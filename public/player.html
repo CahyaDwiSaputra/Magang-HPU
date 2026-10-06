@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMSV6 FLV Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; background: #0f172a; overflow: hidden; font-family: sans-serif; }
+        video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #overlay {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #0f172a; color: #64748b;
+            font-size: 13px; gap: 8px; cursor: pointer;
+            z-index: 20;
+        }
+        #overlay.hidden { display: none; }
+        .spinner {
+            width: 24px; height: 24px;
+            border: 2px solid #334155;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #status-bar {
+            position: absolute; bottom: 6px; left: 6px;
+            color: #94a3b8; font-size: 10px;
+            background: rgba(0,0,0,0.65); padding: 2px 8px; border-radius: 4px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" muted autoplay playsinline crossorigin="anonymous"></video>
+    <div id="overlay">
+        <div class="spinner" id="spinner-el"></div>
+        <span id="msg">Menghubungkan ke kamera kabin...</span>
+        <span id="click-hint" style="font-size:11px;color:#475569;margin-top:4px;display:none">Klik di sini untuk memutar</span>
+    </div>
+    <div id="status-bar">Inisialisasi...</div>
+
+    <script>
+        const params   = new URLSearchParams(window.location.search);
+        const devIdno  = params.get('dev');
+        const channel  = parseInt(params.get('ch') || '1');
+        const jsession = params.get('jsession');
+
+        const videoEl     = document.getElementById('video');
+        const overlay     = document.getElementById('overlay');
+        const msgEl       = document.getElementById('msg');
+        const statusEl    = document.getElementById('status-bar');
+        const spinnerEl   = document.getElementById('spinner-el');
+        const clickHintEl = document.getElementById('click-hint');
+
+        const displayChannel = channel + 1;
+
+        // Pastikan video selalu muted agar diizinkan autoplay oleh semua browser
+        videoEl.muted = true;
+        videoEl.defaultMuted = true;
+
+        function setStatus(msg)  { if (statusEl) statusEl.textContent = msg; }
+        function setOverlay(msg, showSpinner = true) {
+            if (msgEl) msgEl.textContent = msg;
+            if (spinnerEl) spinnerEl.style.display = showSpinner ? 'block' : 'none';
+        }
+        function hideOverlay()   { overlay.classList.add('hidden'); }
+
+        if (!devIdno || !jsession) {
+            setOverlay('Parameter tidak lengkap', false);
+            setStatus('Error: parameter kosong');
+        } else if (typeof flvjs === 'undefined') {
+            setOverlay('Error: flv.js tidak termuat', false);
+            setStatus('Gagal memuat library');
+        } else if (!flvjs.isSupported()) {
+            setOverlay('Browser tidak mendukung FLV. Gunakan Chrome/Edge.', false);
+            setStatus('Browser tidak support MSE');
+        } else {
+            let started = false;
+            // Gunakan host IP publik server CMSv6 182.253.27.12:6604 secara default jika tidak diberikan
+            const defaultHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? '182.253.27.12:6604'
+                : `${window.location.hostname}:6604`;
+            const host = params.get('host') || defaultHost;
+            const streamUrl = `http://${host}/3/3?AVType=1&jsession=${jsession}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`;
+
+            setStatus(`Menghubungkan CAM ${displayChannel}...`);
+            setOverlay(`Menghubungkan ke Kamera ${displayChannel}...`);
+
+            // Konfigurasi FLV.js Ultra-Low Latency & Fast Response:
+            // SANGAT PENTING: hasAudio: false mematikan pengolahan track audio dashcam yang timestamp-nya kacau (disordered timestamps: 1040ms -> 0ms -> 128ms)
+            // Tanpa audio, FLV.js merender frame video langsung dari hardware kamera tanpa tersendat sama sekali!
+            const player = flvjs.createPlayer({
+                type: 'flv',
+                url: streamUrl,
+                isLive: true,
+                hasAudio: false,
+                hasVideo: true,
+                cors: true,
+            }, {
+                enableWorker: false,
+                lazyLoad: false,
+                enableStashBuffer: false,
+                stashInitialSize: 128,
+                autoCleanupSourceBuffer: true,
+                autoCleanupMaxBackwardDuration: 2.0,
+                autoCleanupMinBackwardDuration: 1.0,
+            });
+
+            player.attachMediaElement(videoEl);
+            player.load();
+
+            function onStreamReady() {
+                if (!started) {
+                    started = true;
+                    hideOverlay();
+                    setStatus(`✓ Live CAM ${displayChannel} (Realtime)`);
+                }
+            }
+
+            videoEl.addEventListener('loadeddata', onStreamReady);
+            videoEl.addEventListener('canplay', onStreamReady);
+            videoEl.addEventListener('playing', onStreamReady);
+            videoEl.addEventListener('timeupdate', () => {
+                if (videoEl.currentTime > 0) onStreamReady();
+            });
+
+            const playPromise = player.play();
+            if (playPromise !== undefined) {
+                playPromise.then(onStreamReady).catch(err => {
+                    console.warn('[FLV] Autoplay blocked, menunggu interaksi pengguna:', err);
+                    setTimeout(() => {
+                        if (!started) {
+                            setOverlay(`Klik untuk memutar Kamera ${displayChannel}`, false);
+                            clickHintEl.style.display = 'block';
+                            setStatus('Klik untuk memutar');
+                        }
+                    }, 1000);
+                });
+            }
+
+            overlay.addEventListener('click', () => {
+                videoEl.muted = true;
+                player.play().then(onStreamReady).catch(e => setStatus('Error: ' + e.message));
+            });
+
+            player.on(flvjs.Events.ERROR, (errType, errDetail) => {
+                console.error(`[FLV CAM${displayChannel}] ${errType}`, errDetail);
+                setStatus(`Koneksi terputus, memuat ulang...`);
+                setTimeout(() => {
+                    try {
+                        player.unload();
+                        player.load();
+                        player.play();
+                    } catch (e) {}
+                }, 2000);
+            });
+
+            // ── DETEKSI VIDEO FREEZE / STALL (AUTO-RECONNECT JIKA TERHENTI) ──
+            let lastRecordedTime = 0;
+            let lastProgressStamp = Date.now();
+            setInterval(() => {
+                if (!started || videoEl.paused) return;
+
+                if (videoEl.currentTime !== lastRecordedTime) {
+                    lastRecordedTime = videoEl.currentTime;
+                    lastProgressStamp = Date.now();
+                } else {
+                    // Jika frame video tidak bertambah selama > 4 detik (koneksi seluler sempat drop)
+                    if (Date.now() - lastProgressStamp > 4000) {
+                        console.warn(`[FLV CAM${displayChannel}] Video freeze terdeteksi, memulihkan stream...`);
+                        lastProgressStamp = Date.now();
+                        setStatus(`Memulihkan Live CAM ${displayChannel}...`);
+                        try {
+                            player.unload();
+                            player.load();
+                            player.play().then(onStreamReady).catch(() => {});
+                        } catch (e) {
+                            console.error('[FLV] Reconnect error:', e);
+                        }
+                    }
+                }
+            }, 1000);
+
+            // ── FITUR LIVE CATCH-UP HALUS (SMOOTH CHASING LIVE EDGE) ──
+            // Menjaga video tetap di waktu nyata tanpa jumping currentTime terus-menerus
+            let lastJumpTime = 0;
+            setInterval(() => {
+                if (!videoEl || videoEl.paused || videoEl.buffered.length === 0) return;
+
+                const bufferedEnd = videoEl.buffered.end(videoEl.buffered.length - 1);
+                const delay = bufferedEnd - videoEl.currentTime;
+
+                if (started) {
+                    if (statusEl) {
+                        statusEl.textContent = `✓ Live CAM ${displayChannel} · Latensi ${(Math.max(0, delay)).toFixed(1)}s`;
+                    }
+
+                    // Jika tertinggal jauh (> 3.5 detik, misal saat jaringan cellular drop sesaat),
+                    // lakukan lompatan maksimal 1 kali setiap 6 detik agar tidak merusak decoding I-frame
+                    if (delay > 3.5 && (Date.now() - lastJumpTime > 6000)) {
+                        videoEl.currentTime = bufferedEnd - 0.1;
+                        lastJumpTime = Date.now();
+                    }
+                    // Jika tertinggal wajar (0.6s - 3.5s), percepat playback sedikit agar sinkron tanpa patah
+                    else if (delay > 1.2) {
+                        videoEl.playbackRate = 1.25;
+                    }
+                    else if (delay > 0.4) {
+                        videoEl.playbackRate = 1.1;
+                    }
+                    else {
+                        videoEl.playbackRate = 1.0;
+                    }
+                }
+            }, 300);
+
+            // ── FUNGSI SNAPSHOT LANGSUNG DARI VIDEO STREAM ──
+            window.getSnapshot = function() {
+                try {
+                    if (!videoEl || videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
+                        console.warn('[player.html] Video belum siap atau dimensi 0');
+                        return null;
+                    }
+                    const canvas = document.createElement('canvas');
+                    const size = Math.min(videoEl.videoWidth, videoEl.videoHeight);
+                    const startX = (videoEl.videoWidth - size) / 2;
+                    const startY = (videoEl.videoHeight - size) / 2;
+                    canvas.width = 400;
+                    canvas.height = 400;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return null;
+                    ctx.drawImage(videoEl, startX, startY, size, size, 0, 0, 400, 400);
+                    return canvas.toDataURL('image/jpeg', 0.92);
+                } catch (err) {
+                    console.error('[player.html] Error saat getSnapshot:', err);
+                    return null;
+                }
+            };
+
+            window.addEventListener('message', function(e) {
+                if (e.data && e.data.type === 'CAPTURE_SNAPSHOT') {
+                    const snap = window.getSnapshot();
+                    if (window.parent) {
+                        window.parent.postMessage({ type: 'SNAPSHOT_RESULT', photoUrl: snap }, '*');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
