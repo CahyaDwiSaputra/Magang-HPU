@@ -213,6 +213,7 @@ Route::controller(DashcamController::class)->prefix("/dashcam")->withoutMiddlewa
 // CMSV6 PROXY — semua request ke server CMSV6 dilewatkan melalui backend (menghindari CORS)
 Route::controller(CmsV6ProxyController::class)->prefix('/cmsv6')->withoutMiddleware(['auth', 'api'])->group(function () {
     Route::get('/session',             'session');           // Ambil jsession aktif
+    Route::get('/vehicles',            'vehicles');          // Daftar armada dashcam PT. HPU
     Route::get('/status',              'deviceStatus');      // Status perangkat (GPS, speed, fuel)
     Route::get('/alarms',              'alarms');            // AI / DMS alarms (sinkronisasi Alarm Center)
     Route::post('/alarms/handle',       'handleAlarm');       // Selesaikan 1 alarm

@@ -3,7 +3,7 @@ require 'vendor/autoload.php';
 $app = require_once 'bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-$res = \Illuminate\Support\Facades\Http::get('http://10.10.0.53:8080/808gps/login.action', ['account'=>'admin', 'password'=>'Password.1']);
+$res = \Illuminate\Support\Facades\Http::get('http://182.253.27.12:8080/808gps/StandardApiAction_login.action', ['account'=>'admin', 'password'=>'Password.1']);
 $jsession = $res->json('jsession');
 
 $endpoints = [
@@ -15,7 +15,7 @@ $endpoints = [
 ];
 
 foreach ($endpoints as $ep) {
-    $res = \Illuminate\Support\Facades\Http::get("http://10.10.0.53:8080/808gps/{$ep}", ['jsession'=>$jsession]);
+    $res = \Illuminate\Support\Facades\Http::get("http://182.253.27.12:8080/808gps/{$ep}", ['jsession'=>$jsession]);
     echo "--- {$ep} ---\n";
     $json = $res->json();
     if($json && isset($json['result']) && $json['result'] === 0) {

@@ -87,20 +87,17 @@ const menu_items=[
     },
 ]
 
-const Layout = ({children, className}) => {
+const Layout = ({children, className}: {children: React.ReactNode, className?: string}) => {
 
     return (
         <div className="background-frontpage min-h-screen p-4 md:p-6 font-sans">
-            <div className="max-w-7xl mx-auto">
+            <div className="mx-auto max-w-7xl transition-all">
                 {/* Header */}
-                <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                     <div className="flex items-center gap-2 px-3">
                         <span className="text-3xl font-extrabold tracking-tight text-white">
                             SMART FLEET
                         </span>
-                        {/* <span className="bg-gray-800 text-white text-[0.55rem] font-semibold px-2 py-0.5 rounded-full">
-                            v2
-                        </span> */}
                     </div>
 
                     {/* Navigation */}
@@ -117,7 +114,7 @@ const Layout = ({children, className}) => {
                     </div>
                 </div>
 
-                <div className={clsx("grid grid-cols-1 gap-5 bg-background rounded-xl", className)}>
+                <div className={clsx("bg-background rounded-2xl overflow-hidden shadow-2xl", className)}>
                     {children}
                 </div>
 

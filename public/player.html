@@ -80,9 +80,9 @@
             setStatus('Browser tidak support MSE');
         } else {
             let started = false;
-            // Gunakan host IP publik server CMSv6 182.253.27.12:6604 secara default jika tidak diberikan
+            // Gunakan host server CMSv6 10.10.0.33:6604 secara default jika tidak diberikan
             const defaultHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                ? '182.253.27.12:6604'
+                ? '10.10.0.33:6604'
                 : `${window.location.hostname}:6604`;
             const host = params.get('host') || defaultHost;
             const streamUrl = `http://${host}/3/3?AVType=1&jsession=${jsession}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`;
@@ -138,12 +138,17 @@
                             clickHintEl.style.display = 'block';
                             setStatus('Klik untuk memutar');
                         }
-                    }, 1000);
+                    }, 4000);
                 });
             }
 
             overlay.addEventListener('click', () => {
                 videoEl.muted = true;
+                hideOverlay();
+                try {
+                    player.unload();
+                    player.load();
+                } catch (e) {}
                 player.play().then(onStreamReady).catch(e => setStatus('Error: ' + e.message));
             });
 

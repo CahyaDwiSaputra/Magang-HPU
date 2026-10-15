@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import LayoutNavbar from '@/components/layout-navbar';
 import { 
-    Video, AlertCircle, ShieldCheck, Map as MapIcon, Truck, Fuel, Power, 
+    User, Scan, Video, AlertCircle, ShieldCheck, Map as MapIcon, Truck, Fuel, Power, 
     UserCheck, UserX, LogOut, Navigation, ArrowRightCircle, LogIn, X, 
     ChevronDown, Search, History, Camera, CheckCircle2, ScanFace, UserPlus,
     ShieldAlert, Check, CheckCheck, Sparkles, Bell, LandPlot, Play, RotateCw, 
@@ -11,24 +11,270 @@ import {
 import { useEffect, useState } from 'react';
 import { Map, Marker, Overlay } from 'pigeon-maps';
 
-const DEVICE_ID = "240078916116";
+export type FleetVehicle = {
+    id: string;
+    plateNo: string;
+    deviceNo: string;
+    sim?: string;
+    type: 'DT' | 'EXCA' | 'FT';
+    model: string;
+    site: string;
+    status?: 'ONLINE' | 'STANDBY';
+    channels?: { channel: number; name: string }[];
+};
+
+export const HPU_FLEET: FleetVehicle[] = [
+    {
+        id: 'HPA-DT47109VV',
+        plateNo: 'HPA-DT47109VV',
+        deviceNo: '240078734998',
+        sim: '081119759085',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47109)',
+        site: 'HPA Pit Front',
+        status: 'ONLINE',
+    },
+    {
+        id: 'BDA-DT41107VV-RU-225',
+        plateNo: 'BDA-DT41107VV (RU-225)',
+        deviceNo: '240078740672',
+        sim: '08115125648',
+        type: 'DT',
+        model: 'Dump Truck RU-225',
+        site: 'BDA Pit Area',
+        status: 'ONLINE',
+    },
+    {
+        id: 'HPA-CWR-DT44123XC',
+        plateNo: 'HPA-CWR-DT44123XC',
+        deviceNo: '240078921470',
+        sim: '081119759083',
+        type: 'DT',
+        model: 'Dump Truck Hauling (44123XC)',
+        site: 'HPA CWR Pit',
+        status: 'STANDBY',
+    },
+    {
+        id: 'HPA-CWR-DT44121XC',
+        plateNo: 'HPA-CWR-DT44121XC',
+        deviceNo: '240078921678',
+        sim: '081119759094',
+        type: 'DT',
+        model: 'Dump Truck Hauling (44121XC)',
+        site: 'HPA CWR Pit',
+        status: 'STANDBY',
+    },
+    {
+        id: 'HPA-DT49109MB',
+        plateNo: 'HPA-DT49109MB',
+        deviceNo: '240078916025',
+        sim: '081100105674',
+        type: 'DT',
+        model: 'Dump Truck Hauling (49109MB)',
+        site: 'HPA Pit Front',
+        status: 'ONLINE',
+    },
+    {
+        id: 'BDA-DT41107VV-RU-225',
+        plateNo: 'BDA-DT41107VV (RU-225)',
+        deviceNo: '240078740672',
+        sim: '08115125648',
+        type: 'DT',
+        model: 'Dump Truck RU-225',
+        site: 'BDA Pit Area',
+        status: 'ONLINE',
+    },
+    {
+        id: 'BDA-DT41121VV-RU-227',
+        plateNo: 'BDA-DT41121VV (RU-227)',
+        deviceNo: '291073208720',
+        sim: '081120270220',
+        type: 'DT',
+        model: 'Dump Truck RU-227',
+        site: 'BDA Pit Area',
+        status: 'STANDBY',
+    },
+    {
+        id: 'HPA-DT47101VV',
+        plateNo: 'HPA-DT47101VV',
+        deviceNo: '240078735201',
+        sim: '081119759089',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47101)',
+        site: 'HPA Pit Front',
+        status: 'ONLINE',
+    },
+    {
+        id: 'HPA-DT47109VV',
+        plateNo: 'HPA-DT47109VV',
+        deviceNo: '240078734998',
+        sim: '081119759085',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47109)',
+        site: 'HPA Pit Front',
+        status: 'ONLINE',
+    },
+    {
+        id: 'HPA-DT47103VV',
+        plateNo: 'HPA-DT47103VV',
+        deviceNo: '240078735110',
+        sim: '081119759087',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47103)',
+        site: 'HPA Pit Front',
+        status: 'ONLINE',
+    },
+    {
+        id: 'HPA-DT47106VV',
+        plateNo: 'HPA-DT47106VV',
+        deviceNo: '240078734980',
+        sim: '081119759080',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47106)',
+        site: 'HPA Pit Front',
+        status: 'ONLINE',
+    },
+    {
+        id: 'KDA-FT28001HN',
+        plateNo: 'KDA-FT28001HN',
+        deviceNo: '240079626307',
+        sim: '08115219303',
+        type: 'FT',
+        model: 'Fuel Truck 28,000L',
+        site: 'KDA Pit Area',
+        status: 'STANDBY',
+    },
+    {
+        id: 'KDA-FT40003MB',
+        plateNo: 'KDA-FT40003MB',
+        deviceNo: '240079658477',
+        sim: '08115219305',
+        type: 'FT',
+        model: 'Fuel Truck 40,000L',
+        site: 'KDA Pit Area',
+        status: 'STANDBY',
+    },
+    {
+        id: 'KIA-DT42101VV-HAUL',
+        plateNo: 'KIA-DT42101VV (HAUL)',
+        deviceNo: '240079676909',
+        sim: '08115219637',
+        type: 'DT',
+        model: 'Dump Truck Hauling (42101)',
+        site: 'KIA Hauling Road',
+        status: 'ONLINE',
+    },
+    {
+        id: 'KJA-DT49125MB-HAUL',
+        plateNo: 'KJA-DT49125MB (HAUL)',
+        deviceNo: '240079664063',
+        sim: '08115219644',
+        type: 'DT',
+        model: 'Dump Truck Hauling (49125)',
+        site: 'KJA Hauling Road',
+        status: 'ONLINE',
+    },
+    {
+        id: 'KJA-DT49115MB-HAUL',
+        plateNo: 'KJA-DT49115MB (HAUL)',
+        deviceNo: '240079636952',
+        sim: '08115219314',
+        type: 'DT',
+        model: 'Dump Truck Hauling (49115)',
+        site: 'KJA Hauling Road',
+        status: 'ONLINE',
+    },
+    {
+        id: 'KJA-DT49113MB-HAUL',
+        plateNo: 'KJA-DT49113MB (HAUL)',
+        deviceNo: '240079608836',
+        sim: '08115219307',
+        type: 'DT',
+        model: 'Dump Truck Hauling (49113)',
+        site: 'KJA Hauling Road',
+        status: 'ONLINE',
+    },
+    {
+        id: 'EXCA-PC2000-01',
+        plateNo: 'EX-2001 (Komatsu PC2000)',
+        deviceNo: '240078915951',
+        sim: '08115219999',
+        type: 'EXCA',
+        model: 'Excavator Komatsu PC2000-8',
+        site: 'Pit Front Alfa',
+        status: 'ONLINE',
+    },
+    {
+        id: 'EXCA-PC1250-02',
+        plateNo: 'EX-1252 (Komatsu PC1250)',
+        deviceNo: '240078915952',
+        sim: '08115219998',
+        type: 'EXCA',
+        model: 'Excavator Komatsu PC1250-8',
+        site: 'Pit Front Bravo',
+        status: 'ONLINE',
+    },
+    {
+        id: 'DT-HPU-01',
+        plateNo: 'HD-78501 (Trial UNS)',
+        deviceNo: '240078916116',
+        sim: '081119759000',
+        type: 'DT',
+        model: 'Dump Truck HD-785',
+        site: 'Trial Mining Route',
+        status: 'ONLINE',
+    }
+];
 
 // Channel 0 = CAM 1 Depan (Metode 1: videoH5.html langsung dari server CMSV6 HPU)
 // Channel 1 = CAM 2 Kabin (Metode 2: player.html dengan optimasi low-latency)
-function camUrl(channel: number, jsession: string | null, baseUrl: string = "http://182.253.27.12:8080") {
-    if (jsession) {
-        const mediaHost = (baseUrl && baseUrl.includes('://')) ? `${new URL(baseUrl).hostname}:6604` : '182.253.27.12:6604';
-        return `/player.html?dev=${DEVICE_ID}&ch=${channel}&jsession=${jsession}&host=${mediaHost}`;
+function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'cmsv6') {
+    if (!jsession) return null;
+    if (engine === 'cmsv6') {
+        return `http://10.10.0.33:8088/808gps/open/player/video.html?lang=en&devIdno=${deviceId}&jsession=${jsession}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
     }
-    return null;
+    const mediaHost = (baseUrl && baseUrl.includes('://')) ? `${new URL(baseUrl).hostname}:6604` : '10.10.0.33:6604';
+    return `/player.html?dev=${deviceId}&ch=${channel}&jsession=${jsession}&host=${mediaHost}`;
 }
 
-const channels = [
-    { id: "cam1", apiChannel: 0, label: "CAM 1 — Depan", hasStream: true },
-    { id: "cam2", apiChannel: 1, label: "CAM 2 — Kabin", hasStream: true },
-];
+// channels akan dirender dinamis berdasarkan selectedVehicle di dalam komponen
 
 export default function Page() {
+    // ── STATE ARMADA DASHCAM PT. HPU ──
+    const [fleet, setFleet] = useState<FleetVehicle[]>(HPU_FLEET);
+    const [selectedVehicleId, setSelectedVehicleId] = useState<string>('HPA-DT47109VV');
+    const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
+    const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
+    const [vehicleTypeFilter, setVehicleTypeFilter] = useState<'ALL' | 'DT' | 'EXCA' | 'FT'>('ALL');
+    const [streamEngine, setStreamEngine] = useState<'cmsv6' | 'flv'>('cmsv6');
+
+    const currentVehicle = fleet.find(v => v.id === selectedVehicleId) || fleet[0];
+    const activeDeviceId = currentVehicle.deviceNo;
+    const selectedVehicle: 'DT' | 'EXCA' = currentVehicle.type === 'EXCA' ? 'EXCA' : 'DT';
+
+    const activeChannels = currentVehicle.type === 'EXCA' 
+        ? [
+            { id: "cam1", deviceId: activeDeviceId, apiChannel: 0, label: "CAM 1 — Area Kerja (Loading)", hasStream: true },
+            { id: "cam2", deviceId: activeDeviceId, apiChannel: 1, label: "CAM 2 — Kabin Operator", hasStream: true },
+        ]
+        : [
+            { id: "cam1", deviceId: activeDeviceId, apiChannel: 0, label: "CAM 1 — Depan (Jalan)", hasStream: true },
+            { id: "cam2", deviceId: activeDeviceId, apiChannel: 1, label: "CAM 2 — Kabin Pengemudi", hasStream: true },
+        ];
+
+    // Filter daftar kendaraan berdasarkan pencarian & filter tipe
+    const filteredVehicles = fleet.filter(v => {
+        if (vehicleTypeFilter !== 'ALL' && v.type !== vehicleTypeFilter) return false;
+        if (!vehicleSearchQuery.trim()) return true;
+        const q = vehicleSearchQuery.toLowerCase();
+        return (
+            v.plateNo.toLowerCase().includes(q) ||
+            v.deviceNo.toLowerCase().includes(q) ||
+            v.model.toLowerCase().includes(q) ||
+            v.site.toLowerCase().includes(q)
+        );
+    });
+
     // ── STATE DUMMY UNTUK PASSENGER DETECTION ──
     const [passengerDetected, setPassengerDetected] = useState(true);
 
@@ -59,7 +305,7 @@ export default function Page() {
         isLastKnown: true,
     });
     const [jsession, setJsession] = useState<string | null>(null);
-    const [cmsBaseUrl, setCmsBaseUrl] = useState<string>("http://182.253.27.12:8080");
+    const [cmsBaseUrl, setCmsBaseUrl] = useState<string>("http://10.10.0.33:8088");
     const [apiStatus, setApiStatus] = useState<'connecting' | 'live' | 'error'>('connecting');
     const [rawGPS, setRawGPS] = useState<any>({});
     const [driver, setDriver] = useState<{ name: string; id: string; match: number; photoUrl?: string; position?: string; time?: string } | null>(null);
@@ -317,7 +563,7 @@ export default function Page() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
-                    deviceId: DEVICE_ID,
+                    deviceId: activeDeviceId,
                     capturedAt: new Date().toISOString(),
                     source: 'manual-assignment',
                     driverName: d.name,
@@ -665,7 +911,7 @@ export default function Page() {
         }
 
         const payload = {
-            deviceId: DEVICE_ID,
+            deviceId: activeDeviceId,
             capturedAt: new Date().toISOString(),
             source: 'cabin-dashcam-ai',
             photoUrl: actualPhotoUrl,
@@ -905,6 +1151,23 @@ export default function Page() {
         login();
         fetchGeofences();
         fetchRitasiToday();
+
+        // Ambil daftar unit real-time dari server backend
+        fetch('/api/cmsv6/vehicles')
+            .then(r => r.json())
+            .then(data => {
+                if (data.result === 0 && Array.isArray(data.vehicles) && data.vehicles.length > 0) {
+                    setFleet(data.vehicles);
+                    const onlineUnit = data.vehicles.find((v: FleetVehicle) => v.status === 'ONLINE');
+                    if (onlineUnit) {
+                        setSelectedVehicleId(prev => {
+                            const cur = data.vehicles.find((v: FleetVehicle) => v.id === prev);
+                            return (cur && cur.status === 'ONLINE') ? prev : onlineUnit.id;
+                        });
+                    }
+                }
+            })
+            .catch(() => {});
     }, []);
 
     // ── POLLING DATA GPS TIAP 5 DETIK SETELAH JSESSION TERSEDIA ──
@@ -941,7 +1204,7 @@ export default function Page() {
 
         const fetchGPS = async () => {
             try {
-                const res = await fetch('/api/cmsv6/status');
+                const res = await fetch(`/api/cmsv6/status?devIdno=${activeDeviceId}`);
                 const data = await res.json();
 
                 // Jika server error, coba re-login via proxy
@@ -1024,7 +1287,7 @@ export default function Page() {
                             distance: parseFloat(newDistance.toFixed(2)),
                             fuel: s.ft || 0,
                             satellites: s.gd || 0,
-                            online: s.ol === 1,
+                            online: (s.ol === 1 || s.net === 3 || Boolean(s.gt)),
                             lastUpdate: s.gt?.split('.')[0] ?? '-',
                             inGeofence,
                             gpsLocked: hasGPS,
@@ -1103,7 +1366,7 @@ export default function Page() {
             fetchGeofences();
         }, 5000);
         return () => clearInterval(interval);
-    }, [jsession]);
+    }, [jsession, activeDeviceId]);
 
     // ── AKSI ALARM: HANDLE SATUAN ──
     const handleQuickAction = async (guid: string) => {
@@ -1182,22 +1445,183 @@ export default function Page() {
             <LayoutNavbar className="">
                 <Head title="Dashcam Monitoring" />
 
-                <div className="flex flex-col h-full bg-slate-50 rounded-2xl overflow-hidden shadow-md border border-slate-200 m-1">
+                <div className="flex flex-col h-full bg-slate-100 rounded-2xl overflow-hidden shadow-md border border-slate-200 m-1">
 
-                    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 z-10 relative">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
-                                <Video className="w-5 h-5 text-blue-600" />
+                    <header className="flex min-h-[4.5rem] py-2 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 md:px-6 z-30 relative shadow-sm">
+                        {/* ── SISI KIRI: BRANDING & DROPDOWN PEMILIH UNIT DASHCAM PT. HPU ── */}
+                        <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-md shadow-blue-500/20">
+                                    <Video className="w-5 h-5" />
+                                </div>
+                                <div className="hidden sm:block">
+                                    <h1 className="text-base font-extrabold text-slate-800 leading-tight flex items-center gap-2">
+                                        PT. HPU DASHCAM
+                                        <span className="text-[10px] uppercase font-black px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-md tracking-wider">
+                                            Live Fleet
+                                        </span>
+                                    </h1>
+                                    <p className="text-xs text-slate-400 font-medium">Server CMSV6 • 10.10.0.33</p>
+                                </div>
                             </div>
-                            <div>
-                                <h1 className="text-lg font-bold text-slate-800 leading-tight">Dashcam & Telemetry</h1>
-                                <p className="text-sm text-slate-500">Live Surveillance & Fleet Data</p>
+
+                            {/* Separator Line */}
+                            <div className="hidden sm:block h-8 w-px bg-slate-200" />
+
+                            {/* ── DROPDOWN UNIFIED DASHCAM (KIRI) ── */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
+                                    className="flex items-center gap-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white pl-3.5 pr-3 py-2 rounded-xl shadow-md hover:from-slate-800 hover:to-slate-700 transition cursor-pointer border border-slate-700/70 group"
+                                    title="Klik untuk memilih unit Dashcam PT. HPU"
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <div className={`p-1.5 rounded-lg shrink-0 ${
+                                            currentVehicle.type === 'EXCA' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                            currentVehicle.type === 'FT' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                            'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                        }`}>
+                                            {currentVehicle.type === 'EXCA' ? <LandPlot className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="font-black text-sm tracking-wide text-white">{currentVehicle.plateNo}</span>
+                                                <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${
+                                                    currentVehicle.type === 'EXCA' ? 'bg-amber-500/30 text-amber-300' :
+                                                    currentVehicle.type === 'FT' ? 'bg-emerald-500/30 text-emerald-300' :
+                                                    'bg-blue-500/30 text-blue-300'
+                                                }`}>
+                                                    {currentVehicle.type}
+                                                </span>
+                                            </div>
+                                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                Device: {currentVehicle.deviceNo} • {currentVehicle.site}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-slate-400 group-hover:text-white transition-transform duration-200 ml-1 ${isVehicleDropdownOpen ? 'rotate-180 text-white' : ''}`} />
+                                </button>
+
+                                {/* Dropdown Menu Panel Modal */}
+                                {isVehicleDropdownOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsVehicleDropdownOpen(false)} />
+                                        <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl z-50 p-3 flex flex-col gap-2.5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                                            {/* Header Box Dropdown */}
+                                            <div className="flex items-center justify-between pb-2 border-b border-slate-800 px-1">
+                                                <div>
+                                                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                                                        <Video className="w-3.5 h-3.5 text-blue-400" />
+                                                        Pilih Unit Dashcam PT. HPU
+                                                    </h4>
+                                                    <p className="text-[11px] text-slate-400">Total {fleet.length} Unit Terdaftar di Server</p>
+                                                </div>
+                                                <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                                                    ● Live Ready
+                                                </span>
+                                            </div>
+
+                                            {/* Search Input Box */}
+                                            <div className="relative">
+                                                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Cari unit (misal: 44123, EXCA, DT, KDA)..."
+                                                    value={vehicleSearchQuery}
+                                                    onChange={(e) => setVehicleSearchQuery(e.target.value)}
+                                                    className="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-medium"
+                                                    autoFocus
+                                                />
+                                            </div>
+
+                                            {/* Filter Tabs */}
+                                            <div className="flex items-center gap-1 bg-slate-800/60 p-1 rounded-xl border border-slate-800 text-[11px] font-semibold">
+                                                {(['ALL', 'DT', 'EXCA', 'FT'] as const).map(tab => (
+                                                    <button
+                                                        key={tab}
+                                                        type="button"
+                                                        onClick={() => setVehicleTypeFilter(tab)}
+                                                        className={`flex-1 py-1 rounded-lg text-center transition cursor-pointer ${
+                                                            vehicleTypeFilter === tab 
+                                                                ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                                                                : 'text-slate-400 hover:text-white'
+                                                        }`}
+                                                    >
+                                                        {tab === 'ALL' ? 'Semua' : tab === 'DT' ? 'Truck' : tab === 'EXCA' ? 'Exca' : 'Fuel'}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {/* Vehicle List */}
+                                            <div className="max-h-72 overflow-y-auto flex flex-col gap-1 pr-1">
+                                                {filteredVehicles.length === 0 ? (
+                                                    <div className="p-4 text-center text-xs text-slate-500">
+                                                        Tidak ada unit yang cocok dengan "{vehicleSearchQuery}"
+                                                    </div>
+                                                ) : (
+                                                    filteredVehicles.map((v) => {
+                                                        const isSelected = v.id === currentVehicle.id;
+                                                        return (
+                                                            <button
+                                                                key={v.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedVehicleId(v.id);
+                                                                    setIsVehicleDropdownOpen(false);
+                                                                    setVehicleSearchQuery('');
+                                                                }}
+                                                                className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between gap-2.5 transition cursor-pointer border ${
+                                                                    isSelected 
+                                                                        ? 'bg-blue-600/25 border-blue-500/50 text-white' 
+                                                                        : 'hover:bg-slate-800/80 border-transparent text-slate-300'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                                    <div className={`p-2 rounded-lg shrink-0 ${
+                                                                        v.type === 'EXCA' ? 'bg-amber-500/20 text-amber-400' :
+                                                                        v.type === 'FT' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                                        'bg-blue-500/20 text-blue-400'
+                                                                    }`}>
+                                                                        {v.type === 'EXCA' ? <LandPlot className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <span className="font-bold text-xs truncate text-white">{v.plateNo}</span>
+                                                                            <span className={`text-[9px] font-black uppercase px-1 rounded ${
+                                                                                v.type === 'EXCA' ? 'bg-amber-500/30 text-amber-300' :
+                                                                                v.type === 'FT' ? 'bg-emerald-500/30 text-emerald-300' :
+                                                                                'bg-blue-500/30 text-blue-300'
+                                                                            }`}>
+                                                                                {v.type}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="text-[10px] text-slate-400 truncate font-mono">
+                                                                            Device: {v.deviceNo} • {v.site}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex items-center gap-2 shrink-0">
+                                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+                                                                    {isSelected && <Check className="w-4 h-4 text-blue-400" />}
+                                                                </div>
+                                                            </button>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        {/* ── SISI KANAN: STATUS PERANGKAT & KONEKSI API ── */}
+                        <div className="flex items-center gap-2.5">
                             {/* Status Perangkat Hardware (Online / Offline) */}
-                            <div className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-lg border ${telemetry.online ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
+                            <div className={`flex items-center gap-2 text-sm font-bold px-3.5 py-1.5 rounded-xl border ${telemetry.online ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
                                     'bg-rose-50 border-rose-200 text-rose-600'
                                 }`}>
                                 <span className={`w-2.5 h-2.5 rounded-full ${telemetry.online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
@@ -1206,23 +1630,17 @@ export default function Page() {
                             </div>
 
                             {/* Status API Connection */}
-                            <div className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border ${apiStatus === 'live' ? 'bg-blue-50 border-blue-200 text-blue-600' :
+                            <div className={`hidden md:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border ${apiStatus === 'live' ? 'bg-blue-50 border-blue-200 text-blue-600' :
                                     'bg-amber-50 border-amber-200 text-amber-600'
                                 }`}>
                                 <span className={`w-2 h-2 rounded-full ${apiStatus === 'live' ? 'bg-blue-500' : 'bg-amber-500 animate-pulse'}`}></span>
-                                {apiStatus === 'live' ? 'API Connected' : 'Connecting API'}
-                            </div>
-
-                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold px-4 py-2 rounded-lg shadow-sm">
-                                <Truck className="w-4 h-4 text-blue-600" />
-                                UNIT: EX-39103CT
+                                {apiStatus === 'live' ? 'CMSV6 10.10.0.33 Live' : 'Connecting CMSV6'}
                             </div>
                         </div>
                     </header>
 
                     <div className="flex flex-1 flex-col p-5 md:p-6 overflow-y-auto gap-6">
-
-                        {/* Floating Emergency Alarm Banner */}
+{/* Floating Emergency Alarm Banner */}
                         {untreatedCriticalAlarm && !bannerDismissed && (
                             <div className="bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 text-white p-3.5 rounded-2xl shadow-lg border border-red-400 flex items-center justify-between gap-3 animate-pulse">
                                 <div className="flex items-center gap-3">
@@ -1231,12 +1649,12 @@ export default function Page() {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-black uppercase tracking-wider bg-black/30 px-2 py-0.5 rounded-md border border-white/20">
+                                            <span className="text-[12px] font-black uppercase tracking-wider bg-black/30 px-2 py-0.5 rounded-md border border-white/20">
                                                 {untreatedCriticalAlarm.category || 'AI Safety Alert'}
                                             </span>
                                             <span className="text-xs font-bold">{untreatedCriticalAlarm.desc}</span>
                                         </div>
-                                        <p className="text-[11px] text-white/90 mt-0.5">
+                                        <p className="text-xs text-white/90 mt-0.5">
                                             Unit: {untreatedCriticalAlarm.vehicle || 'TrialUNS2'} • Waktu: {untreatedCriticalAlarm.time} • Status: Menunggu Tindakan Safety Officer
                                         </p>
                                     </div>
@@ -1276,15 +1694,42 @@ export default function Page() {
                                             Live Dashcam & In-Cabin AI Surveillance
                                         </h2>
                                     </div>
-                                    <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold">
+                                    <span className="hidden sm:inline-flex items-center gap-1 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold">
                                         ● DUAL LIVE 1080P HD
                                     </span>
-                                    <span className="hidden md:inline-block text-[11px] text-slate-400 font-mono">
-                                        Unit EX-39103CT (ID: 240078916116)
+                                    <span className="hidden md:inline-block text-xs text-slate-400 font-mono">
+                                        {`Unit ${currentVehicle.plateNo} (Device: ${currentVehicle.deviceNo})`}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                    {/* Stream Engine Toggle (Official CMSV6 Player vs FLV) */}
+                                    <div className="bg-slate-900 p-1 rounded-xl border border-slate-800 flex items-center text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStreamEngine('cmsv6')}
+                                            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
+                                                streamEngine === 'cmsv6' 
+                                                    ? 'bg-blue-600 text-white shadow-sm' 
+                                                    : 'text-slate-400 hover:text-white'
+                                            }`}
+                                            title="Pemutar Resmi HTML5 CMSV6 dari Server HPU"
+                                        >
+                                            CMSV6 Official H5
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStreamEngine('flv')}
+                                            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
+                                                streamEngine === 'flv' 
+                                                    ? 'bg-blue-600 text-white shadow-sm' 
+                                                    : 'text-slate-400 hover:text-white'
+                                            }`}
+                                            title="Pemutar Low-Latency FLV.js Direct"
+                                        >
+                                            FLV Direct
+                                        </button>
+                                    </div>
                                     {/* View Mode Switcher */}
                                     <div className="bg-slate-800/80 p-0.5 rounded-xl border border-slate-700/80 flex items-center">
                                         <button
@@ -1357,14 +1802,14 @@ export default function Page() {
                             <div className="p-4 bg-slate-950">
                                 {cameraViewMode === 'dual' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                        {channels.map(ch => {
+                                        {activeChannels.map(ch => {
                                             const notInstalled = !ch.hasStream;
-                                            const src = !notInstalled ? camUrl(ch.apiChannel, jsession, cmsBaseUrl) : null;
+                                            const src = !notInstalled ? camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine) : null;
                                             return (
                                                 <div
                                                     key={ch.id}
                                                     className="relative bg-black rounded-xl overflow-hidden border border-slate-800 shadow-2xl group"
-                                                    style={{ height: '420px' }}
+                                                    style={{ height: '520px' }}
                                                 >
                                                     {notInstalled ? (
                                                         <div className="w-full h-full absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-3">
@@ -1378,7 +1823,7 @@ export default function Page() {
                                                             src={src}
                                                             className="w-full h-full border-0 absolute inset-0 bg-slate-900"
                                                             title={ch.label}
-                                                            allowFullScreen
+                                                            allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full border-0 absolute inset-0 bg-slate-900 flex items-center justify-center">
@@ -1388,21 +1833,21 @@ export default function Page() {
 
                                                     {/* Stream Header Overlay */}
                                                     <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-                                                        <span className="flex items-center gap-1.5 bg-black/70 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-white/20">
+                                                        <span className="flex items-center gap-1.5 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/20">
                                                             <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                                                             {ch.label}
                                                         </span>
-                                                        <span className="bg-slate-900/80 backdrop-blur-md text-slate-300 text-[10px] font-mono px-2 py-1 rounded-lg border border-slate-700/50">
+                                                        <span className="bg-slate-900/80 backdrop-blur-md text-slate-300 text-[12px] font-mono px-2 py-1 rounded-lg border border-slate-700/50">
                                                             {ch.id === 'cam1' ? 'HAULING ROAD VIEW' : 'DMS DRIVER CABIN'}
                                                         </span>
                                                     </div>
 
                                                     {/* Stream Footer Watermark Overlay */}
                                                     <div className="absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
-                                                        <div className="bg-black/60 backdrop-blur-sm text-slate-300 text-[10px] font-mono px-2.5 py-1 rounded-lg border border-white/10">
+                                                        <div className="bg-black/60 backdrop-blur-sm text-slate-300 text-[12px] font-mono px-2.5 py-1 rounded-lg border border-white/10">
                                                             📍 Lat: {telemetry.lat?.toFixed(5) ?? '-7.55596'}, Lng: {telemetry.lng?.toFixed(5) ?? '111.65882'} • Speed: {telemetry.speed} km/j
                                                         </div>
-                                                        <div className="bg-black/60 backdrop-blur-sm text-emerald-400 text-[10px] font-mono px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                                                        <div className="bg-black/60 backdrop-blur-sm text-emerald-400 text-[12px] font-mono px-2.5 py-1 rounded-lg border border-emerald-500/20">
                                                             1080P HD • 25 FPS
                                                         </div>
                                                     </div>
@@ -1413,13 +1858,13 @@ export default function Page() {
                                 )}
 
                                 {cameraViewMode === 'cam1' && (
-                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black" style={{ height: '480px' }}>
-                                        {camUrl(0, jsession, cmsBaseUrl) ? (
+                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black" style={{ height: '600px' }}>
+                                        {camUrl(activeDeviceId, 0, jsession, cmsBaseUrl) ? (
                                             <iframe
-                                                src={camUrl(0, jsession, cmsBaseUrl) || ''}
+                                                src={camUrl(activeDeviceId, 0, jsession, cmsBaseUrl, streamEngine) || ''}
                                                 className="w-full h-full border-0 absolute inset-0 bg-slate-900"
                                                 title="CAM 1 — Depan"
-                                                allowFullScreen
+                                                allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-slate-500">Memuat stream CAM 1...</div>
@@ -1437,14 +1882,14 @@ export default function Page() {
                                             className="absolute bottom-4 right-4 z-20 w-64 h-40 bg-black rounded-xl border-2 border-white/40 shadow-2xl overflow-hidden cursor-pointer group hover:scale-105 transition-all"
                                             title="Klik untuk berpindah ke CAM 2"
                                         >
-                                            {camUrl(1, jsession, cmsBaseUrl) && (
+                                            {camUrl(activeDeviceId, 1, jsession, cmsBaseUrl) && (
                                                 <iframe
-                                                    src={camUrl(1, jsession, cmsBaseUrl) || ''}
+                                                    src={camUrl(activeDeviceId, 1, jsession, cmsBaseUrl, streamEngine) || ''}
                                                     className="w-full h-full border-0 pointer-events-none"
                                                     title="CAM 2 Kabin (PIP)"
                                                 />
                                             )}
-                                            <div className="absolute bottom-1.5 left-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                            <div className="absolute bottom-1.5 left-2 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 rounded">
                                                 CAM 2 — Kabin (Klik untuk ganti)
                                             </div>
                                         </div>
@@ -1452,13 +1897,13 @@ export default function Page() {
                                 )}
 
                                 {cameraViewMode === 'cam2' && (
-                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black" style={{ height: '480px' }}>
-                                        {camUrl(1, jsession, cmsBaseUrl) ? (
+                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black" style={{ height: '600px' }}>
+                                        {camUrl(activeDeviceId, 1, jsession, cmsBaseUrl) ? (
                                             <iframe
-                                                src={camUrl(1, jsession, cmsBaseUrl) || ''}
+                                                src={camUrl(activeDeviceId, 1, jsession, cmsBaseUrl, streamEngine) || ''}
                                                 className="w-full h-full border-0 absolute inset-0 bg-slate-900"
                                                 title="CAM 2 — Kabin"
-                                                allowFullScreen
+                                                allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-slate-500">Memuat stream CAM 2...</div>
@@ -1476,14 +1921,14 @@ export default function Page() {
                                             className="absolute bottom-4 right-4 z-20 w-64 h-40 bg-black rounded-xl border-2 border-white/40 shadow-2xl overflow-hidden cursor-pointer group hover:scale-105 transition-all"
                                             title="Klik untuk berpindah ke CAM 1"
                                         >
-                                            {camUrl(0, jsession, cmsBaseUrl) && (
+                                            {camUrl(activeDeviceId, 0, jsession, cmsBaseUrl) && (
                                                 <iframe
-                                                    src={camUrl(0, jsession, cmsBaseUrl) || ''}
+                                                    src={camUrl(activeDeviceId, 0, jsession, cmsBaseUrl, streamEngine) || ''}
                                                     className="w-full h-full border-0 pointer-events-none"
                                                     title="CAM 1 Depan (PIP)"
                                                 />
                                             )}
-                                            <div className="absolute bottom-1.5 left-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                            <div className="absolute bottom-1.5 left-2 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 rounded">
                                                 CAM 1 — Depan (Klik untuk ganti)
                                             </div>
                                         </div>
@@ -1492,14 +1937,14 @@ export default function Page() {
 
                                 {cameraViewMode === 'stacked' && (
                                     <div className="flex flex-col gap-4">
-                                        {channels.map(ch => (
+                                        {activeChannels.map(ch => (
                                             <div key={ch.id} className="relative bg-black rounded-xl overflow-hidden border border-slate-800 shadow-xl" style={{ height: '380px' }}>
-                                                {camUrl(ch.apiChannel, jsession, cmsBaseUrl) && (
+                                                {camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl) && (
                                                     <iframe
-                                                        src={camUrl(ch.apiChannel, jsession, cmsBaseUrl) || ''}
+                                                        src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine) || ''}
                                                         className="w-full h-full border-0 absolute inset-0 bg-slate-900"
                                                         title={ch.label}
-                                                        allowFullScreen
+                                                        allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
                                                     />
                                                 )}
                                                 <div className="absolute top-3 left-3 z-10">
@@ -1517,13 +1962,15 @@ export default function Page() {
                         {/* ══════════════════════════════════════════════════════════════
                             OPERATIONAL & TELEMETRY DECK (2 EQUAL BALANCED COLUMNS)
                            ══════════════════════════════════════════════════════════════ */}
-                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start bg-slate-200/40 p-4 rounded-3xl border border-slate-200">
 
                             {/* ── KOLOM KIRI (xl:col-span-6): HAULING OPERATIONS & UNIT SENSORS ── */}
-                            <div className="xl:col-span-6 flex flex-col gap-6">
+                            <div className="flex flex-col gap-6">
+                                {selectedVehicle === 'DT' ? (
+                                    <>
 
                                 {/* CARD 1: OPERASIONAL HAULING & RITASI (SLIDE 19 & 25) */}
-                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4">
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-5 flex flex-col gap-4">
                                     {/* Header */}
                                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                         <div className="flex items-center gap-2.5">
@@ -1554,7 +2001,7 @@ export default function Page() {
                                     </div>
 
                                     {/* Hauling Stage Stepper Progress (Slide 29) */}
-                                    <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+                                    <div className="grid grid-cols-4 gap-3 text-center text-[12px] font-bold">
                                         <div className={`p-2 rounded-xl border transition ${haulingStage === 'LOADING' ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-black shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
                                             ⛏️ 1. Loading
                                         </div>
@@ -1570,26 +2017,26 @@ export default function Page() {
                                     </div>
 
                                     {/* Trip Information & Big RIT Box */}
-                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
                                         <div className="md:col-span-7 flex flex-col gap-2.5 text-xs">
                                             <div className="flex items-center gap-2">
                                                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100 shrink-0"></span>
-                                                <span className="text-[11px] font-semibold text-slate-400 uppercase w-20">Start Pit:</span>
+                                                <span className="text-xs font-semibold text-slate-400 uppercase w-20">Start Pit:</span>
                                                 <span className="font-bold text-slate-700">{currentTrip.startTime}, {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-100 animate-pulse shrink-0"></span>
-                                                <span className="text-[11px] font-semibold text-slate-400 uppercase w-20">Durasi:</span>
+                                                <span className="text-xs font-semibold text-slate-400 uppercase w-20">Durasi:</span>
                                                 <span className="font-bold text-slate-700">{currentTrip.nowTime}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="w-2.5 h-2.5 rounded-full bg-purple-600 ring-2 ring-purple-100 shrink-0"></span>
-                                                <span className="text-[11px] font-semibold text-slate-400 uppercase w-20">Tujuan:</span>
+                                                <span className="text-xs font-semibold text-slate-400 uppercase w-20">Tujuan:</span>
                                                 <span className="font-bold text-slate-800 truncate">{currentTrip.finishArea}</span>
                                             </div>
                                             {/* Progress bar */}
                                             <div className="mt-1">
-                                                <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+                                                <div className="flex justify-between text-[12px] font-bold text-slate-500 mb-1">
                                                     <span>Trip Progress</span>
                                                     <span className="font-mono text-blue-600">{currentTrip.tripProgress}%</span>
                                                 </div>
@@ -1601,7 +2048,7 @@ export default function Page() {
 
                                         {/* Right side: Big RIT Display + Action Button */}
                                         <div className="md:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-purple-200 shadow-sm text-center gap-1.5">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Ritasi Hari Ini</p>
+                                            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Total Ritasi Hari Ini</p>
                                             <p className="text-3xl font-black text-purple-700 tracking-tight leading-none">
                                                 {ritasiToday} <span className="text-sm font-bold text-slate-500 uppercase">RIT</span>
                                             </p>
@@ -1618,13 +2065,13 @@ export default function Page() {
                                     </div>
 
                                     {/* Load Type Material Selector (Slide 21) */}
-                                    <div className="pt-2 border-t border-slate-100">
+                                    <div className="pt-4 mt-2 border-t border-slate-100">
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                                                 <Layers className="w-4 h-4 text-slate-400" />
                                                 Jenis Material Muatan (Slide 21):
                                             </span>
-                                            <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                                            <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                                                 Aktif: {selectedMaterial}
                                             </span>
                                         </div>
@@ -1656,51 +2103,69 @@ export default function Page() {
                                         </div>
                                     </div>
 
+                                    </div>
+                                
+                                {/* CARD 2: KPI & TELEMETRY */}
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-5 flex flex-col gap-4">
                                     {/* 4 KPI Summary Badges (Slide 19) */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center pt-2 border-t border-slate-100">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                                         <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
                                             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-1.5">
                                                 <Gauge className="w-4 h-4" />
                                             </div>
                                             <p className="text-base font-black text-slate-800 leading-tight">
-                                                {telemetry.speed} <span className="text-[10px] font-normal text-slate-500">km/j</span>
+                                                {telemetry.speed} <span className="text-[12px] font-normal text-slate-500">km/j</span>
                                             </p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Current Speed</p>
+                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Current Speed</p>
                                         </div>
                                         <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
                                             <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-1.5">
                                                 <Clock className="w-4 h-4" />
                                             </div>
                                             <p className="text-base font-black text-purple-700 leading-tight">
-                                                {avgCycleTimeToday || 22} <span className="text-[10px] font-normal text-slate-500">min</span>
+                                                {avgCycleTimeToday || 22} <span className="text-[12px] font-normal text-slate-500">min</span>
                                             </p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Cycle Time</p>
+                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Cycle Time</p>
                                         </div>
                                         <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
                                             <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-1.5">
                                                 <Power className="w-4 h-4" />
                                             </div>
                                             <p className="text-base font-black text-emerald-700 leading-tight">
-                                                98,765 <span className="text-[10px] font-normal text-slate-500">HM</span>
+                                                98,765 <span className="text-[12px] font-normal text-slate-500">HM</span>
                                             </p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Hour Meter</p>
+                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Hour Meter</p>
                                         </div>
                                         <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
                                             <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1.5">
                                                 <Fuel className="w-4 h-4" />
                                             </div>
                                             <p className="text-base font-black text-amber-700 leading-tight">
-                                                {telemetry.fuel} <span className="text-[10px] font-normal text-slate-500">L</span>
+                                                {telemetry.fuel} <span className="text-[12px] font-normal text-slate-500">L</span>
                                             </p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Fuel Cons</p>
+                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Fuel Cons</p>
                                         </div>
                                     </div>
 
+                                    </div>
+                                
+                                {/* CARD 3: PRODUKSI BCM */}
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-5 flex flex-col gap-4">
+                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-2">
+                                        <div className="p-2 bg-amber-50 rounded-xl text-amber-600 border border-amber-100">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-box"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black tracking-wider uppercase text-slate-800">
+                                                TOTAL PRODUKSI BCM
+                                            </h3>
+                                        </div>
+                                    </div>
                                     {/* BCM Production & Riwayat Button */}
                                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-900 text-white rounded-xl">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[9px] uppercase font-bold tracking-wider text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded">
+                                                <span className="text-xs uppercase font-bold tracking-wider text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded">
                                                     PRODUKSI BCM (SLIDE 5-6)
                                                 </span>
                                                 <span className="text-xs text-slate-300">Vessel: 20 BCM/trip</span>
@@ -1724,13 +2189,13 @@ export default function Page() {
                                 {/* CARD 2: HARDWARE SENSORS & TELEMETRY */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Engine Status */}
-                                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 text-center flex flex-col items-center justify-center">
+                                    <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-4 text-center flex flex-col items-center justify-center">
                                         <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2 border border-emerald-100">
                                             <Power className="w-5 h-5" />
                                         </div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Engine Status</p>
+                                        <p className="text-[12px] text-slate-400 font-bold uppercase tracking-wider">Engine Status</p>
                                         <p className="text-sm font-black text-emerald-600 mt-0.5">ON (RUNNING)</p>
-                                        <p className="text-[10px] text-slate-400 mt-1">Normal Operasi</p>
+                                        <p className="text-[12px] text-slate-400 mt-1">Normal Operasi</p>
                                     </div>
 
                                     {/* PTO Dump Sensor */}
@@ -1742,7 +2207,7 @@ export default function Page() {
                                         <ArrowRightCircle className={`w-8 h-8 mb-1.5 transition-transform duration-300 ${
                                             ptoActive ? 'text-white rotate-[-45deg] scale-110' : 'text-slate-400 rotate-[-90deg]'
                                         }`} />
-                                        <p className={`text-[10px] font-bold uppercase tracking-wider ${ptoActive ? 'text-amber-100' : 'text-slate-400'}`}>
+                                        <p className={`text-[12px] font-bold uppercase tracking-wider ${ptoActive ? 'text-amber-100' : 'text-slate-400'}`}>
                                             PTO (Dump Sensor)
                                         </p>
                                         <p className={`font-black text-sm mt-0.5 ${ptoActive ? 'text-white' : 'text-slate-700'}`}>
@@ -1756,7 +2221,7 @@ export default function Page() {
                                                 setGeofenceNotice(nextPto ? '⚡ Sensor PTO ON: Hidrolik dump aktif! Siap rekam dumping.' : 'Sensor PTO OFF: Dump diturunkan.');
                                                 setTimeout(() => setGeofenceNotice(null), 3500);
                                             }}
-                                            className={`mt-2 text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition ${
+                                            className={`mt-2 text-[12px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition ${
                                                 ptoActive ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                             }`}
                                         >
@@ -1765,13 +2230,13 @@ export default function Page() {
                                     </div>
 
                                     {/* Fuel Sensor */}
-                                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between">
+                                    <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-4 flex flex-col justify-between">
                                         <div>
                                             <div className="flex justify-between items-center mb-1">
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                                <span className="text-[12px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
                                                     <Fuel className="w-3.5 h-3.5 text-blue-600" /> Fuel Sensor
                                                 </span>
-                                                <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
+                                                <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
                                                     No Theft
                                                 </span>
                                             </div>
@@ -1780,24 +2245,140 @@ export default function Page() {
                                                 <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((telemetry.fuel / 500) * 100))}%` }}></div>
                                             </div>
                                         </div>
-                                        <p className="text-[9px] text-slate-400 mt-2">Kapasitas tangki: ~500 L</p>
+                                        <p className="text-xs text-slate-400 mt-2">Kapasitas tangki: ~500 L</p>
                                     </div>
                                 </div>
 
-                            </div>
+                                                                </>
+                                ) : (
+                                    <>
+
+                                {/* EXCAVATOR CARD 1: AI TRUCK DETECTION */}
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-6 flex flex-col gap-5">
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600 border border-blue-100 relative overflow-hidden">
+                                                <Scan className="w-6 h-6 relative z-10" />
+                                                <div className="absolute inset-0 bg-blue-200/50 animate-ping rounded-xl"></div>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-black tracking-wider uppercase text-slate-800">
+                                                    AI TRUCK DETECTION
+                                                </h3>
+                                                <p className="text-xs text-slate-400">Deteksi Truk via Kamera AI & RFID</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs font-black uppercase px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
+                                            <Truck className="w-4 h-4" />
+                                            TRUK TERDETEKSI
+                                        </span>
+                                    </div>
+
+                                    {/* Truck Info Box */}
+                                    <div className="flex flex-col gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4 relative overflow-hidden">
+                                        <div className="absolute -right-4 -top-4 text-slate-100 opacity-50 pointer-events-none">
+                                            <Truck className="w-32 h-32" />
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center relative z-10">
+                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Unit DT Terkunci (Loading Zone)</span>
+                                            <span className="text-[11px] font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-600">Jarak: 3.2m</span>
+                                        </div>
+                                        <div className="flex items-end gap-3 relative z-10">
+                                            <h4 className="text-2xl font-black text-blue-700 tracking-tight">HD-78501</h4>
+                                            <span className="text-sm font-bold text-slate-500 mb-1">ID: 240078916116</span>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-3 mt-2 relative z-10">
+                                            <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
+                                                <User className="w-4 h-4 text-slate-400" />
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Operator DT</p>
+                                                    <p className="text-xs font-bold text-slate-700 truncate">Sandi Setiawan</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
+                                                <Layers className="w-4 h-4 text-slate-400" />
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Kapasitas Vessel</p>
+                                                    <p className="text-xs font-bold text-slate-700">~20 BCM (30 Ton)</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* EXCAVATOR CARD 2: LOADING PROGRESS */}
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-6 flex flex-col gap-4">
+                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                                        <div className="p-2 bg-amber-50 rounded-xl text-amber-600 border border-amber-100">
+                                            <Activity className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black tracking-wider uppercase text-slate-800">
+                                                STATUS PEMUATAN (LOADING)
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    {/* Real-time Load Bar */}
+                                    <div className="flex flex-col gap-2 mt-2">
+                                        <div className="flex justify-between items-end">
+                                            <div>
+                                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Estimasi Muatan Masuk</p>
+                                                <p className="text-xl font-black text-amber-600">14.5 <span className="text-xs text-slate-500 font-bold">BCM</span></p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Target</p>
+                                                <p className="text-xl font-black text-slate-800">20.0 <span className="text-xs text-slate-500 font-bold">BCM</span></p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="w-full bg-slate-100 rounded-full h-4 border border-slate-200 overflow-hidden relative">
+                                            <div className="absolute inset-0 bg-slate-100"></div>
+                                            {/* Progress Fill */}
+                                            <div className="absolute top-0 left-0 bottom-0 bg-amber-500 transition-all duration-1000" style={{ width: '72%' }}>
+                                                {/* Diagonal stripes for construction look */}
+                                                <div className="w-full h-full opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #000 10px, #000 20px)' }}></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between text-[11px] font-bold mt-1">
+                                            <span className="text-slate-500">Pass 3 dari 4 (Estimasi)</span>
+                                            <span className="text-amber-600">72% Terisi</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Blind Spot Safety Toggle (Prep for feature) */}
+                                    <div className="mt-2 p-3 bg-slate-900 rounded-xl flex items-center justify-between border border-slate-700">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400">
+                                                <ShieldCheck className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-white">Proximity & Blind Spot</p>
+                                                <p className="text-[10px] text-slate-400">360° Radar Area Excavator</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-black px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/50">AKTIF</span>
+                                    </div>
+                                </div>
+                                </>
+                                )}
+</div>
 
                             {/* ── KOLOM KANAN (xl:col-span-6): GPS MAP, CREW HUB & AI SAFETY ── */}
-                            <div className="xl:col-span-6 flex flex-col gap-6">
-
+                            
+                            <div className="flex flex-col gap-6">
                                 {/* CARD 3: LIVE GPS LOCATION & GEOFENCE TAMBANG */}
-                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md overflow-hidden flex flex-col">
                                     <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
                                         <div className="flex items-center gap-2">
                                             <Navigation className="w-4 h-4 text-blue-600" />
                                             <h3 className="text-sm font-bold text-slate-800">Live GPS Location & Geofence Tambang</h3>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                            <span className="text-[12px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                                 -7.555961, 111.658822
                                             </span>
                                             <button
@@ -1837,7 +2418,7 @@ export default function Page() {
                                                                 backgroundColor: `${gf.color || '#8B5CF6'}20`
                                                             }}
                                                         />
-                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm bg-white/90 border border-slate-200 text-slate-800 whitespace-nowrap mt-1">
+                                                        <span className="text-xs font-bold px-1.5 py-0.5 rounded shadow-sm bg-white/90 border border-slate-200 text-slate-800 whitespace-nowrap mt-1">
                                                             {gf.name}
                                                         </span>
                                                     </div>
@@ -1847,7 +2428,7 @@ export default function Page() {
 
                                         {/* Status badge di atas map */}
                                         <div className="absolute top-2 left-2 z-10">
-                                            <span className="text-[10px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
+                                            <span className="text-[12px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-lg border border-slate-300 shadow-md flex items-center gap-1">
                                                 <MapPin className="w-3 h-3 text-rose-500" />
                                                 Pigeon OSM • Site BDA Pit
                                             </span>
@@ -1857,21 +2438,21 @@ export default function Page() {
                                     {/* Map Footer HUD */}
                                     <div className="grid grid-cols-4 divide-x divide-slate-100 p-3 bg-white border-t border-slate-100 text-center">
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">Speed</p>
+                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Speed</p>
                                             <p className="text-sm font-black text-slate-800">{telemetry.speed} km/j</p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">Odometer</p>
+                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Odometer</p>
                                             <p className="text-sm font-black text-blue-600">{telemetry.distance.toFixed(1)} km</p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">Geofence</p>
+                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Geofence</p>
                                             <p className="text-xs font-bold text-purple-700 truncate px-1">
                                                 {activeGeofence ? activeGeofence.name : 'Luar Geofence'}
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">Ritasi</p>
+                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Ritasi</p>
                                             <p className="text-sm font-black text-purple-600">{ritasiToday} trip</p>
                                         </div>
                                     </div>
@@ -1882,7 +2463,7 @@ export default function Page() {
                                             <span className="text-xs font-bold text-slate-700">Daftar Zona Tambang ({geofences.length}):</span>
                                             <button
                                                 onClick={handleResetRitasi}
-                                                className="text-[11px] font-bold text-rose-600 hover:text-rose-800 hover:underline flex items-center gap-1 cursor-pointer"
+                                                className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:underline flex items-center gap-1 cursor-pointer"
                                             >
                                                 <RotateCw className="w-3 h-3" /> Reset Ritasi
                                             </button>
@@ -1893,11 +2474,11 @@ export default function Page() {
                                                     <div className="flex items-center gap-2 min-w-0">
                                                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: gf.color || '#8B5CF6' }}></span>
                                                         <span className="font-bold text-slate-800 truncate">{gf.name}</span>
-                                                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">
+                                                        <span className="text-xs font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">
                                                             {gf.type}
                                                         </span>
                                                     </div>
-                                                    <span className="text-[10px] font-mono text-slate-400 shrink-0">R: {gf.radius}m</span>
+                                                    <span className="text-[12px] font-mono text-slate-400 shrink-0">R: {gf.radius}m</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -1905,7 +2486,7 @@ export default function Page() {
                                 </div>
 
                                 {/* CARD 4: DRIVER IDENTIFICATION & CABIN OCCUPANCY AI */}
-                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-4 flex flex-col gap-3">
                                     <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                                         <div className="flex items-center gap-2">
                                             <UserCheck className="w-4 h-4 text-blue-600" />
@@ -1928,8 +2509,8 @@ export default function Page() {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-slate-800">{driver ? driver.name : targetDriver.name}</p>
-                                                <p className="text-[10px] text-slate-400">NIK: {driver ? driver.id : targetDriver.id} • {driver ? (driver.position || 'Operator') : targetDriver.position}</p>
-                                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded mt-0.5">
+                                                <p className="text-[12px] text-slate-400">NIK: {driver ? driver.id : targetDriver.id} • {driver ? (driver.position || 'Operator') : targetDriver.position}</p>
+                                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded mt-0.5">
                                                     <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Terverifikasi Face Recognition
                                                 </span>
                                             </div>
@@ -1955,25 +2536,9 @@ export default function Page() {
                                             {isScanningFace ? 'Memindai dari Kamera Kabin...' : 'Pindai Wajah Pengemudi di Kabin'}
                                         </button>
 
-                                        {/* Cabin Occupancy SOP Violation Alert */}
-                                        {passengerDetected ? (
-                                            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5">
-                                                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                                                <div>
-                                                    <h4 className="text-xs font-bold text-rose-800">SOP Violation: Penumpang Terdeteksi di Kabin Depan!</h4>
-                                                    <p className="text-[10px] text-rose-600 mt-0.5">
-                                                        Kamera mendeteksi lebih dari 1 orang di kabin. Aturan K3 tambang melarang penumpang duduk di kabin depan saat operasi hauling.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
-                                                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                                                <span className="text-xs font-bold text-emerald-800">All Clear — 1 Pengemudi di Kabin (SOP Sesuai)</span>
-                                            </div>
-                                        )}
+                                        
 
-                                        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                                        <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
                                             <button
                                                 type="button"
                                                 onClick={() => setShowCheckin(!showCheckin)}
@@ -2011,7 +2576,7 @@ export default function Page() {
                                                             className="p-1.5 hover:bg-white rounded cursor-pointer text-xs flex justify-between"
                                                         >
                                                             <span className="font-bold text-slate-700">{d.name}</span>
-                                                            <span className="text-slate-400 font-mono text-[10px]">{d.id}</span>
+                                                            <span className="text-slate-400 font-mono text-[12px]">{d.id}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -2021,7 +2586,7 @@ export default function Page() {
                                 </div>
 
                                 {/* CARD 5: AI SAFETY & ALARM CENTER */}
-                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md overflow-hidden flex flex-col">
                                     {/* Header */}
                                     <div className="p-3.5 border-b border-slate-100 bg-rose-50/50 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -2030,17 +2595,17 @@ export default function Page() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {untreatedCount > 0 ? (
-                                                <span className="text-[10px] bg-rose-500 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">
+                                                <span className="text-[12px] bg-rose-500 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">
                                                     {untreatedCount} Belum Ditangani
                                                 </span>
                                             ) : (
-                                                <span className="text-[10px] bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <span className="text-[12px] bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                                     <Check className="w-3 h-3" /> Aman
                                                 </span>
                                             )}
                                             <button
                                                 onClick={() => setShowSimulator(!showSimulator)}
-                                                className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition cursor-pointer ${
+                                                className={`text-[12px] font-bold px-2 py-0.5 rounded-lg border transition cursor-pointer ${
                                                     showSimulator 
                                                         ? 'bg-amber-500 text-white border-amber-600' 
                                                         : 'bg-white text-amber-700 border-amber-300 hover:bg-amber-50'
@@ -2058,25 +2623,25 @@ export default function Page() {
                                             <div className="grid grid-cols-2 gap-1.5">
                                                 <button
                                                     onClick={() => triggerTestAlarm('fatigue', 'Driver Fatigue (Mengantuk Berat)', 'DMS Camera AI', 'critical')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-[11px] font-semibold text-slate-700 text-left cursor-pointer"
+                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
                                                 >
                                                     😴 Kantuk (Fatigue)
                                                 </button>
                                                 <button
                                                     onClick={() => triggerTestAlarm('phone', 'Distracted Driving: Phone Use', 'DMS Camera AI', 'high')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-[11px] font-semibold text-slate-700 text-left cursor-pointer"
+                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
                                                 >
                                                     📱 Main HP di Kabin
                                                 </button>
                                                 <button
                                                     onClick={() => triggerTestAlarm('overspeed', 'Overspeed Alert (48 km/h > 40 km/h)', 'Speed Telemetry', 'high')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-[11px] font-semibold text-slate-700 text-left cursor-pointer"
+                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
                                                 >
                                                     ⚠️ Overspeed 48 km/h
                                                 </button>
                                                 <button
                                                     onClick={() => triggerTestAlarm('collision', 'Emergency Impact Detected', 'GSensor Alarm', 'critical')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-[11px] font-semibold text-slate-700 text-left cursor-pointer"
+                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
                                                 >
                                                     💥 Benturan / G-Sensor
                                                 </button>
@@ -2089,7 +2654,7 @@ export default function Page() {
                                         <div className="flex items-center gap-1 overflow-x-auto">
                                             <button
                                                 onClick={() => setAlarmTab('all')}
-                                                className={`px-2 py-1 rounded-md text-[11px] font-bold transition whitespace-nowrap cursor-pointer ${
+                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                                                     alarmTab === 'all' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
                                                 }`}
                                             >
@@ -2097,7 +2662,7 @@ export default function Page() {
                                             </button>
                                             <button
                                                 onClick={() => setAlarmTab('gsensor')}
-                                                className={`px-2 py-1 rounded-md text-[11px] font-bold transition whitespace-nowrap cursor-pointer ${
+                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                                                     alarmTab === 'gsensor' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
                                                 }`}
                                             >
@@ -2105,7 +2670,7 @@ export default function Page() {
                                             </button>
                                             <button
                                                 onClick={() => setAlarmTab('fd')}
-                                                className={`px-2 py-1 rounded-md text-[11px] font-bold transition whitespace-nowrap cursor-pointer ${
+                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                                                     alarmTab === 'fd' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
                                                 }`}
                                             >
@@ -2113,7 +2678,7 @@ export default function Page() {
                                             </button>
                                             <button
                                                 onClick={() => setAlarmTab('dms')}
-                                                className={`px-2 py-1 rounded-md text-[11px] font-bold transition whitespace-nowrap cursor-pointer ${
+                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                                                     alarmTab === 'dms' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
                                                 }`}
                                             >
@@ -2124,7 +2689,7 @@ export default function Page() {
                                         {untreatedCount > 0 && (
                                             <button
                                                 onClick={handleBatchAction}
-                                                className="text-[10px] font-bold text-rose-700 hover:text-rose-800 hover:underline flex items-center gap-1 shrink-0 ml-1 cursor-pointer"
+                                                className="text-[12px] font-bold text-rose-700 hover:text-rose-800 hover:underline flex items-center gap-1 shrink-0 ml-1 cursor-pointer"
                                             >
                                                 <CheckCheck className="w-3 h-3" /> Tangani Semua
                                             </button>
@@ -2137,7 +2702,7 @@ export default function Page() {
                                             <div className="text-center py-6">
                                                 <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-1" />
                                                 <p className="text-xs text-slate-500 font-bold">Tidak ada peringatan aktif</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">Semua parameter safety berada dalam kondisi normal</p>
+                                                <p className="text-[12px] text-slate-400 mt-0.5">Semua parameter safety berada dalam kondisi normal</p>
                                             </div>
                                         ) : (
                                             filteredAlarms.map((alarm) => {
@@ -2166,7 +2731,7 @@ export default function Page() {
                                                                         <span className="text-xs font-bold text-slate-800 leading-tight">
                                                                             {alarm.desc}
                                                                         </span>
-                                                                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                                                        <span className={`text-xs font-bold px-1.5 py-0.2 rounded ${
                                                                             alarm.severity === 'critical' ? 'bg-red-100 text-red-700' :
                                                                             alarm.severity === 'high' ? 'bg-orange-100 text-orange-700' :
                                                                             'bg-slate-100 text-slate-600'
@@ -2174,7 +2739,7 @@ export default function Page() {
                                                                             {alarm.severity ? alarm.severity.toUpperCase() : 'ALERT'}
                                                                         </span>
                                                                     </div>
-                                                                    <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1.5">
+                                                                    <p className="text-[12px] text-slate-500 mt-1 flex items-center gap-1.5">
                                                                         <span>{alarm.category || 'CMSv6 Alarm'}</span>
                                                                         <span>•</span>
                                                                         <span>{alarm.time}</span>
@@ -2191,13 +2756,13 @@ export default function Page() {
                                                             {/* Handle Action */}
                                                             <div className="shrink-0 text-right">
                                                                 {isHandled ? (
-                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                                                                    <span className="inline-flex items-center gap-1 text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
                                                                         <Check className="w-3 h-3" /> Selesai
                                                                     </span>
                                                                 ) : (
                                                                     <button
                                                                         onClick={() => handleQuickAction(alarm.guid)}
-                                                                        className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2.5 py-1 rounded-lg shadow-sm transition active:scale-95 cursor-pointer"
+                                                                        className="inline-flex items-center gap-1 text-[12px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2.5 py-1 rounded-lg shadow-sm transition active:scale-95 cursor-pointer"
                                                                     >
                                                                         <Check className="w-3 h-3" /> Tangani
                                                                     </button>
@@ -2210,11 +2775,9 @@ export default function Page() {
                                         )}
                                     </div>
                                 </div>
-
                             </div>
-
                         </div>
-                    </div>
+                                    </div>
                 </div>
 
                 {/* ── MODAL: TAMBAH GEOFENCE BARU (Slide 26 GEOFENCE) ── */}
@@ -2226,7 +2789,7 @@ export default function Page() {
                                     <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                         <LandPlot className="w-4 h-4 text-purple-600" /> Tambah Geofence Tambang Baru
                                     </h4>
-                                    <p className="text-[10px] text-slate-400">Konfigurasi zona pagar virtual GPS sesuai standar PT HPU (Slide 26)</p>
+                                    <p className="text-[12px] text-slate-400">Konfigurasi zona pagar virtual GPS sesuai standar PT HPU (Slide 26)</p>
                                 </div>
                                 <button onClick={() => setShowGeofenceModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                                     <X className="w-4 h-4" />
@@ -2336,7 +2899,7 @@ export default function Page() {
                                                     key={c.hex}
                                                     type="button"
                                                     onClick={() => setNewGeofence({ ...newGeofence, color: c.hex })}
-                                                    className="text-[10px] px-2 py-0.5 rounded border flex items-center gap-1 font-semibold"
+                                                    className="text-[12px] px-2 py-0.5 rounded border flex items-center gap-1 font-semibold"
                                                 >
                                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.hex }}></span>
                                                     {c.label}
@@ -2346,7 +2909,7 @@ export default function Page() {
                                     </div>
                                 </div>
 
-                                <p className="text-[10px] text-slate-400 bg-slate-50 p-2 rounded-lg border">
+                                <p className="text-[12px] text-slate-400 bg-slate-50 p-2 rounded-lg border">
                                     📍 Titik pusat otomatis menggunakan posisi GPS unit: ({telemetry.lat?.toFixed(5) ?? '-7.6582'}, {telemetry.lng?.toFixed(5) ?? '111.1895'})
                                 </p>
 
@@ -2392,19 +2955,19 @@ export default function Page() {
                             {/* Summary Metrics Banner */}
                             <div className="grid grid-cols-4 gap-3 mb-4">
                                 <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-center">
-                                    <p className="text-[10px] font-bold text-purple-600 uppercase">Total Ritasi</p>
+                                    <p className="text-[12px] font-bold text-purple-600 uppercase">Total Ritasi</p>
                                     <p className="text-xl font-black text-purple-900">{ritasiToday} <span className="text-xs font-normal">RIT</span></p>
                                 </div>
                                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
-                                    <p className="text-[10px] font-bold text-emerald-600 uppercase">Produksi BCM</p>
+                                    <p className="text-[12px] font-bold text-emerald-600 uppercase">Produksi BCM</p>
                                     <p className="text-xl font-black text-emerald-900">{totalBcmToday} <span className="text-xs font-normal">BCM</span></p>
                                 </div>
                                 <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-center">
-                                    <p className="text-[10px] font-bold text-blue-600 uppercase">Rata-rata Cycle Time</p>
+                                    <p className="text-[12px] font-bold text-blue-600 uppercase">Rata-rata Cycle Time</p>
                                     <p className="text-xl font-black text-blue-900">{avgCycleTimeToday || 22} <span className="text-xs font-normal">Menit</span></p>
                                 </div>
                                 <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-center">
-                                    <p className="text-[10px] font-bold text-amber-600 uppercase">Total Jarak Tempuh</p>
+                                    <p className="text-[12px] font-bold text-amber-600 uppercase">Total Jarak Tempuh</p>
                                     <p className="text-xl font-black text-amber-900">{totalDistanceKm.toFixed(1)} <span className="text-xs font-normal">KM</span></p>
                                 </div>
                             </div>
@@ -2440,7 +3003,7 @@ export default function Page() {
                                                         <td className="p-2.5 font-bold text-slate-700">#{l.id}</td>
                                                         <td className="p-2.5 font-mono font-semibold text-slate-800">{l.unit_code || 'HD-78501'}</td>
                                                         <td className="p-2.5">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${matBg}`}>
+                                                            <span className={`px-2 py-0.5 rounded text-[12px] font-bold font-mono ${matBg}`}>
                                                                 {mat}
                                                             </span>
                                                         </td>
@@ -2449,7 +3012,7 @@ export default function Page() {
                                                         <td className="p-2.5 text-center font-mono text-purple-700 font-bold">{l.cycle_time_minutes ?? 21.5} m</td>
                                                         <td className="p-2.5 text-center font-mono text-slate-600">{l.distance_km ?? 2.4} km</td>
                                                         <td className="p-2.5 text-center">
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            <span className="inline-flex items-center gap-1 text-[12px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                                 <CheckCircle className="w-3 h-3 text-emerald-600" /> ON (Verified)
                                                             </span>
                                                         </td>
@@ -2468,7 +3031,7 @@ export default function Page() {
                             </div>
 
                             <div className="flex items-center justify-between pt-4 mt-2 border-t text-xs">
-                                <span className="text-slate-500 text-[11px]">
+                                <span className="text-slate-500 text-xs">
                                     Rumus Produktivitas Hauler: Q = q × (3600 / Cycle Time) × FK
                                 </span>
                                 <button

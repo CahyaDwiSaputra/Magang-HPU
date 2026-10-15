@@ -32,8 +32,8 @@ A comprehensive vehicle monitoring dashboard built with Laravel, React (Inertia.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/CahyaDwiSaputra/your-repo-name.git
-   cd hpu
+   git clone https://github.com/CahyaDwiSaputra/Magang-HPU.git
+   cd Magang-HPU
    ```
 
 2. **Install Dependencies:**
