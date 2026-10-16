@@ -1,12 +1,12 @@
 import { Head } from '@inertiajs/react';
 import LayoutNavbar from '@/components/layout-navbar';
 import { 
-    User, Scan, Video, AlertCircle, ShieldCheck, Map as MapIcon, Truck, Fuel, Power, 
+    Signal, User, Scan, Video, AlertCircle, ShieldCheck, Map as MapIcon, Truck, Fuel, Power, 
     UserCheck, UserX, LogOut, Navigation, ArrowRightCircle, LogIn, X, 
     ChevronDown, Search, History, Camera, CheckCircle2, ScanFace, UserPlus,
     ShieldAlert, Check, CheckCheck, Sparkles, Bell, LandPlot, Play, RotateCw, 
     Plus, Trash2, MapPin, Clock, Gauge, Layers, Activity, FileText, CheckCircle,
-    LayoutGrid, Rows
+    LayoutGrid, Rows, Star, ArrowUpRight, RotateCcw, Smartphone, Radio, Phone
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Map, Marker, Overlay } from 'pigeon-maps';
@@ -20,21 +20,14 @@ export type FleetVehicle = {
     model: string;
     site: string;
     status?: 'ONLINE' | 'STANDBY';
+    is_registered?: boolean;
+    last_ping?: string | null;
+    server_name?: string;
     channels?: { channel: number; name: string }[];
 };
 
 export const HPU_FLEET: FleetVehicle[] = [
     {
-        id: 'HPA-DT47109VV',
-        plateNo: 'HPA-DT47109VV',
-        deviceNo: '240078734998',
-        sim: '081119759085',
-        type: 'DT',
-        model: 'Dump Truck Hauling (47109)',
-        site: 'HPA Pit Front',
-        status: 'ONLINE',
-    },
-    {
         id: 'BDA-DT41107VV-RU-225',
         plateNo: 'BDA-DT41107VV (RU-225)',
         deviceNo: '240078740672',
@@ -43,56 +36,18 @@ export const HPU_FLEET: FleetVehicle[] = [
         model: 'Dump Truck RU-225',
         site: 'BDA Pit Area',
         status: 'ONLINE',
+        is_registered: true,
     },
     {
-        id: 'HPA-CWR-DT44123XC',
-        plateNo: 'HPA-CWR-DT44123XC',
-        deviceNo: '240078921470',
-        sim: '081119759083',
+        id: 'BDA-DT41110VV-RU-230',
+        plateNo: 'BDA-DT41110VV (RU-230)',
+        deviceNo: '240078740557',
+        sim: '08115125650',
         type: 'DT',
-        model: 'Dump Truck Hauling (44123XC)',
-        site: 'HPA CWR Pit',
-        status: 'STANDBY',
-    },
-    {
-        id: 'HPA-CWR-DT44121XC',
-        plateNo: 'HPA-CWR-DT44121XC',
-        deviceNo: '240078921678',
-        sim: '081119759094',
-        type: 'DT',
-        model: 'Dump Truck Hauling (44121XC)',
-        site: 'HPA CWR Pit',
-        status: 'STANDBY',
-    },
-    {
-        id: 'HPA-DT49109MB',
-        plateNo: 'HPA-DT49109MB',
-        deviceNo: '240078916025',
-        sim: '081100105674',
-        type: 'DT',
-        model: 'Dump Truck Hauling (49109MB)',
-        site: 'HPA Pit Front',
-        status: 'ONLINE',
-    },
-    {
-        id: 'BDA-DT41107VV-RU-225',
-        plateNo: 'BDA-DT41107VV (RU-225)',
-        deviceNo: '240078740672',
-        sim: '08115125648',
-        type: 'DT',
-        model: 'Dump Truck RU-225',
+        model: 'Dump Truck RU-230',
         site: 'BDA Pit Area',
         status: 'ONLINE',
-    },
-    {
-        id: 'BDA-DT41121VV-RU-227',
-        plateNo: 'BDA-DT41121VV (RU-227)',
-        deviceNo: '291073208720',
-        sim: '081120270220',
-        type: 'DT',
-        model: 'Dump Truck RU-227',
-        site: 'BDA Pit Area',
-        status: 'STANDBY',
+        is_registered: true,
     },
     {
         id: 'HPA-DT47101VV',
@@ -103,56 +58,7 @@ export const HPU_FLEET: FleetVehicle[] = [
         model: 'Dump Truck Hauling (47101)',
         site: 'HPA Pit Front',
         status: 'ONLINE',
-    },
-    {
-        id: 'HPA-DT47109VV',
-        plateNo: 'HPA-DT47109VV',
-        deviceNo: '240078734998',
-        sim: '081119759085',
-        type: 'DT',
-        model: 'Dump Truck Hauling (47109)',
-        site: 'HPA Pit Front',
-        status: 'ONLINE',
-    },
-    {
-        id: 'HPA-DT47103VV',
-        plateNo: 'HPA-DT47103VV',
-        deviceNo: '240078735110',
-        sim: '081119759087',
-        type: 'DT',
-        model: 'Dump Truck Hauling (47103)',
-        site: 'HPA Pit Front',
-        status: 'ONLINE',
-    },
-    {
-        id: 'HPA-DT47106VV',
-        plateNo: 'HPA-DT47106VV',
-        deviceNo: '240078734980',
-        sim: '081119759080',
-        type: 'DT',
-        model: 'Dump Truck Hauling (47106)',
-        site: 'HPA Pit Front',
-        status: 'ONLINE',
-    },
-    {
-        id: 'KDA-FT28001HN',
-        plateNo: 'KDA-FT28001HN',
-        deviceNo: '240079626307',
-        sim: '08115219303',
-        type: 'FT',
-        model: 'Fuel Truck 28,000L',
-        site: 'KDA Pit Area',
-        status: 'STANDBY',
-    },
-    {
-        id: 'KDA-FT40003MB',
-        plateNo: 'KDA-FT40003MB',
-        deviceNo: '240079658477',
-        sim: '08115219305',
-        type: 'FT',
-        model: 'Fuel Truck 40,000L',
-        site: 'KDA Pit Area',
-        status: 'STANDBY',
+        is_registered: true,
     },
     {
         id: 'KIA-DT42101VV-HAUL',
@@ -163,16 +69,7 @@ export const HPU_FLEET: FleetVehicle[] = [
         model: 'Dump Truck Hauling (42101)',
         site: 'KIA Hauling Road',
         status: 'ONLINE',
-    },
-    {
-        id: 'KJA-DT49125MB-HAUL',
-        plateNo: 'KJA-DT49125MB (HAUL)',
-        deviceNo: '240079664063',
-        sim: '08115219644',
-        type: 'DT',
-        model: 'Dump Truck Hauling (49125)',
-        site: 'KJA Hauling Road',
-        status: 'ONLINE',
+        is_registered: true,
     },
     {
         id: 'KJA-DT49115MB-HAUL',
@@ -183,6 +80,106 @@ export const HPU_FLEET: FleetVehicle[] = [
         model: 'Dump Truck Hauling (49115)',
         site: 'KJA Hauling Road',
         status: 'ONLINE',
+        is_registered: true,
+    },
+    {
+        id: 'HPA-DT49109MB',
+        plateNo: 'HPA-DT49109MB',
+        deviceNo: '240078916025',
+        sim: '081100105674',
+        type: 'DT',
+        model: 'Dump Truck Hauling (49109MB)',
+        site: 'HPA Pit Front',
+        status: 'ONLINE',
+        is_registered: true,
+    },
+    {
+        id: 'KDA-FT40003MB',
+        plateNo: 'KDA-FT40003MB',
+        deviceNo: '240079658477',
+        sim: '08115219305',
+        type: 'FT',
+        model: 'Fuel Truck 40,000L',
+        site: 'KDA Pit Area',
+        status: 'ONLINE',
+        is_registered: true,
+    },
+    {
+        id: 'HPA-CWR-DT44121XC',
+        plateNo: 'HPA-CWR-DT44121XC',
+        deviceNo: '240078921678',
+        sim: '081119759094',
+        type: 'DT',
+        model: 'Dump Truck Hauling (44121XC)',
+        site: 'HPA CWR Pit',
+        status: 'STANDBY',
+        is_registered: true,
+    },
+    {
+        id: 'HPA-CWR-DT44123XC',
+        plateNo: 'HPA-CWR-DT44123XC',
+        deviceNo: '240078921470',
+        sim: '081119759083',
+        type: 'DT',
+        model: 'Dump Truck Hauling (44123XC)',
+        site: 'HPA CWR Pit',
+        status: 'STANDBY',
+        is_registered: true,
+    },
+    {
+        id: 'HPA-DT47103VV',
+        plateNo: 'HPA-DT47103VV',
+        deviceNo: '240078735110',
+        sim: '081119759087',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47103)',
+        site: 'HPA Pit Front',
+        status: 'STANDBY',
+        is_registered: true,
+    },
+    {
+        id: 'HPA-DT47106VV',
+        plateNo: 'HPA-DT47106VV',
+        deviceNo: '240078734980',
+        sim: '081119759080',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47106)',
+        site: 'HPA Pit Front',
+        status: 'STANDBY',
+        is_registered: true,
+    },
+    {
+        id: 'HPA-DT47109VV',
+        plateNo: 'HPA-DT47109VV',
+        deviceNo: '240078734998',
+        sim: '081119759085',
+        type: 'DT',
+        model: 'Dump Truck Hauling (47109)',
+        site: 'HPA Pit Front',
+        status: 'STANDBY',
+        is_registered: true,
+    },
+    {
+        id: 'KDA-FT28001HN',
+        plateNo: 'KDA-FT28001HN',
+        deviceNo: '240079626307',
+        sim: '08115219303',
+        type: 'FT',
+        model: 'Fuel Truck 28,000L',
+        site: 'KDA Pit Area',
+        status: 'STANDBY',
+        is_registered: true,
+    },
+    {
+        id: 'KJA-DT49125MB-HAUL',
+        plateNo: 'KJA-DT49125MB (HAUL)',
+        deviceNo: '240079664063',
+        sim: '08115219644',
+        type: 'DT',
+        model: 'Dump Truck Hauling (49125)',
+        site: 'KJA Hauling Road',
+        status: 'STANDBY',
+        is_registered: true,
     },
     {
         id: 'KJA-DT49113MB-HAUL',
@@ -192,7 +189,19 @@ export const HPU_FLEET: FleetVehicle[] = [
         type: 'DT',
         model: 'Dump Truck Hauling (49113)',
         site: 'KJA Hauling Road',
-        status: 'ONLINE',
+        status: 'STANDBY',
+        is_registered: true,
+    },
+    {
+        id: 'BDA-DT41121VV-RU-227',
+        plateNo: 'BDA-DT41121VV (RU-227)',
+        deviceNo: '291073208720',
+        sim: '081120270220',
+        type: 'DT',
+        model: 'Dump Truck RU-227',
+        site: 'BDA Pit Area',
+        status: 'STANDBY',
+        is_registered: false,
     },
     {
         id: 'EXCA-PC2000-01',
@@ -202,7 +211,8 @@ export const HPU_FLEET: FleetVehicle[] = [
         type: 'EXCA',
         model: 'Excavator Komatsu PC2000-8',
         site: 'Pit Front Alfa',
-        status: 'ONLINE',
+        status: 'STANDBY',
+        is_registered: true,
     },
     {
         id: 'EXCA-PC1250-02',
@@ -212,29 +222,23 @@ export const HPU_FLEET: FleetVehicle[] = [
         type: 'EXCA',
         model: 'Excavator Komatsu PC1250-8',
         site: 'Pit Front Bravo',
-        status: 'ONLINE',
+        status: 'STANDBY',
+        is_registered: true,
     },
-    {
-        id: 'DT-HPU-01',
-        plateNo: 'HD-78501 (Trial UNS)',
-        deviceNo: '240078916116',
-        sim: '081119759000',
-        type: 'DT',
-        model: 'Dump Truck HD-785',
-        site: 'Trial Mining Route',
-        status: 'ONLINE',
-    }
 ];
 
 // Channel 0 = CAM 1 Depan (Metode 1: videoH5.html langsung dari server CMSV6 HPU)
 // Channel 1 = CAM 2 Kabin (Metode 2: player.html dengan optimasi low-latency)
-function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'cmsv6') {
-    if (!jsession) return null;
-    if (engine === 'cmsv6') {
-        return `http://10.10.0.33:8088/808gps/open/player/video.html?lang=en&devIdno=${deviceId}&jsession=${jsession}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
+function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'cmsv6', isDemo: boolean = false) {
+    if (!jsession && !isDemo) return null;
+    if (isDemo) {
+        return `/player.html?dev=${deviceId}&ch=${channel}&demo=1`;
     }
-    const mediaHost = (baseUrl && baseUrl.includes('://')) ? `${new URL(baseUrl).hostname}:6604` : '10.10.0.33:6604';
-    return `/player.html?dev=${deviceId}&ch=${channel}&jsession=${jsession}&host=${mediaHost}`;
+    if (engine === 'cmsv6') {
+        return `http://10.10.0.33:8088/808gps/open/player/video.html?lang=en&devIdno=${deviceId}&jsession=${jsession || ''}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
+    }
+    const mediaHost = '10.10.0.33:6604';
+    return `/player.html?dev=${deviceId}&ch=${channel}&jsession=${jsession || ''}&host=${mediaHost}`;
 }
 
 // channels akan dirender dinamis berdasarkan selectedVehicle di dalam komponen
@@ -242,11 +246,26 @@ function camUrl(deviceId: string, channel: number, jsession: string | null, base
 export default function Page() {
     // ── STATE ARMADA DASHCAM PT. HPU ──
     const [fleet, setFleet] = useState<FleetVehicle[]>(HPU_FLEET);
-    const [selectedVehicleId, setSelectedVehicleId] = useState<string>('HPA-DT47109VV');
+    const [selectedVehicleId, setSelectedVehicleId] = useState<string>('BDA-DT41107VV-RU-225');
     const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
     const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
     const [vehicleTypeFilter, setVehicleTypeFilter] = useState<'ALL' | 'DT' | 'EXCA' | 'FT'>('ALL');
     const [streamEngine, setStreamEngine] = useState<'cmsv6' | 'flv'>('cmsv6');
+    const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+
+    // Listen postMessage dari player.html untuk navigasi ke armada terdaftar
+    useEffect(() => {
+        const handleMsg = (e: MessageEvent) => {
+            if (e.data && e.data.type === 'SELECT_VEHICLE' && e.data.deviceId) {
+                const target = fleet.find(v => v.deviceNo === e.data.deviceId);
+                if (target) {
+                    setSelectedVehicleId(target.id);
+                }
+            }
+        };
+        window.addEventListener('message', handleMsg);
+        return () => window.removeEventListener('message', handleMsg);
+    }, [fleet]);
 
     const currentVehicle = fleet.find(v => v.id === selectedVehicleId) || fleet[0];
     const activeDeviceId = currentVehicle.deviceNo;
@@ -779,7 +798,7 @@ export default function Page() {
                 lng: 111.191127,
                 speed: 5,
                 progress: 75,
-                notice: `⚡ [3/5 SIKLUS RITASI] DUMPING: Tiba di Disposal Timur, SENSOR PTO ON! Hidrolik dump mengangkat muatan (Slide 25).`,
+                notice: `⚡ [3/5 SIKLUS RITASI] DUMPING: Tiba di Disposal Timur, SENSOR PTO ON! Hidrolik dump mengangkat muatan.`,
                 activeGf: { id: 3, name: 'Disposal Timur (Waste Dump)', type: 'dumping', distance: 0 },
             },
             {
@@ -1442,1379 +1461,1319 @@ export default function Page() {
 
     return (
         <>
-            <LayoutNavbar className="">
+            <LayoutNavbar 
+                containerClassName="w-full max-w-[98%] 2xl:max-w-[1920px]" 
+                className="bg-slate-100/80 rounded-2xl shadow-xl border border-slate-200/80 p-3.5 md:p-5"
+            >
                 <Head title="Dashcam Monitoring" />
 
-                <div className="flex flex-col h-full bg-slate-100 rounded-2xl overflow-hidden shadow-md border border-slate-200 m-1">
-
-                    <header className="flex min-h-[4.5rem] py-2 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 md:px-6 z-30 relative shadow-sm">
-                        {/* ── SISI KIRI: BRANDING & DROPDOWN PEMILIH UNIT DASHCAM PT. HPU ── */}
-                        <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                            <div className="flex items-center gap-2.5">
-                                <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-md shadow-blue-500/20">
-                                    <Video className="w-5 h-5" />
+                <div className="space-y-4">
+                    {/* Floating Emergency Alarm Banner (Jika ada alarm kritis) */}
+                    {untreatedCriticalAlarm && !bannerDismissed && (
+                        <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-3.5 rounded-xl shadow-xs flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white/20 rounded-lg">
+                                    <ShieldAlert className="w-5 h-5 text-white" />
                                 </div>
-                                <div className="hidden sm:block">
-                                    <h1 className="text-base font-extrabold text-slate-800 leading-tight flex items-center gap-2">
-                                        PT. HPU DASHCAM
-                                        <span className="text-[10px] uppercase font-black px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-md tracking-wider">
-                                            Live Fleet
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[11px] font-bold uppercase tracking-wider bg-black/30 px-2 py-0.5 rounded">
+                                            {untreatedCriticalAlarm.category || 'AI Safety Alert'}
                                         </span>
-                                    </h1>
-                                    <p className="text-xs text-slate-400 font-medium">Server CMSV6 • 10.10.0.33</p>
+                                        <span className="text-sm font-bold">{untreatedCriticalAlarm.desc}</span>
+                                    </div>
+                                    <p className="text-xs text-white/80 mt-0.5">
+                                        Unit: {untreatedCriticalAlarm.vehicle || currentVehicle.plateNo} • Waktu: {untreatedCriticalAlarm.time} • Status: Menunggu Tindakan Safety Officer
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                    onClick={() => handleQuickAction(untreatedCriticalAlarm.guid)}
+                                    className="text-xs font-bold bg-white text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
+                                >
+                                    Tangani Sekarang
+                                </button>
+                                <button
+                                    onClick={() => setBannerDismissed(true)}
+                                    className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
+                                    title="Tutup banner"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ══════════════════════════════════════════════════════════════
+                        MAIN 2-COLUMN BALANCED FULL-HEIGHT DASHBOARD LAYOUT (CARD SEPARATION)
+                       ══════════════════════════════════════════════════════════════ */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                        {/* ── KOLOM KIRI (lg:col-span-3): SIDEBAR UNIT ARMADA (CARD SEPARATORS) ── */}
+                        <div className="lg:col-span-3 flex flex-col gap-4">
+                            {/* Card 1: Armada Fleet Selector */}
+                            <div className="bg-white border border-slate-200/90 rounded-xl p-4 flex flex-col gap-3 shadow-xs">
+                                {/* Header Card */}
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-blue-600 text-white rounded-lg shadow-xs">
+                                            <Video className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 leading-tight">
+                                                Armada Dashcam
+                                            </h3>
+                                            <p className="text-[11px] text-gray-400">Total {fleet.length} Unit Terdaftar</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Live Ready
+                                    </span>
+                                </div>
+
+                                {/* Search Input */}
+                                <div className="relative">
+                                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        placeholder="Cari nopol, device, site..."
+                                        value={vehicleSearchQuery}
+                                        onChange={(e) => setVehicleSearchQuery(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    {vehicleSearchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setVehicleSearchQuery('')}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs cursor-pointer"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Filter Tabs */}
+                                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-[11px] font-medium">
+                                    {(['ALL', 'DT', 'EXCA', 'FT'] as const).map(tab => (
+                                        <button
+                                            key={tab}
+                                            type="button"
+                                            onClick={() => setVehicleTypeFilter(tab)}
+                                            className={`flex-1 py-1 rounded text-center transition cursor-pointer text-xs ${
+                                                vehicleTypeFilter === tab 
+                                                    ? 'bg-white text-gray-900 shadow-xs font-bold' 
+                                                    : 'text-gray-500 hover:text-gray-900'
+                                            }`}
+                                        >
+                                            {tab === 'ALL' ? 'Semua' : tab === 'DT' ? 'Truck' : tab === 'EXCA' ? 'Exca' : 'Fuel'}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Vehicle List Panel */}
+                                <div className="flex flex-col gap-1.5 max-h-[500px] overflow-y-auto pr-1">
+                                    {filteredVehicles.length === 0 ? (
+                                        <div className="p-4 text-center text-xs text-gray-400">
+                                            Tidak ada unit yang cocok dengan pencarian "{vehicleSearchQuery}"
+                                        </div>
+                                    ) : (
+                                        filteredVehicles.map((v) => {
+                                            const isSelected = v.id === currentVehicle.id;
+                                            return (
+                                                <button
+                                                    key={v.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedVehicleId(v.id)}
+                                                    className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between gap-2 transition cursor-pointer border ${
+                                                        isSelected 
+                                                            ? 'bg-blue-50/90 border-blue-300 text-blue-900 shadow-xs ring-1 ring-blue-300' 
+                                                            : 'bg-slate-50/60 hover:bg-slate-100/90 border-slate-200/80 text-gray-700'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        <div className={`p-1.5 rounded-lg shrink-0 ${
+                                                            v.type === 'EXCA' ? 'bg-amber-100 text-amber-700' :
+                                                            v.type === 'FT' ? 'bg-emerald-100 text-emerald-700' :
+                                                            'bg-blue-100 text-blue-700'
+                                                        }`}>
+                                                            {v.type === 'EXCA' ? <LandPlot className="w-3.5 h-3.5" /> : <Truck className="w-3.5 h-3.5" />}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="font-bold text-xs truncate text-gray-900">{v.plateNo}</span>
+                                                                {v.is_registered && (
+                                                                    <span className="text-[8px] font-extrabold px-1 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-300">
+                                                                        CMSV6
+                                                                    </span>
+                                                                )}
+                                                                <span className={`text-[9px] font-bold px-1 rounded ${
+                                                                    v.type === 'EXCA' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+                                                                    v.type === 'FT' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+                                                                    'bg-blue-50 text-blue-800 border border-blue-200'
+                                                                }`}>
+                                                                    {v.type}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-[10px] text-gray-400 truncate font-mono">
+                                                                Device: {v.deviceNo} • {v.site}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                        <span className={`w-2 h-2 rounded-full ${
+                                                            v.status === 'ONLINE' ? 'bg-emerald-500 shadow-xs' : 
+                                                            v.is_registered ? 'bg-amber-400' : 'bg-slate-300'
+                                                        }`} title={v.status === 'ONLINE' ? 'Online' : v.is_registered ? 'Standby di Pit' : 'Belum Terdaftar'}></span>
+                                                        {isSelected && <Check className="w-4 h-4 text-blue-600" />}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Separator Line */}
-                            <div className="hidden sm:block h-8 w-px bg-slate-200" />
+                            {/* Card 2: Diagnostik Hardware Unit Terpilih */}
+                            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex flex-col gap-2.5">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                        <Activity className="w-3.5 h-3.5 text-blue-600" />
+                                        Diagnostik Hardware
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+                                        {currentVehicle.plateNo}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
+                                        <span className="text-[10px] text-gray-400 uppercase font-medium">Sinyal 4G MDVR</span>
+                                        <span className={`font-bold mt-0.5 ${
+                                            currentVehicle.status === 'ONLINE' ? 'text-emerald-600' :
+                                            currentVehicle.is_registered ? 'text-amber-600' : 'text-slate-500'
+                                        }`}>
+                                            {currentVehicle.status === 'ONLINE' ? 'Kuat (-68 dBm)' : 
+                                             currentVehicle.is_registered ? 'Standby di Pit' : 'Belum Terdaftar'}
+                                        </span>
+                                    </div>
+                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
+                                        <span className="text-[10px] text-gray-400 uppercase font-medium">GPS Satelit</span>
+                                        <span className="font-bold text-blue-700 mt-0.5">
+                                            {currentVehicle.is_registered ? '18 Terkunci' : '0 Terkunci'}
+                                        </span>
+                                    </div>
+                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
+                                        <span className="text-[10px] text-gray-400 uppercase font-medium">Storage MDVR</span>
+                                        <span className="font-bold text-gray-800 mt-0.5">256 GB (Normal)</span>
+                                    </div>
+                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
+                                        <span className="text-[10px] text-gray-400 uppercase font-medium">Kondisi Mesin</span>
+                                        <span className={`font-bold mt-0.5 ${
+                                            currentVehicle.status === 'ONLINE' ? 'text-emerald-600' :
+                                            currentVehicle.is_registered ? 'text-amber-600' : 'text-slate-500'
+                                        }`}>
+                                            {currentVehicle.status === 'ONLINE' ? 'ON (Running)' :
+                                             currentVehicle.is_registered ? 'STANDBY (Engine OFF)' : 'STANDBY (Virtual)'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 text-[11px] flex items-center justify-between">
+                                    <span className="text-gray-500">Kanal Video Aktif:</span>
+                                    <span className="font-semibold text-gray-800">CH1 Jalan • CH2 Kabin DMS</span>
+                                </div>
+                            </div>
 
-                            {/* ── DROPDOWN UNIFIED DASHCAM (KIRI) ── */}
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
-                                    className="flex items-center gap-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white pl-3.5 pr-3 py-2 rounded-xl shadow-md hover:from-slate-800 hover:to-slate-700 transition cursor-pointer border border-slate-700/70 group"
-                                    title="Klik untuk memilih unit Dashcam PT. HPU"
-                                >
-                                    <div className="flex items-center gap-2.5">
-                                        <div className={`p-1.5 rounded-lg shrink-0 ${
-                                            currentVehicle.type === 'EXCA' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                                            currentVehicle.type === 'FT' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                                            'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            {/* Card 3: CMSV6 Gateway & Dispatch Network */}
+                            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex flex-col gap-2">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2 text-xs">
+                                    <span className="font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Radio className="w-3.5 h-3.5 text-blue-600" />
+                                        Gateway & Dispatch
+                                    </span>
+                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                        Online 100%
+                                    </span>
+                                </div>
+                                <div className="space-y-1.5 text-xs">
+                                    <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200/80">
+                                        <span className="text-gray-500 text-[11px]">Server CMSV6:</span>
+                                        <span className="font-mono font-bold text-gray-800 text-[11px]">10.10.0.33:8088</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200/80">
+                                        <span className="text-gray-500 text-[11px]">Radio Tambang:</span>
+                                        <span className="font-semibold text-blue-700 text-[11px]">CH-04 Pit Front West</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200/80">
+                                        <span className="text-gray-500 text-[11px]">Safety Officer:</span>
+                                        <span className="font-semibold text-gray-800 text-[11px]">Rahmat H. (HSE-09)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 4: Status Kesiapan Armada Tambang */}
+                            <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-xs flex flex-col gap-2">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 text-xs">
+                                    <span className="font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Layers className="w-3.5 h-3.5 text-blue-600" />
+                                        Kesiapan Armada
+                                    </span>
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                        20/20 Aktif
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
+                                    <div className="bg-slate-50 p-1.5 rounded-lg border border-slate-200/80">
+                                        <span className="text-[9px] text-gray-400 font-bold uppercase block">DT Hauler</span>
+                                        <span className="font-bold text-blue-700 text-xs">14 Unit</span>
+                                    </div>
+                                    <div className="bg-slate-50 p-1.5 rounded-lg border border-slate-200/80">
+                                        <span className="text-[9px] text-gray-400 font-bold uppercase block">Excavator</span>
+                                        <span className="font-bold text-amber-700 text-xs">4 Unit</span>
+                                    </div>
+                                    <div className="bg-slate-50 p-1.5 rounded-lg border border-slate-200/80">
+                                        <span className="text-[9px] text-gray-400 font-bold uppercase block">Fuel Truck</span>
+                                        <span className="font-bold text-emerald-700 text-xs">2 Unit</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── KOLOM KANAN (lg:col-span-9): LIVECAM SURVEILLANCE & MODULAR METRICS (CARDS) ── */}
+                        <div className="lg:col-span-9 space-y-4 min-w-0">
+                            {/* Card 5: Integrated Video Surveillance & Command Center Card */}
+                            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs space-y-3">
+                                {/* Command Bar Inside Surveillance Card */}
+                                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                    {/* Left: Selected Unit Info */}
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg shrink-0 ${
+                                            currentVehicle.type === 'EXCA' ? 'bg-amber-100 text-amber-700' :
+                                            currentVehicle.type === 'FT' ? 'bg-emerald-100 text-emerald-700' :
+                                            'bg-blue-100 text-blue-700'
                                         }`}>
                                             {currentVehicle.type === 'EXCA' ? <LandPlot className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
                                         </div>
-                                        <div className="text-left">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="font-black text-sm tracking-wide text-white">{currentVehicle.plateNo}</span>
-                                                <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${
-                                                    currentVehicle.type === 'EXCA' ? 'bg-amber-500/30 text-amber-300' :
-                                                    currentVehicle.type === 'FT' ? 'bg-emerald-500/30 text-emerald-300' :
-                                                    'bg-blue-500/30 text-blue-300'
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h2 className="text-sm font-bold text-gray-900 tracking-tight">
+                                                    {currentVehicle.plateNo}
+                                                </h2>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                                                    currentVehicle.type === 'EXCA' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+                                                    currentVehicle.type === 'FT' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+                                                    'bg-blue-50 text-blue-800 border border-blue-200'
                                                 }`}>
                                                     {currentVehicle.type}
                                                 </span>
                                             </div>
-                                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                Device: {currentVehicle.deviceNo} • {currentVehicle.site}
+                                            <p className="text-[11px] text-gray-400 font-mono">
+                                                Device ID: {currentVehicle.deviceNo} • Site: {currentVehicle.site}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: View Mode, Stream Engine & Status Indicators */}
+                                    <div className="flex flex-wrap items-center gap-2.5">
+                                        {/* View Mode Switcher */}
+                                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-medium">
+                                            <button
+                                                type="button"
+                                                onClick={() => setCameraViewMode('dual')}
+                                                className={`px-2.5 py-1 rounded-md transition flex items-center gap-1.5 cursor-pointer ${
+                                                    cameraViewMode === 'dual' 
+                                                        ? 'bg-blue-600 text-white shadow-xs font-bold' 
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                }`}
+                                            >
+                                                <LayoutGrid className="w-3.5 h-3.5" />
+                                                <span>Dual View</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCameraViewMode('cam1')}
+                                                className={`px-2.5 py-1 rounded-md transition flex items-center gap-1.5 cursor-pointer ${
+                                                    cameraViewMode === 'cam1' 
+                                                        ? 'bg-blue-600 text-white shadow-xs font-bold' 
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                }`}
+                                            >
+                                                <Video className="w-3.5 h-3.5" />
+                                                <span>CAM 1</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCameraViewMode('cam2')}
+                                                className={`px-2.5 py-1 rounded-md transition flex items-center gap-1.5 cursor-pointer ${
+                                                    cameraViewMode === 'cam2' 
+                                                        ? 'bg-blue-600 text-white shadow-xs font-bold' 
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                }`}
+                                            >
+                                                <User className="w-3.5 h-3.5" />
+                                                <span>CAM 2</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCameraViewMode('stacked')}
+                                                className={`px-2.5 py-1 rounded-md transition flex items-center gap-1.5 cursor-pointer ${
+                                                    cameraViewMode === 'stacked' 
+                                                        ? 'bg-blue-600 text-white shadow-xs font-bold' 
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                }`}
+                                            >
+                                                <Rows className="w-3.5 h-3.5" />
+                                                <span>Vertikal</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Stream Engine Selector & Demo Toggle */}
+                                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-medium gap-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setStreamEngine('cmsv6'); setIsDemoMode(false); }}
+                                                className={`px-2 py-1 rounded-md transition cursor-pointer text-xs ${
+                                                    streamEngine === 'cmsv6' && !isDemoMode
+                                                        ? 'bg-white text-gray-900 shadow-xs font-bold' 
+                                                        : 'text-gray-500 hover:text-gray-900'
+                                                }`}
+                                                title="Gunakan CMSV6 Official H5 Video Player dari server 182.253.27.12"
+                                            >
+                                                Official H5
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setStreamEngine('flv'); setIsDemoMode(false); }}
+                                                className={`px-2 py-1 rounded-md transition cursor-pointer text-xs ${
+                                                    streamEngine === 'flv' && !isDemoMode
+                                                        ? 'bg-white text-gray-900 shadow-xs font-bold' 
+                                                        : 'text-gray-500 hover:text-gray-900'
+                                                }`}
+                                                title="Gunakan Direct HTTP-FLV Media Stream Port 6604"
+                                            >
+                                                FLV Direct
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsDemoMode(!isDemoMode)}
+                                                className={`px-2.5 py-1 rounded-md transition cursor-pointer text-xs font-bold flex items-center gap-1 ${
+                                                    isDemoMode
+                                                        ? 'bg-emerald-600 text-white shadow-xs' 
+                                                        : 'text-slate-600 hover:text-emerald-700 bg-white/70'
+                                                }`}
+                                                title="Aktifkan simulasi streaming video demo pit hauling & kabin DMS saat armada offline"
+                                            >
+                                                <span>🎬</span>
+                                                <span>{isDemoMode ? 'Demo Aktif' : 'Demo Stream'}</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Refresh Player Button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const oldJ = jsession;
+                                                setJsession('');
+                                                setTimeout(() => setJsession(oldJ), 300);
+                                            }}
+                                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-gray-600 hover:text-blue-600 transition cursor-pointer"
+                                            title="Muat Ulang Video Feed"
+                                        >
+                                            <RotateCw className="w-3.5 h-3.5" />
+                                        </button>
+
+                                        {/* Live Status Indicators */}
+                                        <div className="flex items-center gap-1.5 text-xs">
+                                            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                                LIVE
+                                            </span>
+                                            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                CMSV6 OK
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Video Player Frame (Aspect Ratio Preserved) */}
+                                <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-lg">
+                                    {/* Video Player Top Bar (CCTV OSD Header) */}
+                                    <div className="bg-slate-900/95 border-b border-slate-800/80 px-3.5 py-2 flex items-center justify-between text-xs text-slate-300">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                                            <span className="w-2.5 h-2.5 rounded-full bg-rose-600 -ml-4.5"></span>
+                                            <span className="font-bold tracking-wide uppercase text-white text-[11px]">
+                                                Live CCTV & Cabin AI Surveillance
+                                            </span>
+                                            <span className="text-slate-500">•</span>
+                                            <span className="font-mono text-slate-400 text-[11px]">
+                                                {currentVehicle.plateNo} ({currentVehicle.deviceNo})
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-3 font-mono text-[11px]">
+                                            <span className="text-emerald-400 font-semibold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/50">
+                                                1080P HD 30FPS
+                                            </span>
+                                            <span className="text-slate-400">
+                                                {new Date().toLocaleTimeString('id-ID')}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Video Feeds Container */}
+                                    <div className="p-2 sm:p-2.5 bg-black">
+                                        {cameraViewMode === 'dual' && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5">
+                                                {activeChannels.map(ch => (
+                                                    <div 
+                                                        key={ch.id}
+                                                        className="relative aspect-video bg-black rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group"
+                                                    >
+                                                        <iframe
+                                                            src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                            className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
+                                                            scrolling="no"
+                                                            style={{ overflow: 'hidden' }}
+                                                            title={ch.label}
+                                                            allowFullScreen
+                                                            allow="autoplay; fullscreen; camera; microphone; encrypted-media"
+                                                        />
+                                                        <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
+                                                            <span className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold px-2 py-0.8 rounded-md border border-white/10">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                                                {ch.label}
+                                                            </span>
+                                                        </div>
+                                                        <div className="absolute bottom-1.5 left-2 right-2 z-10 pointer-events-none flex items-center justify-between text-[10px] text-white/80 font-mono bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded">
+                                                            <span>Lat: {telemetry.lat?.toFixed(5) ?? '-7.65820'}, Lng: {telemetry.lng?.toFixed(5) ?? '111.18950'} • Speed: {telemetry.speed} km/j</span>
+                                                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> LIVE
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {cameraViewMode === 'cam1' && (
+                                            <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden border border-slate-800">
+                                                <iframe
+                                                    src={camUrl(currentVehicle.deviceNo, 0, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                    className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
+                                                    scrolling="no"
+                                                    style={{ overflow: 'hidden' }}
+                                                    title="CAM 1 - Depan (Jalan)"
+                                                    allowFullScreen
+                                                    allow="autoplay; fullscreen; camera; microphone; encrypted-media"
+                                                />
+                                                <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                                                    <span className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-md border border-white/10">
+                                                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                                        CAM 1 — Depan (Jalan)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {cameraViewMode === 'cam2' && (
+                                            <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden border border-slate-800">
+                                                <iframe
+                                                    src={camUrl(currentVehicle.deviceNo, 1, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                    className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
+                                                    scrolling="no"
+                                                    style={{ overflow: 'hidden' }}
+                                                    title="CAM 2 - Kabin Pengemudi"
+                                                    allowFullScreen
+                                                    allow="autoplay; fullscreen; camera; microphone; encrypted-media"
+                                                />
+                                                <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                                                    <span className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-md border border-white/10">
+                                                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                                        CAM 2 — Kabin Pengemudi
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {cameraViewMode === 'stacked' && (
+                                            <div className="flex flex-col gap-3">
+                                                {activeChannels.map(ch => (
+                                                    <div
+                                                        key={ch.id}
+                                                        className="relative bg-black rounded-lg overflow-hidden border border-slate-800 h-[360px]"
+                                                    >
+                                                        <iframe
+                                                            src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                            className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
+                                                            scrolling="no"
+                                                            style={{ overflow: 'hidden' }}
+                                                            title={ch.label}
+                                                            allowFullScreen
+                                                            allow="autoplay; fullscreen; camera; microphone; encrypted-media"
+                                                        />
+                                                        <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
+                                                            <span className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-md border border-white/10">
+                                                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                                                {ch.label}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ── MODULAR CARDS: ROW 1 (HAULING / EXCA + GPS & GEOFENCE) ── */}
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
+                                <div className="xl:col-span-7 flex flex-col">
+                                    {selectedVehicle === 'DT' ? (
+                                        /* Card 6: SIKLUS OPERASIONAL HAULING */
+                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
+                                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                        <Activity className="w-3.5 h-3.5 text-blue-600" />
+                                                        SIKLUS OPERASIONAL HAULING
+                                                    </span>
+                                                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                                                        Tahap: {haulingStage}
+                                                    </span>
+                                                </div>
+
+                                                {/* Stepper Progress */}
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs font-bold">
+                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
+                                                        haulingStage === 'LOADING' 
+                                                            ? 'bg-blue-50 border-blue-300 text-blue-800 shadow-xs' 
+                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
+                                                    }`}>
+                                                        <Layers className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                        <span className="truncate">1. Loading</span>
+                                                    </div>
+                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
+                                                        haulingStage === 'TRAVEL_ISI' 
+                                                            ? 'bg-blue-50 border-blue-300 text-blue-800 shadow-xs' 
+                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
+                                                    }`}>
+                                                        <Truck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                        <span className="truncate">2. Travel Isi</span>
+                                                    </div>
+                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
+                                                        haulingStage === 'DUMPING' 
+                                                            ? 'bg-amber-50 border-amber-300 text-amber-800 shadow-xs' 
+                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
+                                                    }`}>
+                                                        <ArrowRightCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                                        <span className="truncate">3. Dumping</span>
+                                                    </div>
+                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
+                                                        haulingStage === 'TRAVEL_KOSONG' 
+                                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-xs' 
+                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
+                                                    }`}>
+                                                        <RotateCcw className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                                        <span className="truncate">4. Trv Kosong</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Trip Info & Big RIT Box */}
+                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
+                                                    <div className="md:col-span-8 flex flex-col gap-1.5 text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Start Pit:</span>
+                                                            <span className="font-bold text-gray-800">{currentTrip.startTime}, {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Durasi:</span>
+                                                            <span className="font-bold text-gray-800">{currentTrip.nowTime}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Tujuan:</span>
+                                                            <span className="font-bold text-gray-800 truncate">{currentTrip.finishArea}</span>
+                                                        </div>
+                                                        <div className="mt-1">
+                                                            <div className="flex justify-between text-xs font-semibold text-gray-500 mb-1">
+                                                                <span>Progress Trip</span>
+                                                                <span className="font-mono text-blue-600 font-bold">{currentTrip.tripProgress}%</span>
+                                                            </div>
+                                                            <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
+                                                                <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style={{ width: `${currentTrip.tripProgress}%` }}></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="md:col-span-4 flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-slate-200/80 text-center gap-0.5">
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Total Ritasi</p>
+                                                        <p className="text-2xl font-black text-blue-700 leading-none">
+                                                            {ritasiToday} <span className="text-xs font-bold text-gray-500">RIT</span>
+                                                        </p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={runHaulingSimulation}
+                                                            disabled={isSimulatingTrip}
+                                                            className="w-full mt-1.5 py-1 px-2 rounded-md text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-xs transition flex items-center justify-center gap-1 disabled:opacity-50 cursor-pointer"
+                                                        >
+                                                            <Play className="w-2.5 h-2.5 fill-white" />
+                                                            {isSimulatingTrip ? 'Berjalan...' : 'Simulasi 5 Siklus'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Material Selector */}
+                                            <div className="pt-2.5 mt-2.5 border-t border-slate-100">
+                                                <div className="flex items-center justify-between mb-1.5 text-xs">
+                                                    <span className="font-bold text-gray-700 flex items-center gap-1">
+                                                        <Layers className="w-3 h-3 text-gray-400" /> Material Muatan:
+                                                    </span>
+                                                    <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-[11px]">
+                                                        {selectedMaterial}
+                                                    </span>
+                                                </div>
+                                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                                                    {[
+                                                        { name: 'OB', label: 'OB (Overburden)', bg: 'bg-slate-700' },
+                                                        { name: 'COAL', label: 'Coal (Batubara)', bg: 'bg-gray-900' },
+                                                        { name: 'MUD', label: 'Mud (Lumpur)', bg: 'bg-amber-800' },
+                                                        { name: 'TOP SOIL', label: 'Top Soil', bg: 'bg-orange-700' },
+                                                        { name: 'LIMONIT', label: 'Limonit', bg: 'bg-yellow-700' },
+                                                        { name: 'SAPROLIT', label: 'Saprolit', bg: 'bg-emerald-800' },
+                                                    ].map(mat => (
+                                                        <button
+                                                            key={mat.name}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedMaterial(mat.name as MaterialType);
+                                                                setGeofenceNotice(`Material diubah ke: ${mat.name}`);
+                                                                setTimeout(() => setGeofenceNotice(null), 3000);
+                                                            }}
+                                                            className={`py-1 px-1.5 rounded-lg text-[11px] font-bold text-white transition cursor-pointer text-center truncate ${mat.bg} ${
+                                                                selectedMaterial === mat.name ? 'ring-2 ring-blue-500 shadow-xs' : 'opacity-80 hover:opacity-100'
+                                                            }`}
+                                                            title={mat.label}
+                                                        >
+                                                            {mat.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Card 6 (Excavator): AI TRUCK DETECTION */
+                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
+                                            <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
+                                                <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                    <Scan className="w-3.5 h-3.5 text-blue-600" />
+                                                    AI TRUCK DETECTION & LOADING ZONE
+                                                </span>
+                                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                    <Truck className="w-3 h-3" /> TRUK TERDETEKSI
+                                                </span>
+                                            </div>
+                                            <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 flex flex-col gap-2">
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-gray-400 font-semibold uppercase text-[10px]">Unit DT Terkunci</span>
+                                                    <span className="text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-gray-700">Jarak: 3.2m</span>
+                                                </div>
+                                                <div className="flex items-baseline gap-2">
+                                                    <h4 className="text-xl font-bold text-blue-700">HD-78501</h4>
+                                                    <span className="text-xs text-gray-400 font-mono">ID: 240078916116</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
+                                                    <div className="bg-white p-2 rounded border border-slate-200">
+                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Operator DT</p>
+                                                        <p className="font-bold text-gray-800">Sandi Setiawan</p>
+                                                    </div>
+                                                    <div className="bg-white p-2 rounded border border-slate-200">
+                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Kapasitas Vessel</p>
+                                                        <p className="font-bold text-gray-800">~20 BCM (30 Ton)</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="xl:col-span-5 flex flex-col">
+                                    {/* Card 7: LIVE GPS LOCATION & GEOFENCE TAMBANG */}
+                                    <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
+                                                <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                                                    GPS & GEOFENCE TAMBANG
+                                                </span>
+                                                <button
+                                                    onClick={() => setShowGeofenceModal(true)}
+                                                    className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Tambah Zona
+                                                </button>
+                                            </div>
+
+                                            {/* Map Viewport */}
+                                            <div className="relative h-[220px] w-full rounded-lg overflow-hidden border border-slate-200 bg-slate-900">
+                                                <Map
+                                                    center={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
+                                                    zoom={14}
+                                                    attribution={false}
+                                                >
+                                                    {/* Geofence Circles */}
+                                                    {geofences.map(gf => {
+                                                        const lat = gf.coordinates?.lat || -7.6582;
+                                                        const lng = gf.coordinates?.lng || 111.1895;
+                                                        const r = gf.radius || 100;
+                                                        const pxRadius = Math.max(20, Math.min(100, Math.round(r / 3.5)));
+                                                        return (
+                                                            <Overlay key={gf.id} anchor={[lat, lng]} offset={[pxRadius, pxRadius]}>
+                                                                <div
+                                                                    style={{
+                                                                        width: `${pxRadius * 2}px`,
+                                                                        height: `${pxRadius * 2}px`,
+                                                                        borderColor: gf.color || '#2563EB',
+                                                                        backgroundColor: `${gf.color || '#2563EB'}22`,
+                                                                    }}
+                                                                    className="rounded-full border-2 border-dashed pointer-events-none flex items-center justify-center"
+                                                                >
+                                                                    <span
+                                                                        style={{ color: gf.color || '#2563EB', backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                                                        className="text-[9px] font-bold px-1 rounded shadow-xs truncate max-w-[90px]"
+                                                                    >
+                                                                        {gf.name}
+                                                                    </span>
+                                                                </div>
+                                                            </Overlay>
+                                                        );
+                                                    })}
+
+                                                    {/* Live Unit Marker */}
+                                                    <Marker
+                                                        anchor={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
+                                                        payload={1}
+                                                    >
+                                                        <div className="relative flex items-center justify-center -translate-x-1/2 -translate-y-1/2">
+                                                            <span className="absolute w-8 h-8 rounded-full bg-blue-500/30 animate-ping"></span>
+                                                            <div className="w-7 h-7 rounded-full bg-blue-600 border-2 border-white shadow-md flex items-center justify-center text-white">
+                                                                <Truck className="w-3.5 h-3.5" />
+                                                            </div>
+                                                        </div>
+                                                    </Marker>
+                                                </Map>
+                                            </div>
+
+                                            {/* Quick Telemetry Under Map */}
+                                            <div className="grid grid-cols-4 gap-1 text-center mt-2 p-1.5 rounded-lg bg-slate-50 border border-slate-200/80">
+                                                <div>
+                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Speed</p>
+                                                    <p className="font-bold text-gray-900 text-xs">{telemetry.speed} km/j</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Odometer</p>
+                                                    <p className="font-bold text-blue-600 text-xs">{telemetry.distance.toFixed(1)} km</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Geofence</p>
+                                                    <p className="font-bold text-gray-800 truncate px-1 text-[11px]">
+                                                        {activeGeofence ? activeGeofence.name : 'Luar Area'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Ritasi</p>
+                                                    <p className="font-bold text-blue-600 text-xs">{ritasiToday} trip</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Zones List */}
+                                        <div className="mt-2 pt-2 border-t border-slate-100">
+                                            <div className="flex items-center justify-between mb-1 text-xs">
+                                                <span className="font-bold text-gray-700 text-[11px]">Zona Tambang ({geofences.length}):</span>
+                                                <button
+                                                    onClick={handleResetRitasi}
+                                                    className="text-[10px] font-semibold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <RotateCw className="w-2.5 h-2.5" /> Reset
+                                                </button>
+                                            </div>
+                                            <div className="max-h-24 overflow-y-auto space-y-1 pr-1">
+                                                {geofences.map(gf => (
+                                                    <div key={gf.id} className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-[11px]">
+                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: gf.color || '#2563EB' }}></span>
+                                                            <span className="font-semibold text-gray-800 truncate">{gf.name}</span>
+                                                            <span className="text-[9px] font-bold uppercase px-1 rounded bg-white text-gray-600 shrink-0 border border-slate-200">
+                                                                {gf.type}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] font-mono text-gray-400 shrink-0">R: {gf.radius}m</span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
-                                    <ChevronDown className={`w-4 h-4 text-slate-400 group-hover:text-white transition-transform duration-200 ml-1 ${isVehicleDropdownOpen ? 'rotate-180 text-white' : ''}`} />
-                                </button>
+                                </div>
+                            </div>
 
-                                {/* Dropdown Menu Panel Modal */}
-                                {isVehicleDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setIsVehicleDropdownOpen(false)} />
-                                        <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl z-50 p-3 flex flex-col gap-2.5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
-                                            {/* Header Box Dropdown */}
-                                            <div className="flex items-center justify-between pb-2 border-b border-slate-800 px-1">
-                                                <div>
-                                                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
-                                                        <Video className="w-3.5 h-3.5 text-blue-400" />
-                                                        Pilih Unit Dashcam PT. HPU
-                                                    </h4>
-                                                    <p className="text-[11px] text-slate-400">Total {fleet.length} Unit Terdaftar di Server</p>
+                            {/* ── MODULAR CARDS: ROW 2 (TELEMETRI & SENSOR + OPERATOR DETAIL) ── */}
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
+                                <div className="xl:col-span-7 flex flex-col">
+                                    {selectedVehicle === 'DT' ? (
+                                        /* Card 8: TELEMETRI & SENSOR HARDWARE */
+                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
+                                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                        <Gauge className="w-3.5 h-3.5 text-blue-600" />
+                                                        TELEMETRI & SENSOR HARDWARE
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowRitasiHistoryModal(true)}
+                                                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                                                    >
+                                                        <FileText className="w-3 h-3" />
+                                                        Riwayat Ritasi ({ritasiLogs.length})
+                                                    </button>
                                                 </div>
-                                                <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-                                                    ● Live Ready
+
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center mb-3">
+                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
+                                                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-1">
+                                                            <Gauge className="w-3.5 h-3.5" />
+                                                        </div>
+                                                        <p className="text-sm font-bold text-gray-900 leading-tight">
+                                                            {telemetry.speed} <span className="text-[10px] font-normal text-gray-500">km/j</span>
+                                                        </p>
+                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Kecepatan</p>
+                                                    </div>
+                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
+                                                        <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-1">
+                                                            <Clock className="w-3.5 h-3.5" />
+                                                        </div>
+                                                        <p className="text-sm font-bold text-purple-700 leading-tight">
+                                                            {avgCycleTimeToday || 22} <span className="text-[10px] font-normal text-gray-500">min</span>
+                                                        </p>
+                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Cycle Time</p>
+                                                    </div>
+                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
+                                                        <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-1">
+                                                            <Power className="w-3.5 h-3.5" />
+                                                        </div>
+                                                        <p className="text-sm font-bold text-emerald-700 leading-tight">
+                                                            98,765 <span className="text-[10px] font-normal text-gray-500">HM</span>
+                                                        </p>
+                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Hour Meter</p>
+                                                    </div>
+                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
+                                                        <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1">
+                                                            <Fuel className="w-3.5 h-3.5" />
+                                                        </div>
+                                                        <p className="text-sm font-bold text-amber-700 leading-tight">
+                                                            {telemetry.fuel} <span className="text-[10px] font-normal text-gray-500">L</span>
+                                                        </p>
+                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Konsumsi BBM</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Sensors Row */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1">
+                                                <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase">Engine Status</p>
+                                                    <p className={`text-xs font-bold mt-0.5 ${
+                                                        currentVehicle.status === 'ONLINE' ? 'text-emerald-600' :
+                                                        currentVehicle.is_registered ? 'text-amber-600' : 'text-slate-500'
+                                                    }`}>
+                                                        {currentVehicle.status === 'ONLINE' ? 'ON (RUNNING)' :
+                                                         currentVehicle.is_registered ? 'STANDBY (OFF)' : 'VIRTUAL (OFF)'}
+                                                    </p>
+                                                </div>
+                                                <div className={`p-2.5 rounded-lg border text-center flex flex-col items-center justify-center transition ${
+                                                    ptoActive ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-slate-50 border-slate-200/80 text-gray-700'
+                                                }`}>
+                                                    <p className="text-[10px] font-bold uppercase text-gray-400">Sensor Hidrolik PTO</p>
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        <span className="font-bold text-xs">{ptoActive ? 'ON (DUMPING)' : 'OFF (NORMAL)'}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPtoActive(!ptoActive)}
+                                                            className="text-[10px] font-semibold text-blue-600 hover:underline cursor-pointer"
+                                                        >
+                                                            {ptoActive ? '(Turunkan)' : '(Uji)'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase">Produksi BCM</p>
+                                                    <p className="text-xs font-bold text-gray-900 mt-0.5">{totalBcmToday} BCM ({totalDistanceKm.toFixed(1)} km)</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Card 8 (Excavator): STATUS PEMUATAN */
+                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
+                                            <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
+                                                <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                    <Activity className="w-3.5 h-3.5 text-blue-600" />
+                                                    STATUS PEMUATAN (LOADING)
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex justify-between items-end text-xs">
+                                                    <div>
+                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Estimasi Muatan</p>
+                                                        <p className="text-lg font-bold text-amber-600">14.5 <span className="text-xs font-normal text-gray-500">BCM</span></p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Target</p>
+                                                        <p className="text-lg font-bold text-gray-900">20.0 <span className="text-xs font-normal text-gray-500">BCM</span></p>
+                                                    </div>
+                                                </div>
+                                                <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                                                    <div className="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style={{ width: '72%' }}></div>
+                                                </div>
+                                                <div className="flex justify-between text-xs font-semibold text-gray-500">
+                                                    <span>Pass 3 dari 4</span>
+                                                    <span className="text-amber-600 font-bold">72% Terisi</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="xl:col-span-5 flex flex-col">
+                                    {/* Card 9: OPERATOR DETAIL */}
+                                    <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
+                                                <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                    <User className="w-3.5 h-3.5 text-blue-600" />
+                                                    OPERATOR DETAIL
+                                                </span>
+                                                <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> 4.6
                                                 </span>
                                             </div>
 
-                                            {/* Search Input Box */}
-                                            <div className="relative">
-                                                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Cari unit (misal: 44123, EXCA, DT, KDA)..."
-                                                    value={vehicleSearchQuery}
-                                                    onChange={(e) => setVehicleSearchQuery(e.target.value)}
-                                                    className="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-medium"
-                                                    autoFocus
-                                                />
-                                            </div>
-
-                                            {/* Filter Tabs */}
-                                            <div className="flex items-center gap-1 bg-slate-800/60 p-1 rounded-xl border border-slate-800 text-[11px] font-semibold">
-                                                {(['ALL', 'DT', 'EXCA', 'FT'] as const).map(tab => (
-                                                    <button
-                                                        key={tab}
-                                                        type="button"
-                                                        onClick={() => setVehicleTypeFilter(tab)}
-                                                        className={`flex-1 py-1 rounded-lg text-center transition cursor-pointer ${
-                                                            vehicleTypeFilter === tab 
-                                                                ? 'bg-blue-600 text-white shadow-sm font-bold' 
-                                                                : 'text-slate-400 hover:text-white'
-                                                        }`}
-                                                    >
-                                                        {tab === 'ALL' ? 'Semua' : tab === 'DT' ? 'Truck' : tab === 'EXCA' ? 'Exca' : 'Fuel'}
-                                                    </button>
-                                                ))}
-                                            </div>
-
-                                            {/* Vehicle List */}
-                                            <div className="max-h-72 overflow-y-auto flex flex-col gap-1 pr-1">
-                                                {filteredVehicles.length === 0 ? (
-                                                    <div className="p-4 text-center text-xs text-slate-500">
-                                                        Tidak ada unit yang cocok dengan "{vehicleSearchQuery}"
+                                            <div className="flex items-start justify-between gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-bold text-gray-900 truncate">
+                                                        {driver ? driver.name : targetDriver.name}
                                                     </div>
-                                                ) : (
-                                                    filteredVehicles.map((v) => {
-                                                        const isSelected = v.id === currentVehicle.id;
-                                                        return (
-                                                            <button
-                                                                key={v.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedVehicleId(v.id);
-                                                                    setIsVehicleDropdownOpen(false);
-                                                                    setVehicleSearchQuery('');
-                                                                }}
-                                                                className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between gap-2.5 transition cursor-pointer border ${
-                                                                    isSelected 
-                                                                        ? 'bg-blue-600/25 border-blue-500/50 text-white' 
-                                                                        : 'hover:bg-slate-800/80 border-transparent text-slate-300'
-                                                                }`}
-                                                            >
-                                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                                    <div className={`p-2 rounded-lg shrink-0 ${
-                                                                        v.type === 'EXCA' ? 'bg-amber-500/20 text-amber-400' :
-                                                                        v.type === 'FT' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                                        'bg-blue-500/20 text-blue-400'
-                                                                    }`}>
-                                                                        {v.type === 'EXCA' ? <LandPlot className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
-                                                                    </div>
-                                                                    <div className="min-w-0">
-                                                                        <div className="flex items-center gap-1.5">
-                                                                            <span className="font-bold text-xs truncate text-white">{v.plateNo}</span>
-                                                                            <span className={`text-[9px] font-black uppercase px-1 rounded ${
-                                                                                v.type === 'EXCA' ? 'bg-amber-500/30 text-amber-300' :
-                                                                                v.type === 'FT' ? 'bg-emerald-500/30 text-emerald-300' :
-                                                                                'bg-blue-500/30 text-blue-300'
-                                                                            }`}>
-                                                                                {v.type}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="text-[10px] text-slate-400 truncate font-mono">
-                                                                            Device: {v.deviceNo} • {v.site}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        <span className="bg-white text-gray-700 text-[11px] font-semibold px-2 py-0.2 rounded-full border border-slate-200">
+                                                            {currentVehicle.plateNo}
+                                                        </span>
+                                                        <span className="text-[11px] text-gray-400 font-mono">
+                                                            NIK: {driver ? driver.id : targetDriver.id}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-2 flex flex-col gap-1 text-[11px] text-gray-500">
+                                                        <span className="flex items-center gap-1">
+                                                            <Phone className="w-3 h-3 text-gray-400" />
+                                                            +62 812 3456 7890
+                                                        </span>
+                                                        <span className="flex items-center gap-1">
+                                                            <MapPin className="w-3 h-3 text-gray-400" />
+                                                            {currentVehicle.site}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-2">
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Biometrik AI
+                                                        </span>
+                                                    </div>
+                                                </div>
 
-                                                                <div className="flex items-center gap-2 shrink-0">
-                                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
-                                                                    {isSelected && <Check className="w-4 h-4 text-blue-400" />}
-                                                                </div>
-                                                            </button>
-                                                        );
-                                                    })
-                                                )}
+                                                {/* Avatar Box */}
+                                                <div className="w-18 h-24 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-gray-400 overflow-hidden shrink-0">
+                                                    {previewPhoto ? (
+                                                        <img src={previewPhoto} alt="Operator" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <User size={36} strokeWidth={1.5} />
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
 
-                        {/* ── SISI KANAN: STATUS PERANGKAT & KONEKSI API ── */}
-                        <div className="flex items-center gap-2.5">
-                            {/* Status Perangkat Hardware (Online / Offline) */}
-                            <div className={`flex items-center gap-2 text-sm font-bold px-3.5 py-1.5 rounded-xl border ${telemetry.online ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
-                                    'bg-rose-50 border-rose-200 text-rose-600'
-                                }`}>
-                                <span className={`w-2.5 h-2.5 rounded-full ${telemetry.online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
-                                    }`}></span>
-                                {telemetry.online ? 'ONLINE' : 'OFFLINE'}
-                            </div>
+                                        {/* Face Scan Action */}
+                                        <div className="mt-3 space-y-2">
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    setIsScanningFace(true);
+                                                    const snap = await captureCabinFrame();
+                                                    if (snap) {
+                                                        setPreviewPhoto(snap);
+                                                    }
+                                                    setIsScanningFace(false);
+                                                }}
+                                                disabled={isScanningFace}
+                                                className="w-full py-1.5 px-3 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                            >
+                                                <Camera className="w-3.5 h-3.5" />
+                                                {isScanningFace ? 'Memindai dari Kabin...' : 'Pindai Wajah di Kabin'}
+                                            </button>
 
-                            {/* Status API Connection */}
-                            <div className={`hidden md:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border ${apiStatus === 'live' ? 'bg-blue-50 border-blue-200 text-blue-600' :
-                                    'bg-amber-50 border-amber-200 text-amber-600'
-                                }`}>
-                                <span className={`w-2 h-2 rounded-full ${apiStatus === 'live' ? 'bg-blue-500' : 'bg-amber-500 animate-pulse'}`}></span>
-                                {apiStatus === 'live' ? 'CMSV6 10.10.0.33 Live' : 'Connecting CMSV6'}
-                            </div>
-                        </div>
-                    </header>
+                                            <div className="flex items-center justify-between text-[11px] text-gray-400 pt-0.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCheckin(!showCheckin)}
+                                                    className="text-blue-600 hover:underline font-semibold cursor-pointer"
+                                                >
+                                                    {showCheckin ? 'Tutup Pilihan' : 'Pilih Manual Operator'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { fetchHistoryLogs(); setShowHistory(true); }}
+                                                    className="hover:text-blue-600 cursor-pointer flex items-center gap-1"
+                                                >
+                                                    <History className="w-3 h-3" /> Riwayat
+                                                </button>
+                                            </div>
 
-                    <div className="flex flex-1 flex-col p-5 md:p-6 overflow-y-auto gap-6">
-{/* Floating Emergency Alarm Banner */}
-                        {untreatedCriticalAlarm && !bannerDismissed && (
-                            <div className="bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 text-white p-3.5 rounded-2xl shadow-lg border border-red-400 flex items-center justify-between gap-3 animate-pulse">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-white/20 rounded-xl">
-                                        <ShieldAlert className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[12px] font-black uppercase tracking-wider bg-black/30 px-2 py-0.5 rounded-md border border-white/20">
-                                                {untreatedCriticalAlarm.category || 'AI Safety Alert'}
-                                            </span>
-                                            <span className="text-xs font-bold">{untreatedCriticalAlarm.desc}</span>
+                                            {showCheckin && (
+                                                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5 mt-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Cari nama atau NIK..."
+                                                        value={searchDriver}
+                                                        onChange={e => setSearchDriver(e.target.value)}
+                                                        className="w-full text-xs p-1.5 rounded border border-slate-200 bg-white"
+                                                    />
+                                                    <div className="max-h-36 overflow-y-auto space-y-1">
+                                                        {driverList.filter(d => d.name.toLowerCase().includes(searchDriver.toLowerCase()) || d.id.includes(searchDriver)).map(d => (
+                                                            <div
+                                                                key={d.id}
+                                                                onClick={() => {
+                                                                    setTargetDriver({ name: d.name, id: d.id, position: d.position || 'Operator' });
+                                                                    setShowCheckin(false);
+                                                                }}
+                                                                className="p-1.5 hover:bg-slate-200/70 rounded cursor-pointer text-xs flex justify-between"
+                                                            >
+                                                                <span className="font-bold text-gray-800">{d.name}</span>
+                                                                <span className="text-gray-400 font-mono text-[10px]">{d.id}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <p className="text-xs text-white/90 mt-0.5">
-                                            Unit: {untreatedCriticalAlarm.vehicle || 'TrialUNS2'} • Waktu: {untreatedCriticalAlarm.time} • Status: Menunggu Tindakan Safety Officer
-                                        </p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <button
-                                        onClick={() => handleQuickAction(untreatedCriticalAlarm.guid)}
-                                        className="text-xs font-bold bg-white text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl shadow transition cursor-pointer"
-                                    >
-                                        Tangani Sekarang
-                                    </button>
-                                    <button
-                                        onClick={() => setBannerDismissed(true)}
-                                        className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
-                                        title="Tutup banner"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
                             </div>
-                        )}
 
-                        {/* ══════════════════════════════════════════════════════════════
-                            HERO SECTION: LIVE CCTV SURVEILLANCE (ENLARGED & HIGHLIGHTED)
-                           ══════════════════════════════════════════════════════════════ */}
-                        <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
-                            {/* Surveillance Top Bar */}
-                            <div className="px-5 py-3.5 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-3 bg-slate-950/80">
-                                <div className="flex items-center gap-3">
-                                    <span className="relative flex h-3 w-3">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                            {/* ── MODULAR CARDS: ROW 3 (SAFETY ALARM & MONITORING DMS - FULL WIDTH CARD) ── */}
+                            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs space-y-3">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                        <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                                        SAFETY ALARM & MONITORING DMS
                                     </span>
                                     <div className="flex items-center gap-2">
-                                        <Video className="w-5 h-5 text-rose-400" />
-                                        <h2 className="text-sm font-bold text-white tracking-wide">
-                                            Live Dashcam & In-Cabin AI Surveillance
-                                        </h2>
+                                        {untreatedCount > 0 ? (
+                                            <span className="text-[11px] bg-rose-50 text-rose-700 border border-rose-200 font-bold px-2 py-0.5 rounded-full">
+                                                {untreatedCount} Perlu Tindakan
+                                            </span>
+                                        ) : (
+                                            <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <Check className="w-3 h-3" /> Aman
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => setShowSimulator(!showSimulator)}
+                                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Sparkles className="w-3 h-3" /> Tes Simulasi
+                                        </button>
                                     </div>
-                                    <span className="hidden sm:inline-flex items-center gap-1 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold">
-                                        ● DUAL LIVE 1080P HD
-                                    </span>
-                                    <span className="hidden md:inline-block text-xs text-slate-400 font-mono">
-                                        {`Unit ${currentVehicle.plateNo} (Device: ${currentVehicle.deviceNo})`}
-                                    </span>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-2.5">
-                                    {/* Stream Engine Toggle (Official CMSV6 Player vs FLV) */}
-                                    <div className="bg-slate-900 p-1 rounded-xl border border-slate-800 flex items-center text-xs">
-                                        <button
-                                            type="button"
-                                            onClick={() => setStreamEngine('cmsv6')}
-                                            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
-                                                streamEngine === 'cmsv6' 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Pemutar Resmi HTML5 CMSV6 dari Server HPU"
-                                        >
-                                            CMSV6 Official H5
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStreamEngine('flv')}
-                                            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
-                                                streamEngine === 'flv' 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Pemutar Low-Latency FLV.js Direct"
-                                        >
-                                            FLV Direct
-                                        </button>
+                                {/* Simulator Drawer */}
+                                {showSimulator && (
+                                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                                        <p className="font-bold text-gray-700 mb-1.5 text-[11px]">Pemicu Uji Alarm AI Safety:</p>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                            <button
+                                                onClick={() => triggerTestAlarm('fatigue', 'Driver Fatigue (Mengantuk Berat)', 'DMS Camera AI', 'critical')}
+                                                className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded border border-rose-200 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Mengantuk
+                                            </button>
+                                            <button
+                                                onClick={() => triggerTestAlarm('phone', 'Penggunaan Ponsel saat Mengemudi', 'DMS Camera AI', 'high')}
+                                                className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded border border-amber-200 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Main Ponsel
+                                            </button>
+                                            <button
+                                                onClick={() => triggerTestAlarm('smoking', 'Merokok di Kabin', 'DMS Camera AI', 'medium')}
+                                                className="p-1.5 bg-slate-200 hover:bg-slate-300 text-gray-800 rounded border border-slate-300 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Merokok
+                                            </button>
+                                            <button
+                                                onClick={() => triggerTestAlarm('yawn', 'Menguap Berulang', 'DMS Camera AI', 'low')}
+                                                className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded border border-blue-200 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Menguap
+                                            </button>
+                                        </div>
                                     </div>
-                                    {/* View Mode Switcher */}
-                                    <div className="bg-slate-800/80 p-0.5 rounded-xl border border-slate-700/80 flex items-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => setCameraViewMode('dual')}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                                                cameraViewMode === 'dual' 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Tampilan 2 Kamera Berdampingan (Dual Grid)"
-                                        >
-                                            <LayoutGrid className="w-3.5 h-3.5" />
-                                            <span>Dual View (1:1)</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setCameraViewMode('cam1')}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                                                cameraViewMode === 'cam1' 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Fokus Kamera Depan (Jalan Hauling)"
-                                        >
-                                            <Video className="w-3.5 h-3.5" />
-                                            <span>CAM 1 Jalan</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setCameraViewMode('cam2')}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                                                cameraViewMode === 'cam2' 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Fokus Kamera Kabin (DMS Driver)"
-                                        >
-                                            <UserCheck className="w-3.5 h-3.5" />
-                                            <span>CAM 2 Kabin</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setCameraViewMode('stacked')}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                                                cameraViewMode === 'stacked' 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Tampilan Kamera Besar Bertumpuk"
-                                        >
-                                            <Rows className="w-3.5 h-3.5" />
-                                            <span>Vertikal</span>
-                                        </button>
+                                )}
+
+                                {/* Category Filter Tabs */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1 overflow-x-auto text-xs">
+                                        {[
+                                            { id: 'all', label: `Semua (${alarms.length})` },
+                                            { id: 'gsensor', label: 'G-Sensor' },
+                                            { id: 'fd', label: 'Fierce Driving' },
+                                            { id: 'dms', label: 'DMS' },
+                                        ].map(tab => (
+                                            <button
+                                                key={tab.id}
+                                                type="button"
+                                                onClick={() => setAlarmTab(tab.id as any)}
+                                                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
+                                                    alarmTab === tab.id
+                                                        ? 'bg-blue-600 text-white font-bold shadow-xs'
+                                                        : 'bg-slate-50 text-gray-600 hover:bg-slate-100 border border-slate-200'
+                                                }`}
+                                            >
+                                                {tab.label}
+                                            </button>
+                                        ))}
                                     </div>
 
-                                    {/* Refresh button */}
-                                    <button
-                                        type="button"
-                                        onClick={() => login()}
-                                        className="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700 transition cursor-pointer"
-                                        title="Muat Ulang Koneksi Stream Kamera"
-                                    >
-                                        <RotateCw className="w-4 h-4" />
-                                    </button>
+                                    {untreatedCount > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={handleBatchAction}
+                                            className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <CheckCheck className="w-3 h-3" /> Tangani Semua
+                                        </button>
+                                    )}
                                 </div>
-                            </div>
 
-                            {/* Large High-Definition Video Feeds (420px height for prominence) */}
-                            <div className="p-4 bg-slate-950">
-                                {cameraViewMode === 'dual' && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                        {activeChannels.map(ch => {
-                                            const notInstalled = !ch.hasStream;
-                                            const src = !notInstalled ? camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine) : null;
+                                {/* Alarms Feed List */}
+                                <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                                    {filteredAlarms.length === 0 ? (
+                                        <div className="text-center py-5 text-gray-400">
+                                            <ShieldCheck className="w-7 h-7 text-emerald-500 mx-auto mb-1" />
+                                            <p className="text-xs font-bold text-gray-700">Tidak ada peringatan aktif</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">Semua parameter safety berada dalam kondisi normal</p>
+                                        </div>
+                                    ) : (
+                                        filteredAlarms.map((alarm) => {
+                                            const isHandled = (alarm.handle_status ?? 'Untreated') === 'Handled';
                                             return (
                                                 <div
-                                                    key={ch.id}
-                                                    className="relative bg-black rounded-xl overflow-hidden border border-slate-800 shadow-2xl group"
-                                                    style={{ height: '520px' }}
+                                                    key={alarm.guid}
+                                                    className={`p-2 rounded-lg border transition ${
+                                                        isHandled 
+                                                            ? 'bg-slate-100/70 border-slate-200 opacity-70' 
+                                                            : alarm.severity === 'critical' 
+                                                            ? 'bg-rose-50 border-rose-200' 
+                                                            : 'bg-amber-50 border-amber-200'
+                                                    }`}
                                                 >
-                                                    {notInstalled ? (
-                                                        <div className="w-full h-full absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-3">
-                                                            <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
-                                                                <Video className="w-7 h-7 text-slate-600" />
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="flex items-start gap-2 min-w-0">
+                                                            <div className={`p-1 rounded shrink-0 mt-0.5 ${
+                                                                isHandled ? 'bg-slate-200 text-gray-600' :
+                                                                alarm.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
+                                                            }`}>
+                                                                <AlertCircle className="w-3 h-3" />
                                                             </div>
-                                                            <p className="text-slate-400 font-semibold text-sm">Kamera Belum Terpasang</p>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-1 flex-wrap">
+                                                                    <span className="text-xs font-bold text-gray-900 leading-tight">
+                                                                        {alarm.desc}
+                                                                    </span>
+                                                                    <span className={`text-[9px] font-bold px-1 rounded ${
+                                                                        alarm.severity === 'critical' ? 'bg-rose-100 text-rose-800' :
+                                                                        alarm.severity === 'high' ? 'bg-amber-100 text-amber-800' :
+                                                                        'bg-slate-200 text-gray-700'
+                                                                    }`}>
+                                                                        {alarm.severity ? alarm.severity.toUpperCase() : 'ALERT'}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 font-mono">
+                                                                    <span>{alarm.category || 'CMSV6'}</span>
+                                                                    <span>•</span>
+                                                                    <span>{alarm.time}</span>
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    ) : src ? (
-                                                        <iframe
-                                                            src={src}
-                                                            className="w-full h-full border-0 absolute inset-0 bg-slate-900"
-                                                            title={ch.label}
-                                                            allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full border-0 absolute inset-0 bg-slate-900 flex items-center justify-center">
-                                                            <div className="text-slate-500 font-medium text-sm animate-pulse">Menghubungkan ke CMSv6 Server...</div>
-                                                        </div>
-                                                    )}
 
-                                                    {/* Stream Header Overlay */}
-                                                    <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-                                                        <span className="flex items-center gap-1.5 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/20">
-                                                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                                                            {ch.label}
-                                                        </span>
-                                                        <span className="bg-slate-900/80 backdrop-blur-md text-slate-300 text-[12px] font-mono px-2 py-1 rounded-lg border border-slate-700/50">
-                                                            {ch.id === 'cam1' ? 'HAULING ROAD VIEW' : 'DMS DRIVER CABIN'}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Stream Footer Watermark Overlay */}
-                                                    <div className="absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
-                                                        <div className="bg-black/60 backdrop-blur-sm text-slate-300 text-[12px] font-mono px-2.5 py-1 rounded-lg border border-white/10">
-                                                            📍 Lat: {telemetry.lat?.toFixed(5) ?? '-7.55596'}, Lng: {telemetry.lng?.toFixed(5) ?? '111.65882'} • Speed: {telemetry.speed} km/j
-                                                        </div>
-                                                        <div className="bg-black/60 backdrop-blur-sm text-emerald-400 text-[12px] font-mono px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                                                            1080P HD • 25 FPS
+                                                        <div className="shrink-0">
+                                                            {isHandled ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                                                                    <Check className="w-3 h-3" /> Selesai
+                                                                </span>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => handleQuickAction(alarm.guid)}
+                                                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2 py-0.5 rounded transition active:scale-95 cursor-pointer"
+                                                                >
+                                                                    <Check className="w-3 h-3" /> Tangani
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
                                             );
-                                        })}
-                                    </div>
-                                )}
-
-                                {cameraViewMode === 'cam1' && (
-                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black" style={{ height: '600px' }}>
-                                        {camUrl(activeDeviceId, 0, jsession, cmsBaseUrl) ? (
-                                            <iframe
-                                                src={camUrl(activeDeviceId, 0, jsession, cmsBaseUrl, streamEngine) || ''}
-                                                className="w-full h-full border-0 absolute inset-0 bg-slate-900"
-                                                title="CAM 1 — Depan"
-                                                allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-500">Memuat stream CAM 1...</div>
-                                        )}
-                                        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                                            <span className="flex items-center gap-1.5 bg-black/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20">
-                                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                                                CAM 1 — Depan (Fokus Utama)
-                                            </span>
-                                        </div>
-
-                                        {/* Picture-in-Picture CAM 2 Kabin di sudut kanan bawah */}
-                                        <div 
-                                            onClick={() => setCameraViewMode('cam2')}
-                                            className="absolute bottom-4 right-4 z-20 w-64 h-40 bg-black rounded-xl border-2 border-white/40 shadow-2xl overflow-hidden cursor-pointer group hover:scale-105 transition-all"
-                                            title="Klik untuk berpindah ke CAM 2"
-                                        >
-                                            {camUrl(activeDeviceId, 1, jsession, cmsBaseUrl) && (
-                                                <iframe
-                                                    src={camUrl(activeDeviceId, 1, jsession, cmsBaseUrl, streamEngine) || ''}
-                                                    className="w-full h-full border-0 pointer-events-none"
-                                                    title="CAM 2 Kabin (PIP)"
-                                                />
-                                            )}
-                                            <div className="absolute bottom-1.5 left-2 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 rounded">
-                                                CAM 2 — Kabin (Klik untuk ganti)
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {cameraViewMode === 'cam2' && (
-                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black" style={{ height: '600px' }}>
-                                        {camUrl(activeDeviceId, 1, jsession, cmsBaseUrl) ? (
-                                            <iframe
-                                                src={camUrl(activeDeviceId, 1, jsession, cmsBaseUrl, streamEngine) || ''}
-                                                className="w-full h-full border-0 absolute inset-0 bg-slate-900"
-                                                title="CAM 2 — Kabin"
-                                                allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-500">Memuat stream CAM 2...</div>
-                                        )}
-                                        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                                            <span className="flex items-center gap-1.5 bg-black/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20">
-                                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                                                CAM 2 — Kabin (Fokus Utama DMS)
-                                            </span>
-                                        </div>
-
-                                        {/* Picture-in-Picture CAM 1 Depan */}
-                                        <div 
-                                            onClick={() => setCameraViewMode('cam1')}
-                                            className="absolute bottom-4 right-4 z-20 w-64 h-40 bg-black rounded-xl border-2 border-white/40 shadow-2xl overflow-hidden cursor-pointer group hover:scale-105 transition-all"
-                                            title="Klik untuk berpindah ke CAM 1"
-                                        >
-                                            {camUrl(activeDeviceId, 0, jsession, cmsBaseUrl) && (
-                                                <iframe
-                                                    src={camUrl(activeDeviceId, 0, jsession, cmsBaseUrl, streamEngine) || ''}
-                                                    className="w-full h-full border-0 pointer-events-none"
-                                                    title="CAM 1 Depan (PIP)"
-                                                />
-                                            )}
-                                            <div className="absolute bottom-1.5 left-2 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 rounded">
-                                                CAM 1 — Depan (Klik untuk ganti)
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {cameraViewMode === 'stacked' && (
-                                    <div className="flex flex-col gap-4">
-                                        {activeChannels.map(ch => (
-                                            <div key={ch.id} className="relative bg-black rounded-xl overflow-hidden border border-slate-800 shadow-xl" style={{ height: '380px' }}>
-                                                {camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl) && (
-                                                    <iframe
-                                                        src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine) || ''}
-                                                        className="w-full h-full border-0 absolute inset-0 bg-slate-900"
-                                                        title={ch.label}
-                                                        allowFullScreen allow="autoplay; fullscreen; camera; microphone; encrypted-media"
-                                                    />
-                                                )}
-                                                <div className="absolute top-3 left-3 z-10">
-                                                    <span className="bg-black/70 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/20">
-                                                        {ch.label}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* ══════════════════════════════════════════════════════════════
-                            OPERATIONAL & TELEMETRY DECK (2 EQUAL BALANCED COLUMNS)
-                           ══════════════════════════════════════════════════════════════ */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start bg-slate-200/40 p-4 rounded-3xl border border-slate-200">
-
-                            {/* ── KOLOM KIRI (xl:col-span-6): HAULING OPERATIONS & UNIT SENSORS ── */}
-                            <div className="flex flex-col gap-6">
-                                {selectedVehicle === 'DT' ? (
-                                    <>
-
-                                {/* CARD 1: OPERASIONAL HAULING & RITASI (SLIDE 19 & 25) */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-5 flex flex-col gap-4">
-                                    {/* Header */}
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="p-2 bg-blue-50 rounded-xl text-blue-600 border border-blue-100">
-                                                <Truck className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-black tracking-wider uppercase text-slate-800">
-                                                    OPERASIONAL HAULING & RITASI
-                                                </h3>
-                                                <p className="text-xs text-slate-400">Siklus Angkut Batubara / OB Pit Front → Disposal</p>
-                                            </div>
-                                        </div>
-                                        <span className={`text-xs font-black uppercase px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 ${
-                                            haulingStage === 'LOADING' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
-                                            haulingStage === 'TRAVEL_ISI' ? 'bg-blue-600 text-white animate-pulse' :
-                                            haulingStage === 'DUMPING' ? 'bg-amber-600 text-white animate-pulse' :
-                                            haulingStage === 'TRAVEL_KOSONG' ? 'bg-emerald-600 text-white' :
-                                            'bg-yellow-400 text-slate-900'
-                                        }`}>
-                                            <Activity className="w-3.5 h-3.5" />
-                                            {haulingStage === 'LOADING' ? '⛏️ 1. LOADING (PIT)' :
-                                             haulingStage === 'TRAVEL_ISI' ? '🚛 2. TRAVEL ISI (BIRU)' :
-                                             haulingStage === 'DUMPING' ? '⚡ 3. DUMPING (PTO ON)' :
-                                             haulingStage === 'TRAVEL_KOSONG' ? '🚛 4. TRAVEL KOSONG (HIJAU)' :
-                                             '⏸️ IDLING'}
-                                        </span>
-                                    </div>
-
-                                    {/* Hauling Stage Stepper Progress (Slide 29) */}
-                                    <div className="grid grid-cols-4 gap-3 text-center text-[12px] font-bold">
-                                        <div className={`p-2 rounded-xl border transition ${haulingStage === 'LOADING' ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-black shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
-                                            ⛏️ 1. Loading
-                                        </div>
-                                        <div className={`p-2 rounded-xl border transition ${haulingStage === 'TRAVEL_ISI' ? 'bg-blue-50 border-blue-300 text-blue-800 font-black shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
-                                            🚛 2. Travel Isi
-                                        </div>
-                                        <div className={`p-2 rounded-xl border transition ${haulingStage === 'DUMPING' ? 'bg-amber-50 border-amber-300 text-amber-800 font-black shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
-                                            ⚡ 3. Dumping
-                                        </div>
-                                        <div className={`p-2 rounded-xl border transition ${haulingStage === 'TRAVEL_KOSONG' ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-black shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
-                                            🚛 4. Trv Kosong
-                                        </div>
-                                    </div>
-
-                                    {/* Trip Information & Big RIT Box */}
-                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
-                                        <div className="md:col-span-7 flex flex-col gap-2.5 text-xs">
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100 shrink-0"></span>
-                                                <span className="text-xs font-semibold text-slate-400 uppercase w-20">Start Pit:</span>
-                                                <span className="font-bold text-slate-700">{currentTrip.startTime}, {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-100 animate-pulse shrink-0"></span>
-                                                <span className="text-xs font-semibold text-slate-400 uppercase w-20">Durasi:</span>
-                                                <span className="font-bold text-slate-700">{currentTrip.nowTime}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2.5 h-2.5 rounded-full bg-purple-600 ring-2 ring-purple-100 shrink-0"></span>
-                                                <span className="text-xs font-semibold text-slate-400 uppercase w-20">Tujuan:</span>
-                                                <span className="font-bold text-slate-800 truncate">{currentTrip.finishArea}</span>
-                                            </div>
-                                            {/* Progress bar */}
-                                            <div className="mt-1">
-                                                <div className="flex justify-between text-[12px] font-bold text-slate-500 mb-1">
-                                                    <span>Trip Progress</span>
-                                                    <span className="font-mono text-blue-600">{currentTrip.tripProgress}%</span>
-                                                </div>
-                                                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                                                    <div className="bg-blue-600 h-2 rounded-full transition-all duration-500" style={{ width: `${currentTrip.tripProgress}%` }}></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Right side: Big RIT Display + Action Button */}
-                                        <div className="md:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-purple-200 shadow-sm text-center gap-1.5">
-                                            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Total Ritasi Hari Ini</p>
-                                            <p className="text-3xl font-black text-purple-700 tracking-tight leading-none">
-                                                {ritasiToday} <span className="text-sm font-bold text-slate-500 uppercase">RIT</span>
-                                            </p>
-                                            <button
-                                                type="button"
-                                                onClick={runHaulingSimulation}
-                                                disabled={isSimulatingTrip}
-                                                className="w-full mt-1.5 py-2 px-3 rounded-lg text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 active:scale-95 shadow transition flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
-                                            >
-                                                <Play className="w-3.5 h-3.5 fill-white" />
-                                                {isSimulatingTrip ? 'Siklus Berjalan...' : 'Simulasi 5 Siklus Hauling'}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Load Type Material Selector (Slide 21) */}
-                                    <div className="pt-4 mt-2 border-t border-slate-100">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                                <Layers className="w-4 h-4 text-slate-400" />
-                                                Jenis Material Muatan (Slide 21):
-                                            </span>
-                                            <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                                                Aktif: {selectedMaterial}
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                                            {[
-                                                { name: 'OB', label: 'OB (Overburden)', bg: 'bg-slate-600' },
-                                                { name: 'COAL', label: 'Coal (Batubara)', bg: 'bg-slate-900' },
-                                                { name: 'MUD', label: 'Mud (Lumpur)', bg: 'bg-amber-800' },
-                                                { name: 'TOP SOIL', label: 'Top Soil', bg: 'bg-orange-600' },
-                                                { name: 'LIMONIT', label: 'Limonit', bg: 'bg-yellow-700' },
-                                                { name: 'SAPROLIT', label: 'Saprolit', bg: 'bg-emerald-700' },
-                                            ].map(mat => (
-                                                <button
-                                                    key={mat.name}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setSelectedMaterial(mat.name as MaterialType);
-                                                        setGeofenceNotice(`Material angkut diubah ke: ${mat.name}`);
-                                                        setTimeout(() => setGeofenceNotice(null), 3000);
-                                                    }}
-                                                    className={`py-2 px-2 rounded-xl text-xs font-bold text-white transition-all cursor-pointer text-center truncate ${mat.bg} ${
-                                                        selectedMaterial === mat.name ? 'ring-2 ring-offset-2 ring-blue-500 shadow-md font-black scale-102' : 'opacity-75 hover:opacity-100'
-                                                    }`}
-                                                    title={mat.label}
-                                                >
-                                                    {mat.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    </div>
-                                
-                                {/* CARD 2: KPI & TELEMETRY */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-5 flex flex-col gap-4">
-                                    {/* 4 KPI Summary Badges (Slide 19) */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                                        <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-1.5">
-                                                <Gauge className="w-4 h-4" />
-                                            </div>
-                                            <p className="text-base font-black text-slate-800 leading-tight">
-                                                {telemetry.speed} <span className="text-[12px] font-normal text-slate-500">km/j</span>
-                                            </p>
-                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Current Speed</p>
-                                        </div>
-                                        <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
-                                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-1.5">
-                                                <Clock className="w-4 h-4" />
-                                            </div>
-                                            <p className="text-base font-black text-purple-700 leading-tight">
-                                                {avgCycleTimeToday || 22} <span className="text-[12px] font-normal text-slate-500">min</span>
-                                            </p>
-                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Cycle Time</p>
-                                        </div>
-                                        <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
-                                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-1.5">
-                                                <Power className="w-4 h-4" />
-                                            </div>
-                                            <p className="text-base font-black text-emerald-700 leading-tight">
-                                                98,765 <span className="text-[12px] font-normal text-slate-500">HM</span>
-                                            </p>
-                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Hour Meter</p>
-                                        </div>
-                                        <div className="p-3 rounded-xl border border-slate-100 bg-slate-50/80 flex flex-col items-center justify-center">
-                                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1.5">
-                                                <Fuel className="w-4 h-4" />
-                                            </div>
-                                            <p className="text-base font-black text-amber-700 leading-tight">
-                                                {telemetry.fuel} <span className="text-[12px] font-normal text-slate-500">L</span>
-                                            </p>
-                                            <p className="text-[12px] font-bold text-slate-400 uppercase mt-0.5">Fuel Cons</p>
-                                        </div>
-                                    </div>
-
-                                    </div>
-                                
-                                {/* CARD 3: PRODUKSI BCM */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-5 flex flex-col gap-4">
-                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-2">
-                                        <div className="p-2 bg-amber-50 rounded-xl text-amber-600 border border-amber-100">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-box"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-black tracking-wider uppercase text-slate-800">
-                                                TOTAL PRODUKSI BCM
-                                            </h3>
-                                        </div>
-                                    </div>
-                                    {/* BCM Production & Riwayat Button */}
-                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-900 text-white rounded-xl">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs uppercase font-bold tracking-wider text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded">
-                                                    PRODUKSI BCM (SLIDE 5-6)
-                                                </span>
-                                                <span className="text-xs text-slate-300">Vessel: 20 BCM/trip</span>
-                                            </div>
-                                            <p className="text-lg font-black text-white mt-0.5">
-                                                {totalBcmToday} <span className="text-xs font-semibold text-slate-300">BCM hari ini</span>
-                                                <span className="text-xs text-slate-400 ml-3 font-mono font-normal">Jarak Total: {totalDistanceKm.toFixed(1)} km</span>
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowRitasiHistoryModal(true)}
-                                            className="w-full sm:w-auto py-2 px-3 rounded-lg text-xs font-bold text-purple-200 bg-purple-900/60 hover:bg-purple-800 border border-purple-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                                        >
-                                            <FileText className="w-3.5 h-3.5 text-purple-300" />
-                                            Riwayat Lengkap ({ritasiLogs.length})
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* CARD 2: HARDWARE SENSORS & TELEMETRY */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {/* Engine Status */}
-                                    <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-4 text-center flex flex-col items-center justify-center">
-                                        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2 border border-emerald-100">
-                                            <Power className="w-5 h-5" />
-                                        </div>
-                                        <p className="text-[12px] text-slate-400 font-bold uppercase tracking-wider">Engine Status</p>
-                                        <p className="text-sm font-black text-emerald-600 mt-0.5">ON (RUNNING)</p>
-                                        <p className="text-[12px] text-slate-400 mt-1">Normal Operasi</p>
-                                    </div>
-
-                                    {/* PTO Dump Sensor */}
-                                    <div className={`rounded-2xl border shadow-sm p-4 text-center flex flex-col items-center justify-center transition-all ${
-                                        ptoActive 
-                                            ? 'bg-amber-500 text-white border-amber-600 shadow-md animate-pulse' 
-                                            : 'bg-white text-slate-700 border-slate-200'
-                                    }`}>
-                                        <ArrowRightCircle className={`w-8 h-8 mb-1.5 transition-transform duration-300 ${
-                                            ptoActive ? 'text-white rotate-[-45deg] scale-110' : 'text-slate-400 rotate-[-90deg]'
-                                        }`} />
-                                        <p className={`text-[12px] font-bold uppercase tracking-wider ${ptoActive ? 'text-amber-100' : 'text-slate-400'}`}>
-                                            PTO (Dump Sensor)
-                                        </p>
-                                        <p className={`font-black text-sm mt-0.5 ${ptoActive ? 'text-white' : 'text-slate-700'}`}>
-                                            {ptoActive ? '⚡ ON (DUMPING)' : 'OFF (NORMAL)'}
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const nextPto = !ptoActive;
-                                                setPtoActive(nextPto);
-                                                setGeofenceNotice(nextPto ? '⚡ Sensor PTO ON: Hidrolik dump aktif! Siap rekam dumping.' : 'Sensor PTO OFF: Dump diturunkan.');
-                                                setTimeout(() => setGeofenceNotice(null), 3500);
-                                            }}
-                                            className={`mt-2 text-[12px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition ${
-                                                ptoActive ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                            }`}
-                                        >
-                                            {ptoActive ? 'Turunkan Dump' : 'Uji Dump (PTO)'}
-                                        </button>
-                                    </div>
-
-                                    {/* Fuel Sensor */}
-                                    <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-4 flex flex-col justify-between">
-                                        <div>
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="text-[12px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                    <Fuel className="w-3.5 h-3.5 text-blue-600" /> Fuel Sensor
-                                                </span>
-                                                <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
-                                                    No Theft
-                                                </span>
-                                            </div>
-                                            <p className="text-base font-black text-slate-800 mt-1">{telemetry.fuel} L</p>
-                                            <div className="w-full bg-slate-100 rounded-full h-2 mt-2">
-                                                <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((telemetry.fuel / 500) * 100))}%` }}></div>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-slate-400 mt-2">Kapasitas tangki: ~500 L</p>
-                                    </div>
-                                </div>
-
-                                                                </>
-                                ) : (
-                                    <>
-
-                                {/* EXCAVATOR CARD 1: AI TRUCK DETECTION */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-6 flex flex-col gap-5">
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600 border border-blue-100 relative overflow-hidden">
-                                                <Scan className="w-6 h-6 relative z-10" />
-                                                <div className="absolute inset-0 bg-blue-200/50 animate-ping rounded-xl"></div>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-black tracking-wider uppercase text-slate-800">
-                                                    AI TRUCK DETECTION
-                                                </h3>
-                                                <p className="text-xs text-slate-400">Deteksi Truk via Kamera AI & RFID</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-xs font-black uppercase px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
-                                            <Truck className="w-4 h-4" />
-                                            TRUK TERDETEKSI
-                                        </span>
-                                    </div>
-
-                                    {/* Truck Info Box */}
-                                    <div className="flex flex-col gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4 relative overflow-hidden">
-                                        <div className="absolute -right-4 -top-4 text-slate-100 opacity-50 pointer-events-none">
-                                            <Truck className="w-32 h-32" />
-                                        </div>
-                                        
-                                        <div className="flex justify-between items-center relative z-10">
-                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Unit DT Terkunci (Loading Zone)</span>
-                                            <span className="text-[11px] font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-600">Jarak: 3.2m</span>
-                                        </div>
-                                        <div className="flex items-end gap-3 relative z-10">
-                                            <h4 className="text-2xl font-black text-blue-700 tracking-tight">HD-78501</h4>
-                                            <span className="text-sm font-bold text-slate-500 mb-1">ID: 240078916116</span>
-                                        </div>
-                                        
-                                        <div className="grid grid-cols-2 gap-3 mt-2 relative z-10">
-                                            <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
-                                                <User className="w-4 h-4 text-slate-400" />
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Operator DT</p>
-                                                    <p className="text-xs font-bold text-slate-700 truncate">Sandi Setiawan</p>
-                                                </div>
-                                            </div>
-                                            <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
-                                                <Layers className="w-4 h-4 text-slate-400" />
-                                                <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Kapasitas Vessel</p>
-                                                    <p className="text-xs font-bold text-slate-700">~20 BCM (30 Ton)</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* EXCAVATOR CARD 2: LOADING PROGRESS */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-6 flex flex-col gap-4">
-                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                                        <div className="p-2 bg-amber-50 rounded-xl text-amber-600 border border-amber-100">
-                                            <Activity className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-black tracking-wider uppercase text-slate-800">
-                                                STATUS PEMUATAN (LOADING)
-                                            </h3>
-                                        </div>
-                                    </div>
-
-                                    {/* Real-time Load Bar */}
-                                    <div className="flex flex-col gap-2 mt-2">
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Estimasi Muatan Masuk</p>
-                                                <p className="text-xl font-black text-amber-600">14.5 <span className="text-xs text-slate-500 font-bold">BCM</span></p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Target</p>
-                                                <p className="text-xl font-black text-slate-800">20.0 <span className="text-xs text-slate-500 font-bold">BCM</span></p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="w-full bg-slate-100 rounded-full h-4 border border-slate-200 overflow-hidden relative">
-                                            <div className="absolute inset-0 bg-slate-100"></div>
-                                            {/* Progress Fill */}
-                                            <div className="absolute top-0 left-0 bottom-0 bg-amber-500 transition-all duration-1000" style={{ width: '72%' }}>
-                                                {/* Diagonal stripes for construction look */}
-                                                <div className="w-full h-full opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #000 10px, #000 20px)' }}></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex justify-between text-[11px] font-bold mt-1">
-                                            <span className="text-slate-500">Pass 3 dari 4 (Estimasi)</span>
-                                            <span className="text-amber-600">72% Terisi</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Blind Spot Safety Toggle (Prep for feature) */}
-                                    <div className="mt-2 p-3 bg-slate-900 rounded-xl flex items-center justify-between border border-slate-700">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400">
-                                                <ShieldCheck className="w-4 h-4" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-white">Proximity & Blind Spot</p>
-                                                <p className="text-[10px] text-slate-400">360° Radar Area Excavator</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-[10px] font-black px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/50">AKTIF</span>
-                                    </div>
-                                </div>
-                                </>
-                                )}
-</div>
-
-                            {/* ── KOLOM KANAN (xl:col-span-6): GPS MAP, CREW HUB & AI SAFETY ── */}
-                            
-                            <div className="flex flex-col gap-6">
-                                {/* CARD 3: LIVE GPS LOCATION & GEOFENCE TAMBANG */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md overflow-hidden flex flex-col">
-                                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-                                        <div className="flex items-center gap-2">
-                                            <Navigation className="w-4 h-4 text-blue-600" />
-                                            <h3 className="text-sm font-bold text-slate-800">Live GPS Location & Geofence Tambang</h3>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[12px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                                -7.555961, 111.658822
-                                            </span>
-                                            <button
-                                                onClick={() => setShowGeofenceModal(true)}
-                                                className="text-xs font-bold text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
-                                            >
-                                                <Plus className="w-3.5 h-3.5" /> Tambah Zona
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Map Container */}
-                                    <div className="relative h-[250px] w-full bg-slate-100">
-                                        <Map
-                                            center={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
-                                            zoom={14}
-                                            height={250}
-                                        >
-                                            <Marker
-                                                width={40}
-                                                anchor={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
-                                                color="#2563EB"
-                                            />
-                                            {geofences.map(gf => (
-                                                <Overlay
-                                                    key={gf.id}
-                                                    anchor={[gf.latitude, gf.longitude]}
-                                                    offset={[0, 0]}
-                                                >
-                                                    <div className="flex flex-col items-center pointer-events-none transform -translate-x-1/2 -translate-y-1/2">
-                                                        <div 
-                                                            className="rounded-full border-2 border-dashed opacity-40 animate-pulse"
-                                                            style={{
-                                                                width: `${Math.max(30, gf.radius / 3)}px`,
-                                                                height: `${Math.max(30, gf.radius / 3)}px`,
-                                                                borderColor: gf.color || '#8B5CF6',
-                                                                backgroundColor: `${gf.color || '#8B5CF6'}20`
-                                                            }}
-                                                        />
-                                                        <span className="text-xs font-bold px-1.5 py-0.5 rounded shadow-sm bg-white/90 border border-slate-200 text-slate-800 whitespace-nowrap mt-1">
-                                                            {gf.name}
-                                                        </span>
-                                                    </div>
-                                                </Overlay>
-                                            ))}
-                                        </Map>
-
-                                        {/* Status badge di atas map */}
-                                        <div className="absolute top-2 left-2 z-10">
-                                            <span className="text-[12px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-lg border border-slate-300 shadow-md flex items-center gap-1">
-                                                <MapPin className="w-3 h-3 text-rose-500" />
-                                                Pigeon OSM • Site BDA Pit
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Map Footer HUD */}
-                                    <div className="grid grid-cols-4 divide-x divide-slate-100 p-3 bg-white border-t border-slate-100 text-center">
-                                        <div>
-                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Speed</p>
-                                            <p className="text-sm font-black text-slate-800">{telemetry.speed} km/j</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Odometer</p>
-                                            <p className="text-sm font-black text-blue-600">{telemetry.distance.toFixed(1)} km</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Geofence</p>
-                                            <p className="text-xs font-bold text-purple-700 truncate px-1">
-                                                {activeGeofence ? activeGeofence.name : 'Luar Geofence'}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[12px] text-slate-400 font-bold uppercase">Ritasi</p>
-                                            <p className="text-sm font-black text-purple-600">{ritasiToday} trip</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Mining Zones List (Slide 26) */}
-                                    <div className="p-3 bg-slate-50/50 border-t border-slate-100">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs font-bold text-slate-700">Daftar Zona Tambang ({geofences.length}):</span>
-                                            <button
-                                                onClick={handleResetRitasi}
-                                                className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:underline flex items-center gap-1 cursor-pointer"
-                                            >
-                                                <RotateCw className="w-3 h-3" /> Reset Ritasi
-                                            </button>
-                                        </div>
-                                        <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
-                                            {geofences.map(gf => (
-                                                <div key={gf.id} className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs">
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: gf.color || '#8B5CF6' }}></span>
-                                                        <span className="font-bold text-slate-800 truncate">{gf.name}</span>
-                                                        <span className="text-xs font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">
-                                                            {gf.type}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-[12px] font-mono text-slate-400 shrink-0">R: {gf.radius}m</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* CARD 4: DRIVER IDENTIFICATION & CABIN OCCUPANCY AI */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md p-4 flex flex-col gap-3">
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                        <div className="flex items-center gap-2">
-                                            <UserCheck className="w-4 h-4 text-blue-600" />
-                                            <h3 className="text-sm font-bold text-slate-800">Operator & Cabin Occupancy AI</h3>
-                                        </div>
-                                        <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                                            ⭐ 4.9 Rating
-                                        </span>
-                                    </div>
-
-                                    {/* Driver Profile Row */}
-                                    <div className="flex items-center justify-between gap-3 p-3 bg-slate-50/70 rounded-xl border border-slate-200">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-base border-2 border-white shadow-sm overflow-hidden shrink-0">
-                                                {previewPhoto ? (
-                                                    <img src={previewPhoto} alt="Driver" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <ScanFace className="w-6 h-6" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-slate-800">{driver ? driver.name : targetDriver.name}</p>
-                                                <p className="text-[12px] text-slate-400">NIK: {driver ? driver.id : targetDriver.id} • {driver ? (driver.position || 'Operator') : targetDriver.position}</p>
-                                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded mt-0.5">
-                                                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Terverifikasi Face Recognition
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Actions & Cabin Alert */}
-                                    <div className="space-y-2">
-                                        <button
-                                            type="button"
-                                            onClick={async () => {
-                                                setIsScanningFace(true);
-                                                const snap = await captureCabinFrame();
-                                                if (snap) {
-                                                    setPreviewPhoto(snap);
-                                                }
-                                                setIsScanningFace(false);
-                                            }}
-                                            disabled={isScanningFace}
-                                            className="w-full py-2 px-3 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 shadow transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                                        >
-                                            <Camera className="w-4 h-4" />
-                                            {isScanningFace ? 'Memindai dari Kamera Kabin...' : 'Pindai Wajah Pengemudi di Kabin'}
-                                        </button>
-
-                                        
-
-                                        <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowCheckin(!showCheckin)}
-                                                className="text-blue-600 hover:underline font-semibold cursor-pointer"
-                                            >
-                                                {showCheckin ? 'Tutup Pilihan Driver' : 'Pilih Manual dari 118 Operator PT HPU'}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { fetchHistoryLogs(); setShowHistory(true); }}
-                                                className="hover:text-blue-600 cursor-pointer flex items-center gap-1"
-                                            >
-                                                <History className="w-3 h-3" /> Riwayat Check-in
-                                            </button>
-                                        </div>
-
-                                        {/* Dropdown list if opened */}
-                                        {showCheckin && (
-                                            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 mt-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Cari nama atau NIK operator..."
-                                                    value={searchDriver}
-                                                    onChange={e => setSearchDriver(e.target.value)}
-                                                    className="w-full text-xs p-2 rounded-lg border border-slate-300"
-                                                />
-                                                <div className="max-h-40 overflow-y-auto space-y-1">
-                                                    {driverList.filter(d => d.name.toLowerCase().includes(searchDriver.toLowerCase()) || d.id.includes(searchDriver)).map(d => (
-                                                        <div
-                                                            key={d.id}
-                                                            onClick={() => {
-                                                                setTargetDriver({ name: d.name, id: d.id, position: d.position || 'Operator' });
-                                                                setShowCheckin(false);
-                                                            }}
-                                                            className="p-1.5 hover:bg-white rounded cursor-pointer text-xs flex justify-between"
-                                                        >
-                                                            <span className="font-bold text-slate-700">{d.name}</span>
-                                                            <span className="text-slate-400 font-mono text-[12px]">{d.id}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* CARD 5: AI SAFETY & ALARM CENTER */}
-                                <div className="bg-white rounded-2xl border border-slate-300 shadow-md overflow-hidden flex flex-col">
-                                    {/* Header */}
-                                    <div className="p-3.5 border-b border-slate-100 bg-rose-50/50 flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <ShieldAlert className="w-4 h-4 text-rose-600" />
-                                            <h3 className="text-sm font-bold text-slate-800">AI Safety & Alarm Center</h3>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {untreatedCount > 0 ? (
-                                                <span className="text-[12px] bg-rose-500 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">
-                                                    {untreatedCount} Belum Ditangani
-                                                </span>
-                                            ) : (
-                                                <span className="text-[12px] bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                    <Check className="w-3 h-3" /> Aman
-                                                </span>
-                                            )}
-                                            <button
-                                                onClick={() => setShowSimulator(!showSimulator)}
-                                                className={`text-[12px] font-bold px-2 py-0.5 rounded-lg border transition cursor-pointer ${
-                                                    showSimulator 
-                                                        ? 'bg-amber-500 text-white border-amber-600' 
-                                                        : 'bg-white text-amber-700 border-amber-300 hover:bg-amber-50'
-                                                }`}
-                                            >
-                                                ⚡ Tes Alarm
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Simulator Drawer if open */}
-                                    {showSimulator && (
-                                        <div className="p-3 bg-amber-50/80 border-b border-amber-200 text-xs">
-                                            <p className="font-bold text-amber-900 mb-2">Simulasikan Pemicu Alarm AI Safety:</p>
-                                            <div className="grid grid-cols-2 gap-1.5">
-                                                <button
-                                                    onClick={() => triggerTestAlarm('fatigue', 'Driver Fatigue (Mengantuk Berat)', 'DMS Camera AI', 'critical')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
-                                                >
-                                                    😴 Kantuk (Fatigue)
-                                                </button>
-                                                <button
-                                                    onClick={() => triggerTestAlarm('phone', 'Distracted Driving: Phone Use', 'DMS Camera AI', 'high')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
-                                                >
-                                                    📱 Main HP di Kabin
-                                                </button>
-                                                <button
-                                                    onClick={() => triggerTestAlarm('overspeed', 'Overspeed Alert (48 km/h > 40 km/h)', 'Speed Telemetry', 'high')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
-                                                >
-                                                    ⚠️ Overspeed 48 km/h
-                                                </button>
-                                                <button
-                                                    onClick={() => triggerTestAlarm('collision', 'Emergency Impact Detected', 'GSensor Alarm', 'critical')}
-                                                    className="p-1.5 bg-white hover:bg-rose-50 border border-amber-200 rounded-lg text-xs font-semibold text-slate-700 text-left cursor-pointer"
-                                                >
-                                                    💥 Benturan / G-Sensor
-                                                </button>
-                                            </div>
-                                        </div>
+                                        })
                                     )}
-
-                                    {/* Category Tabs */}
-                                    <div className="p-2 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between text-xs">
-                                        <div className="flex items-center gap-1 overflow-x-auto">
-                                            <button
-                                                onClick={() => setAlarmTab('all')}
-                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                                                    alarmTab === 'all' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
-                                                }`}
-                                            >
-                                                Semua ({alarms.length})
-                                            </button>
-                                            <button
-                                                onClick={() => setAlarmTab('gsensor')}
-                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                                                    alarmTab === 'gsensor' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
-                                                }`}
-                                            >
-                                                G-Sensor ({alarms.filter(a => a.category?.toLowerCase().includes('gsensor') || a.desc.toLowerCase().includes('rollover')).length})
-                                            </button>
-                                            <button
-                                                onClick={() => setAlarmTab('fd')}
-                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                                                    alarmTab === 'fd' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
-                                                }`}
-                                            >
-                                                Fierce Driving ({alarms.filter(a => a.category?.toLowerCase().includes('fierce') || a.desc.toLowerCase().includes('collision')).length})
-                                            </button>
-                                            <button
-                                                onClick={() => setAlarmTab('dms')}
-                                                className={`px-2 py-1 rounded-md text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                                                    alarmTab === 'dms' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-800'
-                                                }`}
-                                            >
-                                                DMS ({alarms.filter(a => a.category?.toLowerCase().includes('dms') || a.category?.toLowerCase().includes('fatigue')).length})
-                                            </button>
-                                        </div>
-
-                                        {untreatedCount > 0 && (
-                                            <button
-                                                onClick={handleBatchAction}
-                                                className="text-[12px] font-bold text-rose-700 hover:text-rose-800 hover:underline flex items-center gap-1 shrink-0 ml-1 cursor-pointer"
-                                            >
-                                                <CheckCheck className="w-3 h-3" /> Tangani Semua
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Alarms Feed List */}
-                                    <div className="p-3 space-y-2 max-h-[260px] overflow-y-auto">
-                                        {filteredAlarms.length === 0 ? (
-                                            <div className="text-center py-6">
-                                                <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-1" />
-                                                <p className="text-xs text-slate-500 font-bold">Tidak ada peringatan aktif</p>
-                                                <p className="text-[12px] text-slate-400 mt-0.5">Semua parameter safety berada dalam kondisi normal</p>
-                                            </div>
-                                        ) : (
-                                            filteredAlarms.map((alarm) => {
-                                                const isHandled = (alarm.handle_status ?? 'Untreated') === 'Handled';
-                                                return (
-                                                    <div
-                                                        key={alarm.guid}
-                                                        className={`p-2.5 rounded-xl border transition-all ${
-                                                            isHandled
-                                                                ? 'bg-slate-50/70 border-slate-200 opacity-75'
-                                                                : alarm.severity === 'critical'
-                                                                ? 'bg-rose-50/80 border-rose-200 shadow-sm'
-                                                                : 'bg-amber-50/60 border-amber-200'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <div className="flex items-start gap-2 flex-1 min-w-0">
-                                                                <div className={`p-1 rounded-lg shrink-0 mt-0.5 ${
-                                                                    isHandled ? 'bg-slate-200 text-slate-600' :
-                                                                    alarm.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
-                                                                }`}>
-                                                                    <AlertCircle className="w-3.5 h-3.5" />
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                                        <span className="text-xs font-bold text-slate-800 leading-tight">
-                                                                            {alarm.desc}
-                                                                        </span>
-                                                                        <span className={`text-xs font-bold px-1.5 py-0.2 rounded ${
-                                                                            alarm.severity === 'critical' ? 'bg-red-100 text-red-700' :
-                                                                            alarm.severity === 'high' ? 'bg-orange-100 text-orange-700' :
-                                                                            'bg-slate-100 text-slate-600'
-                                                                        }`}>
-                                                                            {alarm.severity ? alarm.severity.toUpperCase() : 'ALERT'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <p className="text-[12px] text-slate-500 mt-1 flex items-center gap-1.5">
-                                                                        <span>{alarm.category || 'CMSv6 Alarm'}</span>
-                                                                        <span>•</span>
-                                                                        <span>{alarm.time}</span>
-                                                                        {alarm.vehicle && (
-                                                                            <>
-                                                                                <span>•</span>
-                                                                                <span className="font-semibold text-slate-700">{alarm.vehicle}</span>
-                                                                            </>
-                                                                        )}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Handle Action */}
-                                                            <div className="shrink-0 text-right">
-                                                                {isHandled ? (
-                                                                    <span className="inline-flex items-center gap-1 text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
-                                                                        <Check className="w-3 h-3" /> Selesai
-                                                                    </span>
-                                                                ) : (
-                                                                    <button
-                                                                        onClick={() => handleQuickAction(alarm.guid)}
-                                                                        className="inline-flex items-center gap-1 text-[12px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2.5 py-1 rounded-lg shadow-sm transition active:scale-95 cursor-pointer"
-                                                                    >
-                                                                        <Check className="w-3 h-3" /> Tangani
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
-                                    </div>
                                 </div>
                             </div>
                         </div>
-                                    </div>
+                    </div>
                 </div>
 
-                {/* ── MODAL: TAMBAH GEOFENCE BARU (Slide 26 GEOFENCE) ── */}
+                {/* ── MODAL: TAMBAH GEOFENCE BARU ── */}
                 {showGeofenceModal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 border border-slate-200 animate-in fade-in zoom-in duration-150">
-                            <div className="flex items-center justify-between border-b pb-3 mb-4">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
                                 <div>
-                                    <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                        <LandPlot className="w-4 h-4 text-purple-600" /> Tambah Geofence Tambang Baru
+                                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                        <LandPlot className="w-4 h-4 text-blue-600" /> Tambah Geofence Tambang Baru
                                     </h4>
-                                    <p className="text-[12px] text-slate-400">Konfigurasi zona pagar virtual GPS sesuai standar PT HPU (Slide 26)</p>
+                                    <p className="text-xs text-gray-400">Konfigurasi zona pagar virtual GPS sesuai standar PT. HPU</p>
                                 </div>
-                                <button onClick={() => setShowGeofenceModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                                <button onClick={() => setShowGeofenceModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
                             <form onSubmit={handleCreateGeofence} className="space-y-3">
                                 <div>
-                                    <label className="text-xs font-semibold text-slate-600 block mb-1">Nama Zona / Area</label>
+                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Nama Zona / Area</label>
                                     <input
                                         type="text"
                                         placeholder="Contoh: Pit Front C (Loading), Disposal Selatan"
                                         value={newGeofence.name}
                                         onChange={e => setNewGeofence({ ...newGeofence, name: e.target.value })}
-                                        className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
                                         required
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="text-xs font-semibold text-slate-600 block mb-1">Tipe Zona</label>
+                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Tipe Zona</label>
                                         <select
                                             value={newGeofence.type}
                                             onChange={e => setNewGeofence({ ...newGeofence, type: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
                                         >
                                             <option value="dumping">Dumping Area (Disposal)</option>
                                             <option value="loading">Loading Point (PIT)</option>
@@ -2824,26 +2783,26 @@ export default function Page() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-semibold text-slate-600 block mb-1">Jenis Geometri (Slide 26)</label>
+                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Jenis Geometri</label>
                                         <select
                                             value={newGeofence.geometry_type}
                                             onChange={e => setNewGeofence({ ...newGeofence, geometry_type: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
                                         >
-                                            <option value="circle">Circle (Luas Area PIT)</option>
-                                            <option value="polygon">Polygon (Office, PIT, Dumping)</option>
-                                            <option value="line">Line (Pembuatan Jalan)</option>
+                                            <option value="circle">Circle (Radius Melingkar)</option>
+                                            <option value="polygon">Polygon (Area Tertutup)</option>
+                                            <option value="line">Line (Jalur Jalan)</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="text-xs font-semibold text-slate-600 block mb-1">Material Utama (Slide 21)</label>
+                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Material Utama</label>
                                         <select
                                             value={newGeofence.material}
                                             onChange={e => setNewGeofence({ ...newGeofence, material: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
                                         >
                                             <option value="OB">OB (Overburden)</option>
                                             <option value="COAL">Coal (Batubara)</option>
@@ -2854,38 +2813,38 @@ export default function Page() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-semibold text-slate-600 block mb-1">Radius (Meter)</label>
+                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Radius (Meter)</label>
                                         <input
                                             type="number"
                                             min="20"
                                             max="2000"
                                             value={newGeofence.radius}
                                             onChange={e => setNewGeofence({ ...newGeofence, radius: Number(e.target.value) })}
-                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
                                             required
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-slate-600 block mb-1">Alamat / Blok Tambang</label>
+                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Alamat / Blok Tambang</label>
                                     <input
                                         type="text"
                                         placeholder="Contoh: Pit Front Barat Blok 4, KM 15 Hauling Road"
                                         value={newGeofence.address}
                                         onChange={e => setNewGeofence({ ...newGeofence, address: e.target.value })}
-                                        className="w-full text-xs p-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-slate-600 block mb-1">Warna Zona (Slide 28)</label>
+                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Warna Zona</label>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="color"
                                             value={newGeofence.color}
                                             onChange={e => setNewGeofence({ ...newGeofence, color: e.target.value })}
-                                            className="w-8 h-8 rounded-lg border border-slate-300 p-0.5 cursor-pointer"
+                                            className="w-8 h-8 rounded-lg border border-gray-200 p-0.5 cursor-pointer"
                                         />
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             {[
@@ -2899,7 +2858,7 @@ export default function Page() {
                                                     key={c.hex}
                                                     type="button"
                                                     onClick={() => setNewGeofence({ ...newGeofence, color: c.hex })}
-                                                    className="text-[12px] px-2 py-0.5 rounded border flex items-center gap-1 font-semibold"
+                                                    className="text-[11px] px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1 font-semibold"
                                                 >
                                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.hex }}></span>
                                                     {c.label}
@@ -2909,21 +2868,21 @@ export default function Page() {
                                     </div>
                                 </div>
 
-                                <p className="text-[12px] text-slate-400 bg-slate-50 p-2 rounded-lg border">
-                                    📍 Titik pusat otomatis menggunakan posisi GPS unit: ({telemetry.lat?.toFixed(5) ?? '-7.6582'}, {telemetry.lng?.toFixed(5) ?? '111.1895'})
+                                <p className="text-[11px] text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                                    Titik pusat otomatis menggunakan posisi GPS unit saat ini: ({telemetry.lat?.toFixed(5) ?? '-7.6582'}, {telemetry.lng?.toFixed(5) ?? '111.1895'})
                                 </p>
 
-                                <div className="flex items-center justify-end gap-2 pt-2 border-t">
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
                                     <button
                                         type="button"
                                         onClick={() => setShowGeofenceModal(false)}
-                                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 cursor-pointer"
                                     >
                                         Batal
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 shadow cursor-pointer"
+                                        className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs cursor-pointer"
                                     >
                                         Simpan Geofence
                                     </button>
@@ -2933,54 +2892,54 @@ export default function Page() {
                     </div>
                 )}
 
-                {/* ── MODAL: RIWAYAT SIKLUS RITASI & PRODUKSI BCM (Slide 6 & 25) ── */}
+                {/* ── MODAL: RIWAYAT SIKLUS RITASI & PRODUKSI BCM ── */}
                 {showRitasiHistoryModal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col max-h-[85vh]">
-                            <div className="flex items-center justify-between border-b pb-3 mb-4">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh]">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                                         <FileText className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-base font-bold text-slate-800">Riwayat Siklus Ritasi & Produksi BCM</h3>
-                                        <p className="text-xs text-slate-400">Pencatatan siklus hauling dari PIT ke Dumping Area dengan verifikasi sensor PTO (Slide 25)</p>
+                                        <h3 className="text-base font-bold text-gray-900">Riwayat Siklus Ritasi & Produksi BCM</h3>
+                                        <p className="text-xs text-gray-400">Pencatatan siklus hauling dari PIT ke Dumping Area dengan verifikasi sensor PTO</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowRitasiHistoryModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 cursor-pointer">
+                                <button onClick={() => setShowRitasiHistoryModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 cursor-pointer">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
 
-                            {/* Summary Metrics Banner */}
-                            <div className="grid grid-cols-4 gap-3 mb-4">
-                                <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-center">
-                                    <p className="text-[12px] font-bold text-purple-600 uppercase">Total Ritasi</p>
-                                    <p className="text-xl font-black text-purple-900">{ritasiToday} <span className="text-xs font-normal">RIT</span></p>
+                            {/* Summary Metrics */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-center">
+                                    <p className="text-[11px] font-bold text-blue-600 uppercase">Total Ritasi</p>
+                                    <p className="text-xl font-bold text-blue-900">{ritasiToday} <span className="text-xs font-normal">RIT</span></p>
                                 </div>
-                                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
-                                    <p className="text-[12px] font-bold text-emerald-600 uppercase">Produksi BCM</p>
-                                    <p className="text-xl font-black text-emerald-900">{totalBcmToday} <span className="text-xs font-normal">BCM</span></p>
+                                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                                    <p className="text-[11px] font-bold text-emerald-600 uppercase">Produksi BCM</p>
+                                    <p className="text-xl font-bold text-emerald-900">{totalBcmToday} <span className="text-xs font-normal">BCM</span></p>
                                 </div>
-                                <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-center">
-                                    <p className="text-[12px] font-bold text-blue-600 uppercase">Rata-rata Cycle Time</p>
-                                    <p className="text-xl font-black text-blue-900">{avgCycleTimeToday || 22} <span className="text-xs font-normal">Menit</span></p>
+                                <div className="p-3 bg-purple-50 rounded-xl border border-purple-100 text-center">
+                                    <p className="text-[11px] font-bold text-purple-600 uppercase">Rata-rata Cycle Time</p>
+                                    <p className="text-xl font-bold text-purple-900">{avgCycleTimeToday || 22} <span className="text-xs font-normal">Menit</span></p>
                                 </div>
-                                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-center">
-                                    <p className="text-[12px] font-bold text-amber-600 uppercase">Total Jarak Tempuh</p>
-                                    <p className="text-xl font-black text-amber-900">{totalDistanceKm.toFixed(1)} <span className="text-xs font-normal">KM</span></p>
+                                <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-center">
+                                    <p className="text-[11px] font-bold text-amber-600 uppercase">Total Jarak Tempuh</p>
+                                    <p className="text-xl font-bold text-amber-900">{totalDistanceKm.toFixed(1)} <span className="text-xs font-normal">KM</span></p>
                                 </div>
                             </div>
 
                             {/* Table of Ritasi Logs */}
-                            <div className="flex-1 overflow-y-auto border border-slate-200 rounded-xl">
+                            <div className="flex-1 overflow-y-auto border border-gray-200 rounded-xl">
                                 {ritasiLogs.length > 0 ? (
                                     <table className="w-full text-left text-xs border-collapse">
-                                        <thead className="bg-slate-100 text-slate-600 font-bold sticky top-0 border-b">
+                                        <thead className="bg-gray-50 text-gray-600 font-bold sticky top-0 border-b border-gray-200">
                                             <tr>
                                                 <th className="p-2.5">Trip #</th>
                                                 <th className="p-2.5">Unit</th>
-                                                <th className="p-2.5">Material (Slide 21)</th>
+                                                <th className="p-2.5">Material</th>
                                                 <th className="p-2.5">Loading PIT</th>
                                                 <th className="p-2.5">Dumping Disposal</th>
                                                 <th className="p-2.5 text-center">Cycle Time</th>
@@ -2989,54 +2948,48 @@ export default function Page() {
                                                 <th className="p-2.5 text-right">Waktu</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-gray-100">
                                             {ritasiLogs.map(l => {
                                                 const mat = l.load_type || 'OB';
-                                                const matBg = 
-                                                    mat === 'COAL' ? 'bg-slate-900 text-white' :
-                                                    mat === 'OB' ? 'bg-slate-500 text-white' :
-                                                    mat === 'MUD' ? 'bg-amber-900 text-white' :
-                                                    mat === 'TOP SOIL' ? 'bg-orange-600 text-white' :
-                                                    mat === 'LIMONIT' ? 'bg-yellow-700 text-white' : 'bg-emerald-700 text-white';
                                                 return (
-                                                    <tr key={l.id} className="hover:bg-slate-50/70 transition">
-                                                        <td className="p-2.5 font-bold text-slate-700">#{l.id}</td>
-                                                        <td className="p-2.5 font-mono font-semibold text-slate-800">{l.unit_code || 'HD-78501'}</td>
+                                                    <tr key={l.id} className="hover:bg-gray-50/80 transition">
+                                                        <td className="p-2.5 font-bold text-gray-700">#{l.id}</td>
+                                                        <td className="p-2.5 font-mono font-semibold text-gray-900">{l.unit_code || 'HD-78501'}</td>
                                                         <td className="p-2.5">
-                                                            <span className={`px-2 py-0.5 rounded text-[12px] font-bold font-mono ${matBg}`}>
+                                                            <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-gray-100 text-gray-700">
                                                                 {mat}
                                                             </span>
                                                         </td>
-                                                        <td className="p-2.5 text-slate-700">{l.pit_name || 'Pit Front A'}</td>
-                                                        <td className="p-2.5 text-slate-700 font-medium">{l.dumping_name || l.geofence_name}</td>
-                                                        <td className="p-2.5 text-center font-mono text-purple-700 font-bold">{l.cycle_time_minutes ?? 21.5} m</td>
-                                                        <td className="p-2.5 text-center font-mono text-slate-600">{l.distance_km ?? 2.4} km</td>
+                                                        <td className="p-2.5 text-gray-700">{l.pit_name || 'Pit Front A'}</td>
+                                                        <td className="p-2.5 text-gray-700 font-medium">{l.dumping_name || l.geofence_name}</td>
+                                                        <td className="p-2.5 text-center font-mono text-blue-700 font-bold">{l.cycle_time_minutes ?? 21.5} m</td>
+                                                        <td className="p-2.5 text-center font-mono text-gray-600">{l.distance_km ?? 2.4} km</td>
                                                         <td className="p-2.5 text-center">
-                                                            <span className="inline-flex items-center gap-1 text-[12px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                <CheckCircle className="w-3 h-3 text-emerald-600" /> ON (Verified)
+                                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                <CheckCircle className="w-3 h-3 text-emerald-600" /> Terverifikasi
                                                             </span>
                                                         </td>
-                                                        <td className="p-2.5 text-right font-mono text-slate-500">{l.entered_at || '-'}</td>
+                                                        <td className="p-2.5 text-right font-mono text-gray-500">{l.entered_at || '-'}</td>
                                                     </tr>
                                                 );
                                             })}
                                         </tbody>
                                     </table>
                                 ) : (
-                                    <div className="py-12 text-center text-slate-400">
-                                        <p className="text-sm font-semibold">Belum ada riwayat ritasi tercatat hari ini.</p>
-                                        <p className="text-xs text-slate-400 mt-1">Jalankan simulasi 5 siklus hauling atau operasikan unit tambang untuk merekam ritasi.</p>
+                                    <div className="py-12 text-center text-gray-400">
+                                        <p className="text-sm font-semibold text-gray-600">Belum ada riwayat ritasi tercatat hari ini.</p>
+                                        <p className="text-xs text-gray-400 mt-1">Jalankan simulasi siklus hauling untuk merekam ritasi.</p>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex items-center justify-between pt-4 mt-2 border-t text-xs">
-                                <span className="text-slate-500 text-xs">
+                            <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 text-xs">
+                                <span className="text-gray-400">
                                     Rumus Produktivitas Hauler: Q = q × (3600 / Cycle Time) × FK
                                 </span>
                                 <button
                                     onClick={() => setShowRitasiHistoryModal(false)}
-                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold cursor-pointer transition"
+                                    className="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-xl font-bold cursor-pointer transition"
                                 >
                                     Tutup
                                 </button>

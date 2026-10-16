@@ -87,13 +87,13 @@ const menu_items=[
     },
 ]
 
-const Layout = ({children, className}: {children: React.ReactNode, className?: string}) => {
+const Layout = ({children, className, containerClassName}: {children: React.ReactNode, className?: string, containerClassName?: string}) => {
 
     return (
-        <div className="background-frontpage min-h-screen p-4 md:p-6 font-sans">
-            <div className="mx-auto max-w-7xl transition-all">
+        <div className="background-frontpage min-h-screen p-3 md:p-5 font-sans">
+            <div className={clsx("mx-auto transition-all", containerClassName || "max-w-7xl")}>
                 {/* Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div className="flex items-center gap-2 px-3">
                         <span className="text-3xl font-extrabold tracking-tight text-white">
                             SMART FLEET

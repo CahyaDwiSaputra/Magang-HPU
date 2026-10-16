@@ -19,10 +19,10 @@ class CmsV6ProxyController extends Controller
 
     public function __construct()
     {
-        $this->base     = rtrim(config('services.cmsv6.base_url', 'http://10.10.0.53:8080'), '/');
+        $this->base     = rtrim(config('services.cmsv6.base_url', 'http://10.10.0.33:8088'), '/');
         $this->account  = config('services.cmsv6.account', 'admin');
         $this->password = config('services.cmsv6.password', 'Password.1');
-        $this->deviceId = config('services.cmsv6.device_id', '240078916116');
+        $this->deviceId = config('services.cmsv6.device_id', '240078740672');
     }
 
     // ── INTERNAL: Ambil jsession dari cache atau login ulang ──
@@ -387,14 +387,22 @@ class CmsV6ProxyController extends Controller
             ]
         ];
 
-        // Ambil status real-time langsung dari server CMSV6
-        $statusMap = Cache::remember('cmsv6_online_map', 10, function() {
-            $res = $this->callWithRetry('/808gps/StandardApiAction_getDeviceStatus.action');
+        // Ambil status real-time langsung dari server CMSV6 HPU Monitoring (10.10.0.33:8088)
+        $statusMap = Cache::remember('cmsv6_online_map_v3', 10, function() use ($vehicles) {
             $map = [];
-            if (!empty($res['status']) && is_array($res['status'])) {
-                foreach ($res['status'] as $s) {
-                    if (!empty($s['id'])) {
-                        $map[$s['id']] = ($s['ol'] ?? 0) == 1;
+            foreach ($vehicles as $v) {
+                $devId = $v['deviceNo'] ?? '';
+                if ($devId) {
+                    $res = $this->callWithRetry('/808gps/open/player/StandardApiAction_getVideoDevice.action', [
+                        'devIdno' => $devId
+                    ]);
+                    if (($res['result'] ?? -1) === 0) {
+                        $isOnline = (($res['isOnline'] ?? 0) == 1);
+                        $map[$devId] = [
+                            'online'     => $isOnline,
+                            'registered' => true,
+                            'chnCount'   => $res['chnCount'] ?? 2,
+                        ];
                     }
                 }
             }
@@ -402,16 +410,29 @@ class CmsV6ProxyController extends Controller
         });
 
         foreach ($vehicles as &$v) {
-            if (isset($statusMap[$v['deviceNo']])) {
-                $v['status'] = $statusMap[$v['deviceNo']] ? 'ONLINE' : 'STANDBY';
+            $devId = $v['deviceNo'] ?? '';
+            if (isset($statusMap[$devId])) {
+                $info = $statusMap[$devId];
+                $v['status'] = $info['online'] ? 'ONLINE' : 'STANDBY';
+                $v['is_registered'] = true;
+            } else {
+                $v['status'] = 'STANDBY';
+                $v['is_registered'] = false;
             }
         }
         unset($v);
 
-        // Prioritaskan unit yang sedang ONLINE di posisi paling atas
+        // Prioritaskan: 1) yang sedang ONLINE, 2) yang TERDAFTAR di CMSV6, 3) sisanya
         usort($vehicles, function ($a, $b) {
-            if ($a['status'] === $b['status']) return 0;
-            return $a['status'] === 'ONLINE' ? -1 : 1;
+            $aOnline = ($a['status'] === 'ONLINE');
+            $bOnline = ($b['status'] === 'ONLINE');
+            if ($aOnline !== $bOnline) return $aOnline ? -1 : 1;
+
+            $aReg = !empty($a['is_registered']);
+            $bReg = !empty($b['is_registered']);
+            if ($aReg !== $bReg) return $aReg ? -1 : 1;
+
+            return strcmp($a['plateNo'], $b['plateNo']);
         });
 
         return response()->json([
