@@ -341,8 +341,11 @@
                         { label: 'Putar Simulasi Demo', primary: true, onClick: () => startSimulation() }
                     ]);
                 } else {
-                    const host = params.get('host') || '10.10.0.33:6604';
-                    const streamUrl = `http://${host}/3/3?AVType=1&jsession=${jsession}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`;
+                    const host     = params.get('host') || '10.10.0.33:6604';
+                    const useProxy = params.get('proxy') === '1' || window.location.protocol === 'https:';
+                    const streamUrl = useProxy
+                        ? `/api/cmsv6/stream?dev=${devIdno}&ch=${channel}&jsession=${jsession || ''}&stream=1`
+                        : `http://${host}/3/3?AVType=1&jsession=${jsession || ''}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`;
                     let started = false;
 
                     const standbyTimeout = setTimeout(() => {

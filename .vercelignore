@@ -1,0 +1,8 @@
+/vendor
+/node_modules
+/.git
+/tests
+/ai_service
+*.py
+.env
+.env.example

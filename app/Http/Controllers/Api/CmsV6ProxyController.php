@@ -446,8 +446,9 @@ class CmsV6ProxyController extends Controller
      * GET /api/cmsv6/status
      * Status perangkat (GPS, kecepatan, bahan bakar, online/offline)
      */
-    public function deviceStatus(Request $request): JsonResponse
+    public function deviceStatus(?Request $request = null): JsonResponse
     {
+        $request = $request ?? request();
         $devId = $request->input('devIdno', $this->deviceId);
         $data = $this->callWithRetry('/808gps/StandardApiAction_getDeviceStatus.action', [
             'devIdno' => $devId,
@@ -459,8 +460,9 @@ class CmsV6ProxyController extends Controller
      * GET /api/cmsv6/alarms
      * Mengambil daftar alarm aktif yang selaras dengan Alarm Center CMSv6 (18 Alarm: Fierce Driving & GSensor)
      */
-    public function alarms(): JsonResponse
+    public function alarms(?Request $request = null): JsonResponse
     {
+        $request = $request ?? request();
         $alarms = Cache::get('cmsv6_active_alarms');
 
         if ($alarms === null) {
@@ -469,33 +471,56 @@ class CmsV6ProxyController extends Controller
         }
 
         // Cek apakah ada telemetri real-time yang memicu alarm dinamis (misal overspeed)
-        $statusRes = $this->deviceStatus();
+        $devId = $request->input('devIdno', $this->deviceId);
+        $statusRes = $this->deviceStatus($request);
         $statusData = $statusRes->getData(true);
+
+        $vehiclePlate = 'BDA-DT41107VV (RU-225)';
+        if ($devId === '240078916116') {
+            $vehiclePlate = 'HD-78501 (Trial UNS)';
+        } else if ($devId === '240078740557') {
+            $vehiclePlate = 'BDA-DT41110VV (RU-230)';
+        }
+
         if (!empty($statusData['status'][0])) {
             $s = $statusData['status'][0];
             $speed = round(($s['sp'] ?? 0) / 10);
             if ($speed > 40) {
-                // Pastikan overspeed alarm ada di daftar
+                // Pastikan overspeed alarm ada di daftar untuk armada ini
                 $hasOverspeed = false;
                 foreach ($alarms as $a) {
-                    if (($a['type'] ?? 0) === 101 && ($a['handle_status'] ?? '') === 'Untreated') {
+                    if (($a['type'] ?? 0) === 101 && ($a['handle_status'] ?? '') === 'Untreated' && (($a['vehicle'] ?? '') === $vehiclePlate || ($a['devIdno'] ?? '') === $devId)) {
                         $hasOverspeed = true;
                         break;
                     }
                 }
                 if (!$hasOverspeed) {
                     array_unshift($alarms, [
-                        'guid' => 'ALM-SPD-' . time(),
-                        'desc' => "Overspeed Warning ({$speed} km/h > 40 km/h)",
-                        'category' => 'Hauling Safety',
-                        'type' => 101,
-                        'severity' => 'critical',
+                        'guid'          => 'ALM-SPD-' . time(),
+                        'desc'          => "Overspeed Warning ({$speed} km/h > 40 km/h)",
+                        'category'      => 'Hauling Safety',
+                        'type'          => 101,
+                        'severity'      => 'critical',
                         'handle_status' => 'Untreated',
                         'current_state' => 'Alarming',
-                        'time' => now()->format('Y-m-d H:i:s'),
-                        'vehicle' => 'TrialUNS2',
-                        'company' => 'Hpu',
+                        'time'          => now()->format('Y-m-d H:i:s'),
+                        'vehicle'       => $vehiclePlate,
+                        'devIdno'       => $devId,
+                        'company'       => 'Hpu',
                     ]);
+                    Cache::put('cmsv6_active_alarms', $alarms, now()->addDays(7));
+                }
+            } else {
+                // Kecepatan normal (<= 40 km/h): hilangkan alarm overspeed dinamis lama yang belum ditangani
+                $cleanedAlarms = array_values(array_filter($alarms, function($a) use ($vehiclePlate, $devId) {
+                    $isAutoOverspeed = (($a['type'] ?? 0) === 101 && ($a['handle_status'] ?? '') === 'Untreated');
+                    if (!$isAutoOverspeed) return true;
+                    // Hapus jika milik kendaraan yang saat ini normal
+                    $matchesVeh = (($a['vehicle'] ?? '') === $vehiclePlate || ($a['devIdno'] ?? '') === $devId || ($a['vehicle'] ?? '') === 'TrialUNS2');
+                    return !$matchesVeh;
+                }));
+                if (count($cleanedAlarms) !== count($alarms)) {
+                    $alarms = $cleanedAlarms;
                     Cache::put('cmsv6_active_alarms', $alarms, now()->addDays(7));
                 }
             }
@@ -583,6 +608,9 @@ class CmsV6ProxyController extends Controller
 
         $info = $typeMap[$type] ?? ['desc' => 'Custom Safety Alert', 'category' => 'DMS', 'severity' => 'high', 'type' => 300];
 
+        $vehicle = $request->input('vehicle') ?? 'BDA-DT41107VV (RU-225)';
+        $devId = $request->input('deviceId') ?? $request->input('devIdno', $this->deviceId);
+
         $newAlarm = [
             'guid'          => 'ALM-SIM-' . uniqid(),
             'desc'          => $info['desc'],
@@ -592,7 +620,8 @@ class CmsV6ProxyController extends Controller
             'handle_status' => 'Untreated',
             'current_state' => 'Alarming',
             'time'          => now()->format('Y-m-d H:i:s'),
-            'vehicle'       => 'TrialUNS2',
+            'vehicle'       => $vehicle,
+            'devIdno'       => $devId,
             'company'       => 'Hpu',
         ];
 
@@ -722,33 +751,43 @@ class CmsV6ProxyController extends Controller
     }
 
     /**
-     * GET /stream-proxy
-     * Proxy stream FLV dari CMSV6 ke browser (menghindari CORS & cross-origin)
+     * GET /api/cmsv6/stream
+     * Proxy stream FLV langsung dari CMSV6 Gateway port 6604 ke browser (HTTPS & bypass mixed-content)
      */
     public function streamProxy(Request $request)
     {
         $jsession = $request->query('jsession') ?: $this->getSession();
         $dev      = $request->query('dev', $this->deviceId);
-        $channel  = (int) $request->query('ch', 1);
+        $channel  = (int) $request->query('ch', 0);
         $stream   = (int) $request->query('stream', 1);
 
-        $streamUrl = "{$this->base}/808gps/open/video/realVideo.action"
-            . "?jsession={$jsession}"
-            . "&devIdno={$dev}"
-            . "&channel={$channel}"
-            . "&stream={$stream}";
+        $mediaHost = env('CMSV6_MEDIA_HOST', '10.10.0.33:6604');
+        $streamUrl = "http://{$mediaHost}/3/3?AVType=1&jsession={$jsession}&DevIDNO={$dev}&Channel={$channel}&Stream={$stream}";
 
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders(['Accept' => '*/*'])
-                ->get($streamUrl);
-
-            return response($response->body(), $response->status())
-                ->header('Content-Type', 'video/x-flv')
-                ->header('Access-Control-Allow-Origin', '*');
-        } catch (\Throwable $e) {
-            Log::error('[CMSV6] Stream proxy error: ' . $e->getMessage());
-            return response('Stream error', 502);
-        }
+        return response()->stream(function () use ($streamUrl) {
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 15,
+                ]
+            ]);
+            $fp = @fopen($streamUrl, 'rb', false, $context);
+            if ($fp) {
+                while (!feof($fp) && !connection_aborted()) {
+                    $chunk = fread($fp, 16384);
+                    if ($chunk !== false && strlen($chunk) > 0) {
+                        echo $chunk;
+                        flush();
+                    }
+                }
+                fclose($fp);
+            }
+        }, 200, [
+            'Content-Type' => 'video/x-flv',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'Access-Control-Allow-Origin' => '*',
+            'X-Accel-Buffering' => 'no',
+        ]);
     }
 }

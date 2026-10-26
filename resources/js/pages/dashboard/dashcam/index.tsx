@@ -1,14 +1,15 @@
 import { Head } from '@inertiajs/react';
 import LayoutNavbar from '@/components/layout-navbar';
 import { 
-    Signal, User, Scan, Video, AlertCircle, ShieldCheck, Map as MapIcon, Truck, Fuel, Power, 
+    Signal, User, Scan, Video, VideoOff, AlertCircle, ShieldCheck, Map as MapIcon, Truck, Fuel, Power, 
     UserCheck, UserX, LogOut, Navigation, ArrowRightCircle, LogIn, X, 
     ChevronDown, Search, History, Camera, CheckCircle2, ScanFace, UserPlus,
     ShieldAlert, Check, CheckCheck, Sparkles, Bell, LandPlot, Play, RotateCw, 
     Plus, Trash2, MapPin, Clock, Gauge, Layers, Activity, FileText, CheckCircle,
-    LayoutGrid, Rows, Star, ArrowUpRight, RotateCcw, Smartphone, Radio, Phone
+    LayoutGrid, Rows, Star, ArrowUpRight, RotateCcw, Smartphone, Radio, Phone,
+    Maximize2, Minimize2, ZoomIn, ZoomOut, Crosshair, Globe, Compass
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Map, Marker, Overlay } from 'pigeon-maps';
 
 export type FleetVehicle = {
@@ -229,16 +230,18 @@ export const HPU_FLEET: FleetVehicle[] = [
 
 // Channel 0 = CAM 1 Depan (Metode 1: videoH5.html langsung dari server CMSV6 HPU)
 // Channel 1 = CAM 2 Kabin (Metode 2: player.html dengan optimasi low-latency)
-function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'cmsv6', isDemo: boolean = false) {
+function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'flv', isDemo: boolean = false) {
     if (!jsession && !isDemo) return null;
     if (isDemo) {
         return `/player.html?dev=${deviceId}&ch=${channel}&demo=1`;
     }
-    if (engine === 'cmsv6') {
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    if (engine === 'cmsv6' && !isHttps) {
         return `http://10.10.0.33:8088/808gps/open/player/video.html?lang=en&devIdno=${deviceId}&jsession=${jsession || ''}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
     }
     const mediaHost = '10.10.0.33:6604';
-    return `/player.html?dev=${deviceId}&ch=${channel}&jsession=${jsession || ''}&host=${mediaHost}`;
+    const proxyFlag = isHttps ? '&proxy=1' : '';
+    return `/player.html?dev=${deviceId}&ch=${channel}&jsession=${jsession || ''}&host=${mediaHost}${proxyFlag}`;
 }
 
 // channels akan dirender dinamis berdasarkan selectedVehicle di dalam komponen
@@ -253,6 +256,27 @@ export default function Page() {
     const [streamEngine, setStreamEngine] = useState<'cmsv6' | 'flv'>('cmsv6');
     const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
+    // ── REVISI 1: ON/OFF LIVECAM (DEFAULT: OFF TERLEBIH DAHULU) ──
+    const [isLivecamActive, setIsLivecamActive] = useState<boolean>(false);
+
+    // ── REVISI 2: MAP HIGHLIGHT & EXPANSION (CITRA SATELIT / GOOGLE EARTH) ──
+    const [mapLayer, setMapLayer] = useState<'satellite' | 'street'>('satellite');
+    const [mapZoom, setMapZoom] = useState<number>(15);
+    const [mapCenter, setMapCenter] = useState<[number, number]>([-7.658200, 111.189500]);
+    const [isMapExpanded, setIsMapExpanded] = useState<boolean>(false);
+    const [showZonesDrawer, setShowZonesDrawer] = useState<boolean>(false);
+    // Flag: true saat vehicle baru dipilih & peta belum terpusat ke GPS terbaru
+    const mapNeedsRecenter = useRef<boolean>(false);
+    // Ref untuk melacak vehicle sebelumnya agar useEffect tidak jalan saat initial mount
+    const prevVehicleId = useRef<string | null>(null);
+
+    const mapTileProvider = (x: number, y: number, z: number) => {
+        if (mapLayer === 'satellite') {
+            return `https://mt1.google.com/vt/lyrs=y&x=${x}&y=${y}&z=${z}`;
+        }
+        return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+    };
+
     // Listen postMessage dari player.html untuk navigasi ke armada terdaftar
     useEffect(() => {
         const handleMsg = (e: MessageEvent) => {
@@ -266,6 +290,7 @@ export default function Page() {
         window.addEventListener('message', handleMsg);
         return () => window.removeEventListener('message', handleMsg);
     }, [fleet]);
+
 
     const currentVehicle = fleet.find(v => v.id === selectedVehicleId) || fleet[0];
     const activeDeviceId = currentVehicle.deviceNo;
@@ -460,6 +485,33 @@ export default function Page() {
         geometry_type: 'circle',
     });
     const [geofenceNotice, setGeofenceNotice] = useState<string | null>(null);
+
+    // ── SINKRONISASI FOKUS PETA SAAT ARMADA DIGANTI ──
+    // useEffect ini harus diletakkan SETELAH semua useState dideklarasikan
+    useEffect(() => {
+        if (prevVehicleId.current !== null && prevVehicleId.current !== selectedVehicleId) {
+            // Vehicle sungguh-sungguh berganti (bukan initial mount)
+            mapNeedsRecenter.current = true;
+            setBannerDismissed(false);
+            // Reset posisi lama agar peta tidak terjebak di koordinat armada sebelumnya
+            setTelemetry(prev => ({
+                ...prev,
+                lat: null,
+                lng: null,
+                gpsLocked: false,
+                isLastKnown: true,
+            }));
+        }
+        prevVehicleId.current = selectedVehicleId;
+    }, [selectedVehicleId]);
+
+    // Auto-pusatkan peta begitu GPS terbaru masuk setelah armada diganti
+    useEffect(() => {
+        if (mapNeedsRecenter.current && telemetry.lat && telemetry.lng) {
+            setMapCenter([telemetry.lat, telemetry.lng]);
+            mapNeedsRecenter.current = false;
+        }
+    }, [telemetry.lat, telemetry.lng]);
 
     // Helper: Konversi format NMEA (DDDMM.MMMMM) ke Decimal Degrees
     const nmeaToDecimal = (val: string, isNegative = false): number => {
@@ -1435,7 +1487,14 @@ export default function Page() {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ type, desc, category, severity }),
+                body: JSON.stringify({ 
+                    type, 
+                    desc, 
+                    category, 
+                    severity,
+                    vehicle: currentVehicle.plateNo,
+                    deviceId: currentVehicle.deviceNo,
+                }),
             });
             const data = await res.json();
             if (data.result === 0 && Array.isArray(data.alarms)) {
@@ -1447,8 +1506,39 @@ export default function Page() {
         }
     };
 
-    // Filter alarms berdasarkan tab
-    const filteredAlarms = alarms.filter(a => {
+    // Helper pencocokan alarm dengan unit armada yang sedang aktif dilihat
+    const doesAlarmMatchVehicle = (alarm: any, vehicle: FleetVehicle) => {
+        if (!alarm || !vehicle) return false;
+        const alarmVeh = (alarm.vehicle || alarm.devIdno || alarm.deviceNo || '').toString().toLowerCase().trim();
+        if (!alarmVeh) return false;
+
+        const vId = (vehicle.id || '').toLowerCase().trim();
+        const vPlate = (vehicle.plateNo || '').toLowerCase().trim();
+        const vDevice = (vehicle.deviceNo || '').toLowerCase().trim();
+
+        if (alarmVeh === vId || alarmVeh === vPlate || alarmVeh === vDevice) return true;
+
+        const cleanAlarm = alarmVeh.replace(/[^a-z0-9]/g, '');
+        const cleanPlate = vPlate.replace(/[^a-z0-9]/g, '');
+        const cleanId = vId.replace(/[^a-z0-9]/g, '');
+
+        if (cleanAlarm && (cleanPlate.includes(cleanAlarm) || cleanAlarm.includes(cleanPlate))) return true;
+        if (cleanAlarm && (cleanId.includes(cleanAlarm) || cleanAlarm.includes(cleanId))) return true;
+
+        // Dukungan fleksibel untuk unit Trial UNS
+        if ((cleanAlarm.includes('trial') || cleanAlarm.includes('uns')) && 
+            (cleanPlate.includes('trial') || cleanPlate.includes('uns') || cleanId.includes('trial'))) {
+            return true;
+        }
+
+        return false;
+    };
+
+    // Filter alarms khusus untuk armada yang sedang aktif dilihat
+    const currentVehicleAlarms = alarms.filter(a => doesAlarmMatchVehicle(a, currentVehicle));
+
+    // Filter alarms berdasarkan tab untuk armada saat ini
+    const filteredAlarms = currentVehicleAlarms.filter(a => {
         if (alarmTab === 'all') return true;
         if (alarmTab === 'gsensor') return a.category?.toLowerCase().includes('gsensor') || a.desc.toLowerCase().includes('rollover');
         if (alarmTab === 'fd') return a.category?.toLowerCase().includes('fierce') || a.desc.toLowerCase().includes('collision');
@@ -1456,8 +1546,39 @@ export default function Page() {
         return true;
     });
 
-    const untreatedCount = alarms.filter(a => (a.handle_status ?? 'Untreated') === 'Untreated').length;
-    const untreatedCriticalAlarm = alarms.find(a => (a.handle_status ?? 'Untreated') === 'Untreated' && (a.severity === 'critical' || a.severity === 'high'));
+    const untreatedCount = currentVehicleAlarms.filter(a => (a.handle_status ?? 'Untreated') === 'Untreated').length;
+
+    // Evaluasi kondisi keselamatan armada saat ini
+    const speedLimit = 40;
+    const isCurrentVehicleSpeeding = (telemetry.speed || 0) > speedLimit;
+
+    // Cari alarm kritis/tinggi yang belum ditangani KHUSUS untuk unit ini
+    const untreatedCriticalAlarm = currentVehicleAlarms.find(
+        a => (a.handle_status ?? 'Untreated') === 'Untreated' && (a.severity === 'critical' || a.severity === 'high')
+    );
+
+    // Banner warning merah HANYA aktif jika armada yang sedang dilihat memiliki kondisi darurat/warning:
+    // 1. Sedang overspeeding (> 40 km/h)
+    // 2. Memiliki alarm kritis/tinggi yang belum ditangani (Collision, Rollover, Mengantuk, dll.)
+    const activeVehicleWarning = isCurrentVehicleSpeeding
+        ? {
+            guid: 'REALTIME-OVERSPEED',
+            category: 'HAULING SAFETY',
+            desc: `Overspeed Warning (${telemetry.speed} km/h > ${speedLimit} km/h)`,
+            vehicle: currentVehicle.plateNo,
+            time: telemetry.lastUpdate !== '-' ? telemetry.lastUpdate : new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            severity: 'critical' as const,
+            isRealtimeOverspeed: true,
+        }
+        : (untreatedCriticalAlarm ? {
+            guid: untreatedCriticalAlarm.guid,
+            category: untreatedCriticalAlarm.category || 'AI Safety Alert',
+            desc: untreatedCriticalAlarm.desc,
+            vehicle: currentVehicle.plateNo,
+            time: untreatedCriticalAlarm.time,
+            severity: untreatedCriticalAlarm.severity,
+            isRealtimeOverspeed: false,
+        } : null);
 
     return (
         <>
@@ -1468,9 +1589,9 @@ export default function Page() {
                 <Head title="Dashcam Monitoring" />
 
                 <div className="space-y-4">
-                    {/* Floating Emergency Alarm Banner (Jika ada alarm kritis) */}
-                    {untreatedCriticalAlarm && !bannerDismissed && (
-                        <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-3.5 rounded-xl shadow-xs flex items-center justify-between gap-4">
+                    {/* Floating Emergency Alarm Banner (HANYA tampil jika armada yang sedang dilihat ada kondisi warning) */}
+                    {activeVehicleWarning && !bannerDismissed && (
+                        <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-3.5 rounded-xl shadow-xs flex items-center justify-between gap-4 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-white/20 rounded-lg">
                                     <ShieldAlert className="w-5 h-5 text-white" />
@@ -1478,18 +1599,24 @@ export default function Page() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[11px] font-bold uppercase tracking-wider bg-black/30 px-2 py-0.5 rounded">
-                                            {untreatedCriticalAlarm.category || 'AI Safety Alert'}
+                                            {activeVehicleWarning.category || 'AI Safety Alert'}
                                         </span>
-                                        <span className="text-sm font-bold">{untreatedCriticalAlarm.desc}</span>
+                                        <span className="text-sm font-bold">{activeVehicleWarning.desc}</span>
                                     </div>
                                     <p className="text-xs text-white/80 mt-0.5">
-                                        Unit: {untreatedCriticalAlarm.vehicle || currentVehicle.plateNo} • Waktu: {untreatedCriticalAlarm.time} • Status: Menunggu Tindakan Safety Officer
+                                        Unit: {activeVehicleWarning.vehicle} • Waktu: {activeVehicleWarning.time} • Status: Menunggu Tindakan Safety Officer
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <button
-                                    onClick={() => handleQuickAction(untreatedCriticalAlarm.guid)}
+                                    onClick={() => {
+                                        if (activeVehicleWarning.isRealtimeOverspeed) {
+                                            setBannerDismissed(true);
+                                        } else {
+                                            handleQuickAction(activeVehicleWarning.guid);
+                                        }
+                                    }}
                                     className="text-xs font-bold bg-white text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
                                 >
                                     Tangani Sekarang
@@ -1741,10 +1868,297 @@ export default function Page() {
 
                         {/* ── KOLOM KANAN (lg:col-span-9): LIVECAM SURVEILLANCE & MODULAR METRICS (CARDS) ── */}
                         <div className="lg:col-span-9 space-y-4 min-w-0">
-                            {/* Card 5: Integrated Video Surveillance & Command Center Card */}
+                                                        {/* ── REVISI 2: PETA UTAMA TAMBANG (HIGHLIGHTED & ENLARGED - CORE DISPATCH VIEW) ── */}
                             <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs space-y-3">
+                                {/* Map Header Toolbar */}
+                                <div className={`flex flex-wrap items-center justify-between gap-3 ${isLivecamActive ? 'border-b border-slate-100 pb-3 mb-3' : ''}`}>
+                                    {/* Left: Title & Coordinates */}
+                                    <div className="flex flex-wrap items-center gap-2.5">
+                                        <span className="text-xs font-bold text-gray-800 tracking-wider flex items-center gap-1.5 uppercase">
+                                            <MapPin className="w-4 h-4 text-blue-600" />
+                                            GPS & GEOFENCE TAMBANG — LIVE TRACKING
+                                        </span>
+                                        <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                            Lat: {telemetry.lat?.toFixed(5) ?? '-7.65820'}, Lng: {telemetry.lng?.toFixed(5) ?? '111.18950'}
+                                        </span>
+                                        <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                            activeGeofence 
+                                                ? 'bg-blue-50 text-blue-800 border border-blue-200' 
+                                                : 'bg-slate-50 text-slate-600 border border-slate-200'
+                                        }`}>
+                                            <span className={`w-2 h-2 rounded-full ${activeGeofence ? 'bg-blue-600 animate-pulse' : 'bg-slate-400'}`}></span>
+                                            {activeGeofence ? `Zona: ${activeGeofence.name}` : 'Luar Area Tambang'}
+                                        </span>
+                                    </div>
+
+                                    {/* Right: Map Controls */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {/* Layer Switcher: Satelit (Google Earth) vs Topo */}
+                                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapLayer('satellite')}
+                                                className={`px-2.5 py-1 rounded-md transition flex items-center gap-1 cursor-pointer ${
+                                                    mapLayer === 'satellite' 
+                                                        ? 'bg-blue-600 text-white shadow-xs font-bold' 
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                }`}
+                                                id="btn-map-layer-satellite"
+                                                title="Citra Satelit Google Earth (Detail Kontur Pit & Jalan Hauling)"
+                                            >
+                                                <Globe className="w-3.5 h-3.5" />
+                                                <span>Satelit</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapLayer('street')}
+                                                className={`px-2.5 py-1 rounded-md transition flex items-center gap-1 cursor-pointer ${
+                                                    mapLayer === 'street' 
+                                                        ? 'bg-blue-600 text-white shadow-xs font-bold' 
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                }`}
+                                                id="btn-map-layer-street"
+                                                title="Peta Topografi & Jalan Standar OpenStreetMap"
+                                            >
+                                                <MapIcon className="w-3.5 h-3.5" />
+                                                <span>Peta</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Zoom Controls */}
+                                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-bold gap-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapZoom(z => Math.max(10, z - 1))}
+                                                className="p-1 rounded hover:bg-white text-gray-700 transition cursor-pointer"
+                                                id="btn-map-zoom-out"
+                                                title="Zoom Out (-)"
+                                            >
+                                                <ZoomOut className="w-3.5 h-3.5" />
+                                            </button>
+                                            <span className="px-1.5 font-mono text-[11px] text-gray-600">{Math.round(mapZoom)}x</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapZoom(z => Math.min(18, z + 1))}
+                                                className="p-1 rounded hover:bg-white text-gray-700 transition cursor-pointer"
+                                                id="btn-map-zoom-in"
+                                                title="Zoom In (+)"
+                                            >
+                                                <ZoomIn className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+
+                                        {/* Focus Unit */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setMapCenter([telemetry.lat || -7.6582, telemetry.lng || 111.1895]);
+                                                setMapZoom(16);
+                                            }}
+                                            className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                            title="Pusatkan peta ke posisi unit aktif saat ini"
+                                        >
+                                            <Crosshair className="w-3.5 h-3.5" />
+                                            <span>Fokus Unit</span>
+                                        </button>
+
+                                        {/* Expand Height */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsMapExpanded(!isMapExpanded)}
+                                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-gray-600 transition cursor-pointer"
+                                            title={isMapExpanded ? 'Tampilan Standar (340px)' : 'Perbesar Peta (500px)'}
+                                        >
+                                            {isMapExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                                        </button>
+
+                                        {/* Toggle Zones Drawer */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowZonesDrawer(!showZonesDrawer)}
+                                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                                showZonesDrawer 
+                                                    ? 'bg-slate-800 text-white' 
+                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                            }`}
+                                            title="Tampilkan daftar zona geofence tambang"
+                                        >
+                                            <Layers className="w-3.5 h-3.5" />
+                                            <span>Zona ({geofences.length})</span>
+                                        </button>
+
+                                        {/* Add Zone */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowGeofenceModal(true)}
+                                            className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                            <span>Tambah Zona</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Map Viewport (Enlarged) */}
+                                <div className={`relative ${isMapExpanded ? 'h-[500px]' : 'h-[340px]'} w-full rounded-xl overflow-hidden border border-slate-300 shadow-inner bg-slate-950 transition-all duration-300`}>
+                                    <Map
+                                        center={mapCenter}
+                                        zoom={mapZoom}
+                                        onBoundsChanged={({ center, zoom }) => {
+                                            setMapCenter(center);
+                                            setMapZoom(zoom);
+                                        }}
+                                        provider={mapTileProvider}
+                                        attribution={false}
+                                    >
+                                        {/* Geofence Circles */}
+                                        {geofences.map(gf => {
+                                            const lat = gf.coordinates?.lat || -7.6582;
+                                            const lng = gf.coordinates?.lng || 111.1895;
+                                            const r = gf.radius || 100;
+                                            const pxRadius = Math.max(26, Math.min(130, Math.round(r / 3.2)));
+                                            return (
+                                                <Overlay key={gf.id} anchor={[lat, lng]} offset={[pxRadius, pxRadius]}>
+                                                    <div
+                                                        style={{
+                                                            width: `${pxRadius * 2}px`,
+                                                            height: `${pxRadius * 2}px`,
+                                                            borderColor: gf.color || '#2563EB',
+                                                            backgroundColor: `${gf.color || '#2563EB'}28`,
+                                                        }}
+                                                        className="rounded-full border-2 border-dashed pointer-events-none flex items-center justify-center shadow-xs"
+                                                    >
+                                                        <span
+                                                            style={{ 
+                                                                color: '#ffffff', 
+                                                                backgroundColor: 'rgba(15, 23, 42, 0.88)',
+                                                                borderColor: gf.color || '#2563EB'
+                                                            }}
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-md truncate max-w-[120px] backdrop-blur-xs"
+                                                        >
+                                                            {gf.name}
+                                                        </span>
+                                                    </div>
+                                                </Overlay>
+                                            );
+                                        })}
+
+                                        {/* Live Unit Marker */}
+                                        <Marker
+                                            anchor={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
+                                            payload={1}
+                                        >
+                                            <div className="relative flex flex-col items-center justify-center -translate-x-1/2 -translate-y-1/2 pointer-events-auto group">
+                                                <span className="absolute w-12 h-12 rounded-full bg-blue-500/35 animate-ping"></span>
+                                                <span className="absolute w-8 h-8 rounded-full bg-blue-600/20"></span>
+                                                <div className="w-9 h-9 rounded-full bg-blue-600 border-2 border-white shadow-xl flex items-center justify-center text-white relative z-10 transition-transform hover:scale-110">
+                                                    {currentVehicle.type === 'EXCA' ? (
+                                                        <LandPlot className="w-4 h-4" />
+                                                    ) : (
+                                                        <Truck className="w-4 h-4" />
+                                                    )}
+                                                </div>
+                                                {/* Floating Speed & Plate Tag above vehicle */}
+                                                <div className="absolute -top-7 whitespace-nowrap bg-slate-900/90 text-white border border-slate-700/80 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-xs">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                    <span>{telemetry.speed} km/j</span>
+                                                    <span className="text-slate-400 font-mono">• {currentVehicle.plateNo}</span>
+                                                </div>
+                                            </div>
+                                        </Marker>
+                                    </Map>
+
+                                    {/* Floating Zones Drawer (Top Right Overlay) */}
+                                    {showZonesDrawer && (
+                                        <div className="absolute top-3 right-3 z-20 w-72 max-h-[380px] bg-slate-900/92 backdrop-blur-md border border-slate-700 rounded-xl p-3 shadow-2xl overflow-y-auto text-xs text-white">
+                                            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-700/80">
+                                                <span className="font-bold flex items-center gap-1.5">
+                                                    <MapPin className="w-3.5 h-3.5 text-blue-400" />
+                                                    Zona Tambang ({geofences.length})
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowZonesDrawer(false)}
+                                                    className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                {geofences.map(gf => (
+                                                    <div
+                                                        key={gf.id}
+                                                        onClick={() => {
+                                                            const lat = gf.coordinates?.lat || gf.latitude;
+                                                            const lng = gf.coordinates?.lng || gf.longitude;
+                                                            if (lat && lng) {
+                                                                setMapCenter([lat, lng]);
+                                                                setMapZoom(16);
+                                                            }
+                                                        }}
+                                                        className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700/60 cursor-pointer transition flex items-center justify-between group"
+                                                    >
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: gf.color || '#2563EB' }}></span>
+                                                            <div className="truncate">
+                                                                <p className="font-bold text-[11px] text-white truncate group-hover:text-blue-300">
+                                                                    {gf.name}
+                                                                </p>
+                                                                <p className="text-[10px] text-slate-400 uppercase font-mono">
+                                                                    {gf.type} • R: {gf.radius}m
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-[10px] text-blue-400 font-semibold group-hover:underline">
+                                                            Fokus
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Integrated Fleet Telemetry Strip under Map */}
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center p-2 rounded-xl bg-slate-50 border border-slate-200">
+                                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                                        <p className="text-gray-400 font-bold uppercase text-[9px]">Kecepatan GPS</p>
+                                        <p className="font-black text-gray-900 text-sm">{telemetry.speed} <span className="text-[10px] font-normal text-gray-500">km/j</span></p>
+                                    </div>
+                                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                                        <p className="text-gray-400 font-bold uppercase text-[9px]">Odometer Hari Ini</p>
+                                        <p className="font-black text-blue-600 text-sm">{telemetry.distance.toFixed(1)} <span className="text-[10px] font-normal text-gray-500">km</span></p>
+                                    </div>
+                                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                                        <p className="text-gray-400 font-bold uppercase text-[9px]">Zona Geofence</p>
+                                        <p className="font-bold text-gray-800 truncate px-1 text-xs">
+                                            {activeGeofence ? activeGeofence.name : 'Luar Area'}
+                                        </p>
+                                    </div>
+                                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                                        <p className="text-gray-400 font-bold uppercase text-[9px]">Total Ritasi</p>
+                                        <p className="font-black text-emerald-700 text-sm">{ritasiToday} <span className="text-[10px] font-normal text-gray-500">Trip</span></p>
+                                    </div>
+                                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                                        <p className="text-gray-400 font-bold uppercase text-[9px]">Satelit GPS</p>
+                                        <p className="font-bold text-gray-900 text-xs flex items-center justify-center gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            {telemetry.satellites || 18} Terkunci
+                                        </p>
+                                    </div>
+                                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                                        <p className="text-gray-400 font-bold uppercase text-[9px]">Kondisi Mesin</p>
+                                        <p className={`font-bold text-xs ${currentVehicle.status === 'ONLINE' ? 'text-emerald-600' : 'text-slate-500'}`}>
+                                            {currentVehicle.status === 'ONLINE' ? 'ON (Running)' : 'Standby (Idle)'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 5: Integrated Video Surveillance & Command Center Card */}
+                            <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 sm:p-4 shadow-xs">
                                 {/* Command Bar Inside Surveillance Card */}
-                                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                <div className={`flex flex-wrap items-center justify-between gap-3 ${isLivecamActive ? 'border-b border-slate-100 pb-3 mb-3' : ''}`}>
                                     {/* Left: Selected Unit Info */}
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-lg shrink-0 ${
@@ -1868,6 +2282,31 @@ export default function Page() {
                                             </button>
                                         </div>
 
+                                        {/* REVISI 1: Tombol On/Off Livecam (Default: OFF Terlebih Dahulu) */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsLivecamActive(!isLivecamActive)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                                                isLivecamActive
+                                                    ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse'
+                                            }`}
+                                            title={isLivecamActive ? 'Matikan siaran langsung livecam untuk menghemat bandwidth' : 'Nyalakan siaran langsung kamera kabin & jalan'}
+                                        >
+                                            {isLivecamActive ? (
+                                                <>
+                                                    <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                                                    <VideoOff className="w-3.5 h-3.5" />
+                                                    <span>Matikan Livecam</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Video className="w-3.5 h-3.5" />
+                                                    <span>Nyalakan Livecam</span>
+                                                </>
+                                            )}
+                                        </button>
+
                                         {/* Refresh Player Button */}
                                         <button
                                             type="button"
@@ -1884,10 +2323,17 @@ export default function Page() {
 
                                         {/* Live Status Indicators */}
                                         <div className="flex items-center gap-1.5 text-xs">
-                                            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                                LIVE
-                                            </span>
+                                            {isLivecamActive ? (
+                                                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                                    LIVE STREAMING
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                    LIVECAM STANDBY (OFF)
+                                                </span>
+                                            )}
                                             <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                 CMSV6 OK
@@ -1896,8 +2342,9 @@ export default function Page() {
                                     </div>
                                 </div>
 
-                                {/* Video Player Frame (Aspect Ratio Preserved) */}
-                                <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-lg">
+                                {/* REVISI 1: Video Player Frame - Ditampilkan saat Livecam AKTIF (ON) */}
+                                {isLivecamActive && (
+                                    <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-lg">
                                     {/* Video Player Top Bar (CCTV OSD Header) */}
                                     <div className="bg-slate-900/95 border-b border-slate-800/80 px-3.5 py-2 flex items-center justify-between text-xs text-slate-300">
                                         <div className="flex items-center gap-2">
@@ -2024,11 +2471,12 @@ export default function Page() {
                                         )}
                                     </div>
                                 </div>
+                                )}
                             </div>
 
-                            {/* ── MODULAR CARDS: ROW 1 (HAULING / EXCA + GPS & GEOFENCE) ── */}
+                            {/* ── MODULAR CARDS: SIKLUS OPERASIONAL HAULING & TELEMETRI SENSOR HARDWARE ── */}
                             <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
-                                <div className="xl:col-span-7 flex flex-col">
+<div className="xl:col-span-7 flex flex-col">
                                     {selectedVehicle === 'DT' ? (
                                         /* Card 6: SIKLUS OPERASIONAL HAULING */
                                         <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
@@ -2200,129 +2648,7 @@ export default function Page() {
                                     )}
                                 </div>
 
-                                <div className="xl:col-span-5 flex flex-col">
-                                    {/* Card 7: LIVE GPS LOCATION & GEOFENCE TAMBANG */}
-                                    <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
-                                                <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                                                    GPS & GEOFENCE TAMBANG
-                                                </span>
-                                                <button
-                                                    onClick={() => setShowGeofenceModal(true)}
-                                                    className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
-                                                >
-                                                    <Plus className="w-3 h-3" /> Tambah Zona
-                                                </button>
-                                            </div>
-
-                                            {/* Map Viewport */}
-                                            <div className="relative h-[220px] w-full rounded-lg overflow-hidden border border-slate-200 bg-slate-900">
-                                                <Map
-                                                    center={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
-                                                    zoom={14}
-                                                    attribution={false}
-                                                >
-                                                    {/* Geofence Circles */}
-                                                    {geofences.map(gf => {
-                                                        const lat = gf.coordinates?.lat || -7.6582;
-                                                        const lng = gf.coordinates?.lng || 111.1895;
-                                                        const r = gf.radius || 100;
-                                                        const pxRadius = Math.max(20, Math.min(100, Math.round(r / 3.5)));
-                                                        return (
-                                                            <Overlay key={gf.id} anchor={[lat, lng]} offset={[pxRadius, pxRadius]}>
-                                                                <div
-                                                                    style={{
-                                                                        width: `${pxRadius * 2}px`,
-                                                                        height: `${pxRadius * 2}px`,
-                                                                        borderColor: gf.color || '#2563EB',
-                                                                        backgroundColor: `${gf.color || '#2563EB'}22`,
-                                                                    }}
-                                                                    className="rounded-full border-2 border-dashed pointer-events-none flex items-center justify-center"
-                                                                >
-                                                                    <span
-                                                                        style={{ color: gf.color || '#2563EB', backgroundColor: 'rgba(255,255,255,0.85)' }}
-                                                                        className="text-[9px] font-bold px-1 rounded shadow-xs truncate max-w-[90px]"
-                                                                    >
-                                                                        {gf.name}
-                                                                    </span>
-                                                                </div>
-                                                            </Overlay>
-                                                        );
-                                                    })}
-
-                                                    {/* Live Unit Marker */}
-                                                    <Marker
-                                                        anchor={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
-                                                        payload={1}
-                                                    >
-                                                        <div className="relative flex items-center justify-center -translate-x-1/2 -translate-y-1/2">
-                                                            <span className="absolute w-8 h-8 rounded-full bg-blue-500/30 animate-ping"></span>
-                                                            <div className="w-7 h-7 rounded-full bg-blue-600 border-2 border-white shadow-md flex items-center justify-center text-white">
-                                                                <Truck className="w-3.5 h-3.5" />
-                                                            </div>
-                                                        </div>
-                                                    </Marker>
-                                                </Map>
-                                            </div>
-
-                                            {/* Quick Telemetry Under Map */}
-                                            <div className="grid grid-cols-4 gap-1 text-center mt-2 p-1.5 rounded-lg bg-slate-50 border border-slate-200/80">
-                                                <div>
-                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Speed</p>
-                                                    <p className="font-bold text-gray-900 text-xs">{telemetry.speed} km/j</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Odometer</p>
-                                                    <p className="font-bold text-blue-600 text-xs">{telemetry.distance.toFixed(1)} km</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Geofence</p>
-                                                    <p className="font-bold text-gray-800 truncate px-1 text-[11px]">
-                                                        {activeGeofence ? activeGeofence.name : 'Luar Area'}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-400 font-semibold uppercase text-[9px]">Ritasi</p>
-                                                    <p className="font-bold text-blue-600 text-xs">{ritasiToday} trip</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Zones List */}
-                                        <div className="mt-2 pt-2 border-t border-slate-100">
-                                            <div className="flex items-center justify-between mb-1 text-xs">
-                                                <span className="font-bold text-gray-700 text-[11px]">Zona Tambang ({geofences.length}):</span>
-                                                <button
-                                                    onClick={handleResetRitasi}
-                                                    className="text-[10px] font-semibold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
-                                                >
-                                                    <RotateCw className="w-2.5 h-2.5" /> Reset
-                                                </button>
-                                            </div>
-                                            <div className="max-h-24 overflow-y-auto space-y-1 pr-1">
-                                                {geofences.map(gf => (
-                                                    <div key={gf.id} className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-[11px]">
-                                                        <div className="flex items-center gap-1.5 min-w-0">
-                                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: gf.color || '#2563EB' }}></span>
-                                                            <span className="font-semibold text-gray-800 truncate">{gf.name}</span>
-                                                            <span className="text-[9px] font-bold uppercase px-1 rounded bg-white text-gray-600 shrink-0 border border-slate-200">
-                                                                {gf.type}
-                                                            </span>
-                                                        </div>
-                                                        <span className="text-[10px] font-mono text-gray-400 shrink-0">R: {gf.radius}m</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* ── MODULAR CARDS: ROW 2 (TELEMETRI & SENSOR + OPERATOR DETAIL) ── */}
-                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
-                                <div className="xl:col-span-7 flex flex-col">
+<div className="xl:col-span-5 flex flex-col">
                                     {selectedVehicle === 'DT' ? (
                                         /* Card 8: TELEMETRI & SENSOR HARDWARE */
                                         <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
@@ -2446,8 +2772,188 @@ export default function Page() {
                                         </div>
                                     )}
                                 </div>
+                            </div>
 
-                                <div className="xl:col-span-5 flex flex-col">
+                            {/* ── MODULAR CARDS: SAFETY ALARM DMS & OPERATOR DETAIL ── */}
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
+                                <div className="xl:col-span-7 flex flex-col">
+<div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs space-y-3">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
+                                            <ShieldAlert className="w-3.5 h-3.5" />
+                                        </div>
+                                        <div>
+                                            <span className="text-xs font-bold text-gray-800 tracking-wider flex items-center gap-1.5 uppercase">
+                                                SAFETY ALARM & MONITORING DMS
+                                            </span>
+                                            <p className="text-[10px] text-gray-400 font-mono">
+                                                Monitoring Unit: <span className="font-bold text-blue-600">{currentVehicle.plateNo}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {untreatedCount > 0 ? (
+                                            <span className="text-[11px] bg-rose-50 text-rose-700 border border-rose-200 font-bold px-2 py-0.5 rounded-full">
+                                                {untreatedCount} Perlu Tindakan
+                                            </span>
+                                        ) : (
+                                            <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <Check className="w-3 h-3" /> Aman
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => setShowSimulator(!showSimulator)}
+                                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Sparkles className="w-3 h-3" /> Tes Simulasi
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Simulator Drawer */}
+                                {showSimulator && (
+                                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                                        <p className="font-bold text-gray-700 mb-1.5 text-[11px]">Pemicu Uji Alarm AI Safety ({currentVehicle.plateNo}):</p>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                            <button
+                                                onClick={() => triggerTestAlarm('fatigue', 'Driver Fatigue (Mengantuk Berat)', 'DMS Camera AI', 'critical')}
+                                                className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded border border-rose-200 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Mengantuk
+                                            </button>
+                                            <button
+                                                onClick={() => triggerTestAlarm('phone', 'Penggunaan Ponsel saat Mengemudi', 'DMS Camera AI', 'high')}
+                                                className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded border border-amber-200 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Main Ponsel
+                                            </button>
+                                            <button
+                                                onClick={() => triggerTestAlarm('smoking', 'Merokok di Kabin', 'DMS Camera AI', 'medium')}
+                                                className="p-1.5 bg-slate-200 hover:bg-slate-300 text-gray-800 rounded border border-slate-300 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Merokok
+                                            </button>
+                                            <button
+                                                onClick={() => triggerTestAlarm('yawn', 'Menguap Berulang', 'DMS Camera AI', 'low')}
+                                                className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded border border-blue-200 font-semibold text-[11px] cursor-pointer"
+                                            >
+                                                Uji Menguap
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Category Filter Tabs */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1 overflow-x-auto text-xs">
+                                        {[
+                                            { id: 'all', label: `Semua (${currentVehicleAlarms.length})` },
+                                            { id: 'gsensor', label: 'G-Sensor' },
+                                            { id: 'fd', label: 'Fierce Driving' },
+                                            { id: 'dms', label: 'DMS' },
+                                        ].map(tab => (
+                                            <button
+                                                key={tab.id}
+                                                type="button"
+                                                onClick={() => setAlarmTab(tab.id as any)}
+                                                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
+                                                    alarmTab === tab.id
+                                                        ? 'bg-blue-600 text-white font-bold shadow-xs'
+                                                        : 'bg-slate-50 text-gray-600 hover:bg-slate-100 border border-slate-200'
+                                                }`}
+                                            >
+                                                {tab.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {untreatedCount > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={handleBatchAction}
+                                            className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <CheckCheck className="w-3 h-3" /> Tangani Semua
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Alarms Feed List */}
+                                <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                                    {filteredAlarms.length === 0 ? (
+                                        <div className="text-center py-5 text-gray-400">
+                                            <ShieldCheck className="w-7 h-7 text-emerald-500 mx-auto mb-1" />
+                                            <p className="text-xs font-bold text-gray-700">Tidak ada peringatan aktif untuk unit ini</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">Semua parameter safety armada {currentVehicle.plateNo} berada dalam kondisi normal</p>
+                                        </div>
+                                    ) : (
+                                        filteredAlarms.map((alarm) => {
+                                            const isHandled = (alarm.handle_status ?? 'Untreated') === 'Handled';
+                                            return (
+                                                <div
+                                                    key={alarm.guid}
+                                                    className={`p-2 rounded-lg border transition ${
+                                                        isHandled 
+                                                            ? 'bg-slate-100/70 border-slate-200 opacity-70' 
+                                                            : alarm.severity === 'critical' 
+                                                            ? 'bg-rose-50 border-rose-200' 
+                                                            : 'bg-amber-50 border-amber-200'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="flex items-start gap-2 min-w-0">
+                                                            <div className={`p-1 rounded shrink-0 mt-0.5 ${
+                                                                isHandled ? 'bg-slate-200 text-gray-600' :
+                                                                alarm.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
+                                                            }`}>
+                                                                <AlertCircle className="w-3 h-3" />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-1 flex-wrap">
+                                                                    <span className="text-xs font-bold text-gray-900 leading-tight">
+                                                                        {alarm.desc}
+                                                                    </span>
+                                                                    <span className={`text-[9px] font-bold px-1 rounded ${
+                                                                        alarm.severity === 'critical' ? 'bg-rose-100 text-rose-800' :
+                                                                        alarm.severity === 'high' ? 'bg-amber-100 text-amber-800' :
+                                                                        'bg-slate-200 text-gray-700'
+                                                                    }`}>
+                                                                        {alarm.severity ? alarm.severity.toUpperCase() : 'ALERT'}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 font-mono">
+                                                                    <span>{alarm.category || 'CMSV6'}</span>
+                                                                    <span>•</span>
+                                                                    <span>{alarm.time}</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="shrink-0">
+                                                            {isHandled ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                                                                    <Check className="w-3 h-3" /> Selesai
+                                                                </span>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => handleQuickAction(alarm.guid)}
+                                                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2 py-0.5 rounded transition active:scale-95 cursor-pointer"
+                                                                >
+                                                                    <Check className="w-3 h-3" /> Tangani
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                                </div>
+
+                            </div>
+<div className="xl:col-span-5 flex flex-col">
                                     {/* Card 9: OPERATOR DETAIL */}
                                     <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
                                         <div>
@@ -2566,177 +3072,10 @@ export default function Page() {
                                             )}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* ── MODULAR CARDS: ROW 3 (SAFETY ALARM & MONITORING DMS - FULL WIDTH CARD) ── */}
-                            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs space-y-3">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                        <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
-                                        SAFETY ALARM & MONITORING DMS
-                                    </span>
-                                    <div className="flex items-center gap-2">
-                                        {untreatedCount > 0 ? (
-                                            <span className="text-[11px] bg-rose-50 text-rose-700 border border-rose-200 font-bold px-2 py-0.5 rounded-full">
-                                                {untreatedCount} Perlu Tindakan
-                                            </span>
-                                        ) : (
-                                            <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                <Check className="w-3 h-3" /> Aman
-                                            </span>
-                                        )}
-                                        <button
-                                            onClick={() => setShowSimulator(!showSimulator)}
-                                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
-                                        >
-                                            <Sparkles className="w-3 h-3" /> Tes Simulasi
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Simulator Drawer */}
-                                {showSimulator && (
-                                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
-                                        <p className="font-bold text-gray-700 mb-1.5 text-[11px]">Pemicu Uji Alarm AI Safety:</p>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                                            <button
-                                                onClick={() => triggerTestAlarm('fatigue', 'Driver Fatigue (Mengantuk Berat)', 'DMS Camera AI', 'critical')}
-                                                className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded border border-rose-200 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Mengantuk
-                                            </button>
-                                            <button
-                                                onClick={() => triggerTestAlarm('phone', 'Penggunaan Ponsel saat Mengemudi', 'DMS Camera AI', 'high')}
-                                                className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded border border-amber-200 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Main Ponsel
-                                            </button>
-                                            <button
-                                                onClick={() => triggerTestAlarm('smoking', 'Merokok di Kabin', 'DMS Camera AI', 'medium')}
-                                                className="p-1.5 bg-slate-200 hover:bg-slate-300 text-gray-800 rounded border border-slate-300 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Merokok
-                                            </button>
-                                            <button
-                                                onClick={() => triggerTestAlarm('yawn', 'Menguap Berulang', 'DMS Camera AI', 'low')}
-                                                className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded border border-blue-200 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Menguap
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Category Filter Tabs */}
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-1 overflow-x-auto text-xs">
-                                        {[
-                                            { id: 'all', label: `Semua (${alarms.length})` },
-                                            { id: 'gsensor', label: 'G-Sensor' },
-                                            { id: 'fd', label: 'Fierce Driving' },
-                                            { id: 'dms', label: 'DMS' },
-                                        ].map(tab => (
-                                            <button
-                                                key={tab.id}
-                                                type="button"
-                                                onClick={() => setAlarmTab(tab.id as any)}
-                                                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
-                                                    alarmTab === tab.id
-                                                        ? 'bg-blue-600 text-white font-bold shadow-xs'
-                                                        : 'bg-slate-50 text-gray-600 hover:bg-slate-100 border border-slate-200'
-                                                }`}
-                                            >
-                                                {tab.label}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {untreatedCount > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={handleBatchAction}
-                                            className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
-                                        >
-                                            <CheckCheck className="w-3 h-3" /> Tangani Semua
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* Alarms Feed List */}
-                                <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-                                    {filteredAlarms.length === 0 ? (
-                                        <div className="text-center py-5 text-gray-400">
-                                            <ShieldCheck className="w-7 h-7 text-emerald-500 mx-auto mb-1" />
-                                            <p className="text-xs font-bold text-gray-700">Tidak ada peringatan aktif</p>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">Semua parameter safety berada dalam kondisi normal</p>
-                                        </div>
-                                    ) : (
-                                        filteredAlarms.map((alarm) => {
-                                            const isHandled = (alarm.handle_status ?? 'Untreated') === 'Handled';
-                                            return (
-                                                <div
-                                                    key={alarm.guid}
-                                                    className={`p-2 rounded-lg border transition ${
-                                                        isHandled 
-                                                            ? 'bg-slate-100/70 border-slate-200 opacity-70' 
-                                                            : alarm.severity === 'critical' 
-                                                            ? 'bg-rose-50 border-rose-200' 
-                                                            : 'bg-amber-50 border-amber-200'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <div className="flex items-start gap-2 min-w-0">
-                                                            <div className={`p-1 rounded shrink-0 mt-0.5 ${
-                                                                isHandled ? 'bg-slate-200 text-gray-600' :
-                                                                alarm.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
-                                                            }`}>
-                                                                <AlertCircle className="w-3 h-3" />
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <div className="flex items-center gap-1 flex-wrap">
-                                                                    <span className="text-xs font-bold text-gray-900 leading-tight">
-                                                                        {alarm.desc}
-                                                                    </span>
-                                                                    <span className={`text-[9px] font-bold px-1 rounded ${
-                                                                        alarm.severity === 'critical' ? 'bg-rose-100 text-rose-800' :
-                                                                        alarm.severity === 'high' ? 'bg-amber-100 text-amber-800' :
-                                                                        'bg-slate-200 text-gray-700'
-                                                                    }`}>
-                                                                        {alarm.severity ? alarm.severity.toUpperCase() : 'ALERT'}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 font-mono">
-                                                                    <span>{alarm.category || 'CMSV6'}</span>
-                                                                    <span>•</span>
-                                                                    <span>{alarm.time}</span>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="shrink-0">
-                                                            {isHandled ? (
-                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                                                                    <Check className="w-3 h-3" /> Selesai
-                                                                </span>
-                                                            ) : (
-                                                                <button
-                                                                    onClick={() => handleQuickAction(alarm.guid)}
-                                                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2 py-0.5 rounded transition active:scale-95 cursor-pointer"
-                                                                >
-                                                                    <Check className="w-3 h-3" /> Tangani
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 {/* ── MODAL: TAMBAH GEOFENCE BARU ── */}

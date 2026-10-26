@@ -222,4 +222,5 @@ Route::controller(CmsV6ProxyController::class)->prefix('/cmsv6')->withoutMiddlew
     Route::get('/track',               'trackDetail');       // Riwayat GPS / last known location
     Route::get('/vehicle-info',        'vehicleInfo');       // Info kendaraan & driver
     Route::post('/snapshot',           'snapshot');          // Snapshot dari kamera dashcam
+    Route::get('/stream',              'streamProxy');       // FLV stream proxy via HTTPS
 });
