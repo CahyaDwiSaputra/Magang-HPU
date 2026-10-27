@@ -20,12 +20,17 @@ class DashcamController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'deviceId'   => ['required', 'string', 'min:1'],
+            'vehicleId'  => ['nullable', 'string'],
+            'plateNo'    => ['nullable', 'string'],
+            'site'       => ['nullable', 'string'],
+            'shift'      => ['nullable', 'string'],
             'driverName' => ['nullable', 'string'],
             'employeeId' => ['nullable', 'string'],
             'confidence' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'capturedAt' => ['nullable', 'date'],
             'photoUrl'   => ['required', 'string'],
             'source'     => ['nullable', 'string'],
+            'notes'      => ['nullable', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -36,7 +41,18 @@ class DashcamController extends Controller
             ], 422);
         }
 
-        $photoUrl = $request->input('photoUrl', null);
+        $deviceId  = trim((string) $request->input('deviceId'));
+        $vehicleId = trim((string) $request->input('vehicleId', ''));
+        $plateNo   = trim((string) $request->input('plateNo', ''));
+        $site      = trim((string) $request->input('site', ''));
+        $shift     = trim((string) $request->input('shift', ''));
+        $photoUrl  = $request->input('photoUrl', null);
+
+        // Tentukan shift otomatis jika kosong
+        if (empty($shift)) {
+            $hour = (int) now()->format('H');
+            $shift = ($hour >= 6 && $hour < 18) ? 'Shift 1 (Siang)' : 'Shift 2 (Malam)';
+        }
 
         // Jika foto dikirim dalam format data URL Base64 dari HTML5 Canvas kamera kabin
         if ($photoUrl && str_starts_with($photoUrl, 'data:image')) {
@@ -66,14 +82,15 @@ class DashcamController extends Controller
             );
         }
 
-        // Tanya ke AI Service Python
+        // Tanya ke AI Service Python (Port 5001)
         $aiMatch = null;
         $aiConfidence = 0;
+        $verificationMethod = 'face_recognition';
         $rawPhotoUrl = $request->input('photoUrl', null);
         
         if ($rawPhotoUrl) {
             try {
-                $aiResponse = \Illuminate\Support\Facades\Http::post('http://127.0.0.1:5001/recognize', [
+                $aiResponse = \Illuminate\Support\Facades\Http::timeout(5)->post('http://127.0.0.1:5001/recognize', [
                     'image' => $rawPhotoUrl,
                 ]);
                 
@@ -81,53 +98,94 @@ class DashcamController extends Controller
                     $aiData = $aiResponse->json();
                     if (isset($aiData['status']) && $aiData['status'] === 'ok' && !empty($aiData['match'])) {
                         $aiMatch = $aiData['match'];
-                        $aiConfidence = $aiData['confidence'];
+                        $aiConfidence = (float) ($aiData['confidence'] ?? 95);
+                        $verificationMethod = 'face_recognition_ai';
                     }
                 } else {
                     Log::error('AI Service Error: ' . $aiResponse->body());
                 }
             } catch (\Exception $e) {
-                Log::error('Gagal menghubungi AI Service: ' . $e->getMessage());
+                Log::warning('Gagal menghubungi AI Service Python: ' . $e->getMessage());
             }
+        }
+
+        // Fallback: Jika AI belum mengenali tapi ada employeeId / driverName yang dipilih user
+        if (!$aiMatch && $request->filled('employeeId')) {
+            $aiMatch = trim((string) $request->input('employeeId'));
+            $aiConfidence = (float) $request->input('confidence', 95.0);
+            $verificationMethod = 'manual_selection';
         }
 
         if (!$aiMatch) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Wajah tidak dikenali oleh AI, pastikan wajah sudah terdaftar.',
+                'message' => 'Wajah tidak dikenali oleh AI. Pastikan wajah pengemudi sudah didaftarkan pada sistem biometrik kabin.',
             ], 404);
         }
 
-        // Cari data employee berdasarkan hasil AI
+        // Cari data employee di database msemployee
         $employee = EmployeeModel::where('EmployeeID', $aiMatch)->first();
-        $driverName = $employee ? $employee->EmployeeName : 'Unknown Driver';
+        $driverName = $employee ? $employee->EmployeeName : ($request->input('driverName') ?: 'Driver ' . $aiMatch);
+
+        // Nonaktifkan sesi driver aktif sebelumnya pada unit / armada ini
+        DashcamFaceRecognition::where(function ($q) use ($deviceId, $vehicleId) {
+            if (!empty($deviceId)) {
+                $q->where('device_id', $deviceId);
+            }
+            if (!empty($vehicleId)) {
+                $q->orWhere('vehicle_id', $vehicleId);
+            }
+        })
+        ->where('is_current_active', true)
+        ->update([
+            'is_current_active' => false,
+            'status'            => 'completed',
+            'ended_at'          => now(),
+        ]);
 
         $payload = [
-            'device_id'   => trim((string) $request->input('deviceId')),
-            'driver_name' => $driverName,
-            'employee_id' => $aiMatch,
-            'confidence'  => $aiConfidence,
-            'captured_at' => $request->input('capturedAt', now()->toISOString()),
-            'photo_url'   => $photoUrl,
-            'source'      => $request->input('source', 'dashcam-dms'),
-            'received_at' => now()->toDateTimeString(),
+            'device_id'           => $deviceId,
+            'vehicle_id'          => $vehicleId ?: null,
+            'plate_no'            => $plateNo ?: null,
+            'site'                => $site ?: ($employee?->SiteId ?: null),
+            'shift'               => $shift,
+            'status'              => 'active',
+            'verification_method' => $verificationMethod,
+            'is_current_active'   => true,
+            'started_at'          => now(),
+            'driver_name'         => $driverName,
+            'employee_id'         => $aiMatch,
+            'confidence'          => $aiConfidence,
+            'captured_at'         => $request->input('capturedAt', now()->toISOString()),
+            'photo_url'           => $photoUrl,
+            'source'              => $request->input('source', 'cabin-dashcam-ai'),
+            'notes'               => $request->input('notes'),
+            'received_at'         => now()->toDateTimeString(),
         ];
 
         $record = DashcamFaceRecognition::create($payload);
 
         return response()->json([
             'status'  => 'ok',
-            'message' => 'Face recognition check-in berhasil dicatat',
+            'message' => "Pengemudi {$driverName} berhasil diverifikasi & ditugaskan membawa unit {$plateNo}",
             'data'    => [
-                'id'          => $record->id,
-                'driver_name' => $record->driver_name,
-                'device_id'   => $record->device_id,
-                'employee_id' => $record->employee_id,
-                'confidence'  => $record->confidence,
-                'captured_at' => $record->captured_at,
-                'photo_url'   => $record->photo_url,
-                'source'      => $record->source,
-                'received_at' => $record->received_at,
+                'id'                  => $record->id,
+                'driver_name'         => $record->driver_name,
+                'device_id'           => $record->device_id,
+                'vehicle_id'          => $record->vehicle_id,
+                'plate_no'            => $record->plate_no,
+                'site'                => $record->site,
+                'shift'               => $record->shift,
+                'status'              => $record->status,
+                'verification_method' => $record->verification_method,
+                'employee_id'         => $record->employee_id,
+                'position'            => $employee?->PositionName ?: 'Operator Alat Berat',
+                'confidence'          => $record->confidence,
+                'captured_at'         => $record->captured_at,
+                'started_at'          => $record->started_at,
+                'photo_url'           => $record->photo_url,
+                'source'              => $record->source,
+                'received_at'         => $record->received_at,
             ],
         ], 201);
     }
@@ -241,28 +299,62 @@ class DashcamController extends Controller
      */
     public function getActiveDriver(Request $request): JsonResponse
     {
-        $deviceId = $request->input('deviceId', config('services.cmsv6.device_id', '240078916116'));
+        $deviceId  = $request->input('deviceId');
+        $vehicleId = $request->input('vehicleId');
 
-        $latest = DashcamFaceRecognition::where('device_id', $deviceId)
+        $query = DashcamFaceRecognition::query();
+        if (!empty($deviceId) && !empty($vehicleId)) {
+            $query->where(function ($q) use ($deviceId, $vehicleId) {
+                $q->where('device_id', $deviceId)->orWhere('vehicle_id', $vehicleId);
+            });
+        } elseif (!empty($deviceId)) {
+            $query->where('device_id', $deviceId);
+        } elseif (!empty($vehicleId)) {
+            $query->where('vehicle_id', $vehicleId);
+        } else {
+            $deviceId = config('services.cmsv6.device_id', '240078916116');
+            $query->where('device_id', $deviceId);
+        }
+
+        $latest = (clone $query)->where('driver_name', '!=', 'CHECKOUT')
+            ->where('status', 'active')
             ->latest()
             ->first();
 
-        if (!$latest || $latest->driver_name === 'CHECKOUT' || empty($latest->driver_name)) {
+        // Fallback: jika status 'active' belum terset pada record terdahulu
+        if (!$latest) {
+            $candidate = (clone $query)->latest()->first();
+            if ($candidate && $candidate->driver_name !== 'CHECKOUT' && $candidate->status !== 'checkout') {
+                $latest = $candidate;
+            }
+        }
+
+        if (!$latest || $latest->driver_name === 'CHECKOUT' || $latest->status === 'checkout' || empty($latest->driver_name)) {
             return response()->json([
                 'status' => 'ok',
                 'driver' => null,
             ]);
         }
 
+        $employee = EmployeeModel::where('EmployeeID', $latest->employee_id)->first();
+
         return response()->json([
             'status' => 'ok',
             'driver' => [
-                'id'          => $latest->employee_id,
-                'name'        => $latest->driver_name,
-                'confidence'  => $latest->confidence,
-                'photo_url'   => $latest->photo_url,
-                'captured_at' => $latest->captured_at ? $latest->captured_at->toIso8601String() : null,
-                'received_at' => $latest->received_at ? $latest->received_at->format('H:i · d/m/Y') : null,
+                'id'                  => $latest->employee_id,
+                'name'                => $latest->driver_name,
+                'position'            => $employee?->PositionName ?: 'Operator Alat Berat',
+                'confidence'          => $latest->confidence,
+                'photo_url'           => $latest->photo_url,
+                'vehicle_id'          => $latest->vehicle_id,
+                'plate_no'            => $latest->plate_no,
+                'site'                => $latest->site,
+                'shift'               => $latest->shift,
+                'status'              => $latest->status,
+                'verification_method' => $latest->verification_method,
+                'started_at'          => $latest->started_at ? $latest->started_at->toIso8601String() : null,
+                'captured_at'         => $latest->captured_at ? $latest->captured_at->toIso8601String() : null,
+                'received_at'         => $latest->received_at ? $latest->received_at->format('H:i · d/m/Y') : null,
             ],
         ]);
     }
@@ -272,17 +364,38 @@ class DashcamController extends Controller
      */
     public function checkout(Request $request): JsonResponse
     {
-        $deviceId = $request->input('deviceId', config('services.cmsv6.device_id', '240078916116'));
+        $deviceId  = $request->input('deviceId');
+        $vehicleId = $request->input('vehicleId');
+
+        if (empty($deviceId) && empty($vehicleId)) {
+            $deviceId = config('services.cmsv6.device_id', '240078916116');
+        }
+
+        DashcamFaceRecognition::where(function ($q) use ($deviceId, $vehicleId) {
+            if (!empty($deviceId)) $q->where('device_id', $deviceId);
+            if (!empty($vehicleId)) $q->orWhere('vehicle_id', $vehicleId);
+        })
+        ->where('is_current_active', true)
+        ->update([
+            'is_current_active' => false,
+            'status'            => 'checkout',
+            'ended_at'          => now(),
+        ]);
 
         DashcamFaceRecognition::create([
-            'device_id'   => $deviceId,
-            'driver_name' => 'CHECKOUT',
-            'employee_id' => null,
-            'confidence'  => 0,
-            'captured_at' => now(),
-            'photo_url'   => null,
-            'source'      => 'manual-checkout',
-            'received_at' => now(),
+            'device_id'           => $deviceId,
+            'vehicle_id'          => $vehicleId ?: null,
+            'driver_name'         => 'CHECKOUT',
+            'employee_id'         => null,
+            'confidence'          => 0,
+            'captured_at'         => now(),
+            'photo_url'           => null,
+            'source'              => 'manual-checkout',
+            'status'              => 'checkout',
+            'verification_method' => 'manual',
+            'is_current_active'   => false,
+            'ended_at'            => now(),
+            'received_at'         => now(),
         ]);
 
         return response()->json([
@@ -296,24 +409,44 @@ class DashcamController extends Controller
      */
     public function history(Request $request): JsonResponse
     {
-        $deviceId = $request->input('deviceId', config('services.cmsv6.device_id', '240078916116'));
+        $deviceId  = $request->input('deviceId');
+        $vehicleId = $request->input('vehicleId');
+        $limit     = (int) $request->input('limit', 20);
 
-        $records = DashcamFaceRecognition::where('device_id', $deviceId)
-            ->where('driver_name', '!=', 'CHECKOUT')
+        $query = DashcamFaceRecognition::query();
+        if (!empty($deviceId) && !empty($vehicleId)) {
+            $query->where(function ($q) use ($deviceId, $vehicleId) {
+                $q->where('device_id', $deviceId)->orWhere('vehicle_id', $vehicleId);
+            });
+        } elseif (!empty($deviceId)) {
+            $query->where('device_id', $deviceId);
+        } elseif (!empty($vehicleId)) {
+            $query->where('vehicle_id', $vehicleId);
+        }
+
+        $records = $query->where('driver_name', '!=', 'CHECKOUT')
             ->latest()
-            ->take(15)
+            ->take($limit)
             ->get();
 
         return response()->json([
             'status' => 'ok',
             'data'   => $records->map(function ($r) {
                 return [
-                    'id'          => $r->id,
-                    'name'        => $r->driver_name,
-                    'employee_id' => $r->employee_id,
-                    'confidence'  => $r->confidence,
-                    'photo_url'   => $r->photo_url,
-                    'time'        => $r->created_at ? $r->created_at->format('H:i · d M Y') : '-',
+                    'id'                  => $r->id,
+                    'name'                => $r->driver_name,
+                    'employee_id'         => $r->employee_id,
+                    'vehicle_id'          => $r->vehicle_id,
+                    'plate_no'            => $r->plate_no,
+                    'site'                => $r->site,
+                    'shift'               => $r->shift,
+                    'status'              => $r->status,
+                    'verification_method' => $r->verification_method,
+                    'confidence'          => $r->confidence,
+                    'photo_url'           => $r->photo_url,
+                    'started_at'          => $r->started_at ? $r->started_at->format('H:i · d M Y') : null,
+                    'ended_at'            => $r->ended_at ? $r->ended_at->format('H:i · d M Y') : null,
+                    'time'                => $r->created_at ? $r->created_at->format('H:i · d M Y') : '-',
                 ];
             }),
         ]);

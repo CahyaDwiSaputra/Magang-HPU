@@ -8,8 +8,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { width: 100%; height: 100%; background: #0b1120; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        video, canvas { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; }
-        #canvas-sim { display: none; z-index: 5; }
+        video { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; }
         
         #overlay {
             position: absolute; inset: 0;
@@ -65,7 +64,6 @@
 </head>
 <body>
     <video id="video" muted autoplay playsinline crossorigin="anonymous"></video>
-    <canvas id="canvas-sim"></canvas>
 
     <div id="overlay">
         <div class="spinner" id="spinner-el"></div>
@@ -92,10 +90,8 @@
         const devIdno  = params.get('dev') || '240078916116';
         const channel  = parseInt(params.get('ch') || '0', 10);
         const jsession = params.get('jsession');
-        const isDemo   = params.get('demo') === '1';
 
         const videoEl     = document.getElementById('video');
-        const canvasSim   = document.getElementById('canvas-sim');
         const overlay     = document.getElementById('overlay');
         const spinnerEl   = document.getElementById('spinner-el');
         const badgeCont   = document.getElementById('badge-container');
@@ -140,279 +136,113 @@
             overlay.classList.add('hidden');
         }
 
-        // ── SIMULASI DEMO STREAM LIVE (CANVAS) ──
-        let simAnimId = null;
-        function startSimulation() {
-            if (simAnimId) cancelAnimationFrame(simAnimId);
-            hideOverlay();
-            canvasSim.style.display = 'block';
-            videoEl.style.display = 'none';
-            setStatus(`● LIVE SIMULASI ${channelName}`, 'green');
+        // ── INIT STREAMING REALTIME LOGIC ──
+        const isRegistered = REGISTERED_CMSV6_DEVS.includes(devIdno);
 
-            const ctx = canvasSim.getContext('2d');
-            let frame = 0;
-
-            function resize() {
-                canvasSim.width = canvasSim.clientWidth || 640;
-                canvasSim.height = canvasSim.clientHeight || 360;
-            }
-            resize();
-            window.addEventListener('resize', resize);
-
-            function render() {
-                frame++;
-                const w = canvasSim.width;
-                const h = canvasSim.height;
-
-                if (channel === 0) {
-                    // CAM 1: Simulasi Jalan Hauling Tambang (Haul Road Perspective)
-                    // Sky gradient
-                    const sky = ctx.createLinearGradient(0, 0, 0, h * 0.45);
-                    sky.addColorStop(0, '#1e293b');
-                    sky.addColorStop(1, '#64748b');
-                    ctx.fillStyle = sky;
-                    ctx.fillRect(0, 0, w, h * 0.45);
-
-                    // Mining pit backdrop (hills)
-                    ctx.fillStyle = '#78350f';
-                    ctx.beginPath();
-                    ctx.moveTo(0, h * 0.45);
-                    for (let x = 0; x <= w; x += 40) {
-                        ctx.lineTo(x, h * 0.45 - Math.sin((x + frame) * 0.01) * 20 - 15);
+        if (!isRegistered) {
+            // Perangkat belum didaftarkan di CMSV6 server
+            setStatus('Perangkat Tidak Terdaftar di Server', 'amber');
+            showOverlay(
+                `Perangkat ${devIdno} Belum Terdaftar di CMSV6`,
+                `Nomor seri MDVR/Dashcam ini belum didaftarkan di gateway server CMSV6 (10.10.0.33).`,
+                `<span class="badge badge-amber">⚠️ ID Belum Terdaftar</span>`,
+                [
+                    {
+                        label: 'Alihkan ke Unit Terdaftar (HD-78501)',
+                        primary: true,
+                        onClick: () => {
+                            window.parent.postMessage({ type: 'SELECT_VEHICLE', deviceId: '240078916116' }, '*');
+                        }
+                    },
+                    {
+                        label: 'Coba Hubungkan Ulang',
+                        primary: false,
+                        onClick: () => window.location.reload()
                     }
-                    ctx.lineTo(w, h * 0.45);
-                    ctx.fill();
-
-                    // Dirt Road (hauling road)
-                    const road = ctx.createLinearGradient(0, h * 0.45, 0, h);
-                    road.addColorStop(0, '#573318');
-                    road.addColorStop(1, '#3b1c08');
-                    ctx.fillStyle = road;
-                    ctx.fillRect(0, h * 0.45, w, h * 0.55);
-
-                    // Road dust & moving stones
-                    ctx.fillStyle = 'rgba(251, 191, 36, 0.15)';
-                    for (let i = 0; i < 20; i++) {
-                        const px = ((i * 70 + frame * 4) % w);
-                        const py = h * 0.48 + ((i * 30 + frame * 3) % (h * 0.5));
-                        ctx.beginPath();
-                        ctx.arc(px, py, (py / h) * 3, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-
-                    // Passing dump truck ahead
-                    const truckY = h * 0.46;
-                    const truckX = (w * 0.5) + Math.sin(frame * 0.02) * 15;
-                    ctx.fillStyle = '#f59e0b';
-                    ctx.fillRect(truckX - 22, truckY - 18, 44, 25);
-                    ctx.fillStyle = '#1e293b';
-                    ctx.fillRect(truckX - 18, truckY + 4, 10, 8);
-                    ctx.fillRect(truckX + 8, truckY + 4, 10, 8);
-                    // Rear taillights
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(truckX - 20, truckY + 1, 6, 4);
-                    ctx.fillRect(truckX + 14, truckY + 1, 6, 4);
-
-                    // AI Bounding Box for Vehicle Ahead
-                    ctx.strokeStyle = '#10b981';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(truckX - 26, truckY - 22, 52, 36);
-                    ctx.fillStyle = '#10b981';
-                    ctx.font = '10px monospace';
-                    ctx.fillText('HD-785 (18m) [98%]', truckX - 26, truckY - 26);
-                } else {
-                    // CAM 2: Kabin Pengemudi / Cabin AI DMS
-                    // Cabin Interior
-                    ctx.fillStyle = '#0f172a';
-                    ctx.fillRect(0, 0, w, h);
-
-                    // Windshield view (mining background visible from window)
-                    ctx.fillStyle = '#475569';
-                    ctx.beginPath();
-                    ctx.moveTo(w * 0.25, h * 0.15);
-                    ctx.lineTo(w * 0.85, h * 0.15);
-                    ctx.lineTo(w * 0.9, h * 0.55);
-                    ctx.lineTo(w * 0.2, h * 0.55);
-                    ctx.fill();
-
-                    // Driver silhouette (sitting)
-                    const bobY = Math.sin(frame * 0.06) * 3;
-                    ctx.fillStyle = '#1e293b';
-                    // Head
-                    ctx.beginPath();
-                    ctx.arc(w * 0.52, h * 0.42 + bobY, 32, 0, Math.PI * 2);
-                    ctx.fill();
-                    // Safety helmet (white)
-                    ctx.fillStyle = '#f8fafc';
-                    ctx.beginPath();
-                    ctx.arc(w * 0.52, h * 0.38 + bobY, 34, Math.PI, 0);
-                    ctx.fill();
-                    // High-vis Vest
-                    ctx.fillStyle = '#f97316';
-                    ctx.beginPath();
-                    ctx.moveTo(w * 0.4, h * 0.65 + bobY);
-                    ctx.lineTo(w * 0.64, h * 0.65 + bobY);
-                    ctx.lineTo(w * 0.7, h);
-                    ctx.lineTo(w * 0.35, h);
-                    ctx.fill();
-
-                    // Steering wheel
-                    ctx.strokeStyle = '#334155';
-                    ctx.lineWidth = 8;
-                    ctx.beginPath();
-                    ctx.arc(w * 0.5, h * 0.85, 45, 0, Math.PI);
-                    ctx.stroke();
-
-                    // AI Face Landmark Bounding Box
-                    ctx.strokeStyle = '#38bdf8';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(w * 0.45, h * 0.32 + bobY, 44, 52);
-                    ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
-                    ctx.fillRect(w * 0.45, h * 0.32 + bobY, 44, 52);
-                    
-                    // Eyes tracking points
-                    ctx.fillStyle = '#10b981';
-                    ctx.beginPath();
-                    ctx.arc(w * 0.49, h * 0.42 + bobY, 2.5, 0, Math.PI * 2);
-                    ctx.arc(w * 0.55, h * 0.42 + bobY, 2.5, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // DMS Indicator
-                    ctx.fillStyle = '#10b981';
-                    ctx.font = '10px monospace';
-                    ctx.fillText('DMS AI: ATTENTIVE (Eye Gaze OK)', w * 0.35, h * 0.28 + bobY);
-                }
-
-                // OSD Header Bar
-                ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                ctx.fillRect(0, 0, w, 24);
-                ctx.fillStyle = '#e2e8f0';
-                ctx.font = '10px monospace';
-                const timeStr = new Date().toLocaleTimeString('id-ID');
-                ctx.fillText(`PT. HPU MINING • ${channelName} • ${timeStr} • DEV: ${devIdno}`, 10, 16);
-
-                simAnimId = requestAnimationFrame(render);
-            }
-            render();
-        }
-
-        // ── INIT LOGIC ──
-        if (isDemo) {
-            startSimulation();
+                ]
+            );
         } else {
-            const isRegistered = REGISTERED_CMSV6_DEVS.includes(devIdno);
+            // Perangkat terdaftar — Sambungkan ke FLV Stream Realtime
+            setStatus(`Menghubungkan CAM ${displayChannel}...`, 'amber');
+            showOverlay(
+                `Menghubungkan ke ${channelName}...`,
+                `Meminta feed video live dari CMSV6 Gateway (10.10.0.33:6604)...`,
+                `<span class="badge badge-blue">Unit Terdaftar di CMSV6</span>`,
+                [],
+                true
+            );
 
-            if (!isRegistered) {
-                // Perangkat belum didaftarkan di CMSV6 server
-                setStatus('Perangkat Tidak Terdaftar di Server', 'amber');
-                showOverlay(
-                    `Perangkat ${devIdno} Belum Terdaftar di CMSV6`,
-                    `Nomor seri ini belum didaftarkan di CMSV6 server (10.10.0.33). Pilih unit Trial yang sudah terdaftar (HD-78501) atau aktifkan simulasi demo video.`,
-                    `<span class="badge badge-amber">⚠️ ID Belum Terdaftar</span>`,
-                    [
-                        {
-                            label: 'Alihkan ke HD-78501 (Trial UNS)',
-                            primary: true,
-                            onClick: () => {
-                                window.parent.postMessage({ type: 'SELECT_VEHICLE', deviceId: '240078916116' }, '*');
-                            }
-                        },
-                        {
-                            label: 'Putar Simulasi Video Demo',
-                            primary: false,
-                            onClick: () => startSimulation()
-                        }
-                    ]
-                );
+            if (typeof flvjs === 'undefined' || !flvjs.isSupported()) {
+                setStatus('Browser tidak support FLV MSE', 'red');
+                showOverlay('Format FLV Tidak Didukung', 'Browser Anda tidak mendukung Media Source Extension (MSE). Silakan gunakan Google Chrome / Microsoft Edge terbaru.', '', [
+                    { label: 'Coba Muat Ulang', primary: true, onClick: () => window.location.reload() }
+                ]);
             } else {
-                // Perangkat terdaftar — Coba sambungkan ke FLV Stream
-                setStatus(`Menghubungkan CAM ${displayChannel}...`, 'amber');
-                showOverlay(
-                    `Menghubungkan ke ${channelName}...`,
-                    `Meminta feed video live dari CMSV6 Gateway (10.10.0.33:6604)...`,
-                    `<span class="badge badge-blue">Unit Terdaftar di CMSV6</span>`,
-                    [],
-                    true
-                );
+                const host     = params.get('host') || '10.10.0.33:6604';
+                const useProxy = params.get('proxy') === '1' || window.location.protocol === 'https:';
+                const streamUrl = useProxy
+                    ? `/api/cmsv6/stream?dev=${devIdno}&ch=${channel}&jsession=${jsession || ''}&stream=1`
+                    : `http://${host}/3/3?AVType=1&jsession=${jsession || ''}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`;
+                let started = false;
 
-                if (typeof flvjs === 'undefined' || !flvjs.isSupported()) {
-                    setStatus('Browser tidak support FLV MSE', 'red');
-                    showOverlay('Format FLV Tidak Didukung', 'Browser Anda tidak mendukung Media Source Extension (MSE).', '', [
-                        { label: 'Putar Simulasi Demo', primary: true, onClick: () => startSimulation() }
-                    ]);
-                } else {
-                    const host     = params.get('host') || '10.10.0.33:6604';
-                    const useProxy = params.get('proxy') === '1' || window.location.protocol === 'https:';
-                    const streamUrl = useProxy
-                        ? `/api/cmsv6/stream?dev=${devIdno}&ch=${channel}&jsession=${jsession || ''}&stream=1`
-                        : `http://${host}/3/3?AVType=1&jsession=${jsession || ''}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`;
-                    let started = false;
-
-                    const standbyTimeout = setTimeout(() => {
-                        if (!started) {
-                            setStatus('Unit Standby / Engine OFF di Pit', 'amber');
-                            showOverlay(
-                                `Unit ${devIdno} dalam Status Standby / Engine OFF`,
-                                `Perangkat terdaftar di CMSV6, namun mesin unit saat ini mati atau sinyal 4G di pit sedang terputus (data terakhir: 09/10/2026).`,
-                                `<span class="badge badge-amber">⏳ Engine Standby di Pit</span>`,
-                                [
-                                    {
-                                        label: 'Coba Hubungkan Ulang',
-                                        primary: false,
-                                        onClick: () => window.location.reload()
-                                    },
-                                    {
-                                        label: 'Putar Simulasi Demo Video',
-                                        primary: true,
-                                        onClick: () => startSimulation()
-                                    }
-                                ]
-                            );
-                        }
-                    }, 5000);
-
-                    const player = flvjs.createPlayer({
-                        type: 'flv',
-                        url: streamUrl,
-                        isLive: true,
-                        hasAudio: false,
-                        hasVideo: true,
-                        cors: true,
-                    }, {
-                        enableWorker: false,
-                        lazyLoad: false,
-                        enableStashBuffer: false,
-                        stashInitialSize: 128,
-                    });
-
-                    player.attachMediaElement(videoEl);
-                    player.load();
-
-                    function onStreamReady() {
-                        if (!started) {
-                            started = true;
-                            clearTimeout(standbyTimeout);
-                            hideOverlay();
-                            videoEl.style.display = 'block';
-                            canvasSim.style.display = 'none';
-                            setStatus(`✓ Live CAM ${displayChannel} (Realtime)`, 'green');
-                        }
+                const standbyTimeout = setTimeout(() => {
+                    if (!started) {
+                        setStatus('Unit Standby / Engine OFF di Pit', 'amber');
+                        showOverlay(
+                            `Unit ${devIdno} dalam Status Standby / Engine OFF`,
+                            `Perangkat terdaftar di CMSV6, namun mesin unit saat ini mati atau sinyal 4G di area pit sedang offline. Menunggu siaran langsung dimulai.`,
+                            `<span class="badge badge-amber">⏳ Engine Standby di Pit</span>`,
+                            [
+                                {
+                                    label: 'Coba Hubungkan Ulang',
+                                    primary: true,
+                                    onClick: () => window.location.reload()
+                                }
+                            ]
+                        );
                     }
+                }, 5000);
 
-                    videoEl.addEventListener('loadeddata', onStreamReady);
-                    videoEl.addEventListener('playing', onStreamReady);
-                    videoEl.addEventListener('timeupdate', () => {
-                        if (videoEl.currentTime > 0) onStreamReady();
-                    });
+                const player = flvjs.createPlayer({
+                    type: 'flv',
+                    url: streamUrl,
+                    isLive: true,
+                    hasAudio: false,
+                    hasVideo: true,
+                    cors: true,
+                }, {
+                    enableWorker: false,
+                    lazyLoad: false,
+                    enableStashBuffer: false,
+                    stashInitialSize: 128,
+                });
 
-                    player.play().then(onStreamReady).catch(err => {
-                        console.warn('[FLV] Autoplay:', err);
-                    });
+                player.attachMediaElement(videoEl);
+                player.load();
 
-                    player.on(flvjs.Events.ERROR, () => {
-                        // Error handled by timeout prompt
-                    });
+                function onStreamReady() {
+                    if (!started) {
+                        started = true;
+                        clearTimeout(standbyTimeout);
+                        hideOverlay();
+                        videoEl.style.display = 'block';
+                        setStatus(`✓ Live CAM ${displayChannel} (Realtime)`, 'green');
+                    }
                 }
+
+                videoEl.addEventListener('loadeddata', onStreamReady);
+                videoEl.addEventListener('playing', onStreamReady);
+                videoEl.addEventListener('timeupdate', () => {
+                    if (videoEl.currentTime > 0) onStreamReady();
+                });
+
+                player.play().then(onStreamReady).catch(err => {
+                    console.warn('[FLV] Autoplay:', err);
+                });
+
+                player.on(flvjs.Events.ERROR, () => {
+                    // Handled by timeout prompt
+                });
             }
         }
     </script>

@@ -230,14 +230,11 @@ export const HPU_FLEET: FleetVehicle[] = [
 
 // Channel 0 = CAM 1 Depan (Metode 1: videoH5.html langsung dari server CMSV6 HPU)
 // Channel 1 = CAM 2 Kabin (Metode 2: player.html dengan optimasi low-latency)
-function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'flv', isDemo: boolean = false) {
-    if (!jsession && !isDemo) return null;
-    if (isDemo) {
-        return `/player.html?dev=${deviceId}&ch=${channel}&demo=1`;
-    }
+function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'flv') {
+    if (!jsession) return null;
     const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
     if (engine === 'cmsv6' && !isHttps) {
-        return `http://10.10.0.33:8088/808gps/open/player/video.html?lang=en&devIdno=${deviceId}&jsession=${jsession || ''}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
+        return `http://10.10.0.33:8088/808gps/open/player/videoH5.html?lang=en&devIdno=${deviceId}&jsession=${jsession || ''}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
     }
     const mediaHost = '10.10.0.33:6604';
     const proxyFlag = isHttps ? '&proxy=1' : '';
@@ -253,8 +250,7 @@ export default function Page() {
     const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
     const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
     const [vehicleTypeFilter, setVehicleTypeFilter] = useState<'ALL' | 'DT' | 'EXCA' | 'FT'>('ALL');
-    const [streamEngine, setStreamEngine] = useState<'cmsv6' | 'flv'>('cmsv6');
-    const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+    const [streamEngine, setStreamEngine] = useState<'cmsv6' | 'flv'>('flv');
 
     // ── REVISI 1: ON/OFF LIVECAM (DEFAULT: OFF TERLEBIH DAHULU) ──
     const [isLivecamActive, setIsLivecamActive] = useState<boolean>(false);
@@ -352,7 +348,18 @@ export default function Page() {
     const [cmsBaseUrl, setCmsBaseUrl] = useState<string>("http://10.10.0.33:8088");
     const [apiStatus, setApiStatus] = useState<'connecting' | 'live' | 'error'>('connecting');
     const [rawGPS, setRawGPS] = useState<any>({});
-    const [driver, setDriver] = useState<{ name: string; id: string; match: number; photoUrl?: string; position?: string; time?: string } | null>(null);
+    const [driver, setDriver] = useState<{
+        name: string;
+        id: string;
+        match: number;
+        photoUrl?: string;
+        position?: string;
+        plate_no?: string;
+        site?: string;
+        shift?: string;
+        status?: string;
+        time?: string;
+    } | null>(null);
     
     // ── STATE ALARM CENTER CMSV6 ──
     type AlarmItem = {
@@ -391,7 +398,20 @@ export default function Page() {
         return { name: 'Cahya Dwi Saputra', id: '1234567890', position: 'Operator Alat Berat' };
     });
     const [showHistory, setShowHistory] = useState(false);
-    const [historyLogs, setHistoryLogs] = useState<{ id: number; name: string; employee_id: string; confidence: number; photo_url: string; time: string }[]>([]);
+    const [historyLogs, setHistoryLogs] = useState<{
+        id: number;
+        name: string;
+        employee_id: string;
+        confidence: number;
+        photo_url?: string;
+        time: string;
+        vehicle_id?: string;
+        plate_no?: string;
+        site?: string;
+        shift?: string;
+        status?: string;
+        verification_method?: string;
+    }[]>([]);
     const [isScanningFace, setIsScanningFace] = useState(false);
     const [faceStatus, setFaceStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
     const [faceMessage, setFaceMessage] = useState<string>('');
@@ -603,9 +623,34 @@ export default function Page() {
         }
     };
 
+    const fetchActiveDriver = async () => {
+        try {
+            const res = await fetch(`/api/dashcam/active-driver?deviceId=${activeDeviceId}&vehicleId=${encodeURIComponent(currentVehicle.id)}`);
+            const data = await res.json();
+            if (data.status === 'ok' && data.driver) {
+                setDriver({
+                    name: data.driver.name,
+                    id: data.driver.id || '-',
+                    match: data.driver.confidence || 95,
+                    position: data.driver.position || 'Operator Alat Berat',
+                    photoUrl: data.driver.photo_url,
+                    plate_no: data.driver.plate_no || currentVehicle.plateNo,
+                    site: data.driver.site || currentVehicle.site,
+                    shift: data.driver.shift,
+                    status: data.driver.status,
+                    time: data.driver.received_at ? data.driver.received_at.split('·')[0].trim() : '-',
+                });
+            } else {
+                setDriver(null);
+            }
+        } catch (err) {
+            console.error("Error fetching active driver:", err);
+        }
+    };
+
     const fetchHistoryLogs = async () => {
         try {
-            const res = await fetch('/api/dashcam/history');
+            const res = await fetch(`/api/dashcam/history?deviceId=${activeDeviceId}&vehicleId=${encodeURIComponent(currentVehicle.id)}`);
             const data = await res.json();
             if (data.status === 'ok') {
                 setHistoryLogs(data.data || []);
@@ -617,12 +662,14 @@ export default function Page() {
         setShowCheckin(false);
         setIsScanningFace(false);
         setFaceStatus('success');
-        setFaceMessage(`Operator ${d.name} berhasil di-assign.`);
+        setFaceMessage(`Operator ${d.name} berhasil ditugaskan membawa unit ${currentVehicle.plateNo}.`);
         setDriver({
             name: d.name,
             id: d.id,
             match: 99,
             position: d.position || 'Operator Alat Berat',
+            plate_no: currentVehicle.plateNo,
+            site: currentVehicle.site,
             time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
         });
         try {
@@ -635,12 +682,18 @@ export default function Page() {
                 },
                 body: JSON.stringify({
                     deviceId: activeDeviceId,
+                    vehicleId: currentVehicle.id,
+                    plateNo: currentVehicle.plateNo,
+                    site: currentVehicle.site,
                     capturedAt: new Date().toISOString(),
                     source: 'manual-assignment',
                     driverName: d.name,
                     employeeId: d.id,
+                    confidence: 99.0,
+                    photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(d.name)}&background=10B981&color=fff&bold=true`,
                 }),
             });
+            await fetchHistoryLogs();
         } catch {}
     };
 
@@ -917,25 +970,6 @@ export default function Page() {
         setIsSimulatingTrip(false);
     };
 
-    const activateDemoCoordinates = () => {
-        setTelemetry(prev => ({
-            ...prev,
-            lat: -7.658200,
-            lng: 111.189500,
-            speed: 0,
-            gpsLocked: true,
-            isLastKnown: false,
-        }));
-        setActiveGeofence({
-            id: 2,
-            name: 'Pit Front A (Loading Point)',
-            type: 'loading',
-            distance: 0,
-        });
-        setGeofenceNotice('Peta dipusatkan ke Pit Front A (Zona Tambang HPU).');
-        setTimeout(() => setGeofenceNotice(null), 4000);
-    };
-
     const takeDashcamSnapshot = async (): Promise<string | null> => {
         try {
             setFaceMessage('Meminta snapshot dari kamera kabin...');
@@ -981,11 +1015,20 @@ export default function Page() {
             setFaceMessage('Menyimpan data pengemudi...');
         }
 
+        if (!actualPhotoUrl) {
+            actualPhotoUrl = previewPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(targetDriver?.name || 'Driver')}&background=3B82F6&color=fff&bold=true`;
+        }
+
         const payload = {
             deviceId: activeDeviceId,
+            vehicleId: currentVehicle.id,
+            plateNo: currentVehicle.plateNo,
+            site: currentVehicle.site,
             capturedAt: new Date().toISOString(),
             source: 'cabin-dashcam-ai',
             photoUrl: actualPhotoUrl,
+            driverName: targetDriver?.name,
+            employeeId: targetDriver?.id,
         };
 
         try {
@@ -1005,16 +1048,20 @@ export default function Page() {
 
             if (response.ok && data.status === 'ok') {
                 const savedPhoto = data.data?.photo_url || actualPhotoUrl;
+                setPreviewPhoto(savedPhoto);
                 setFaceStatus('success');
-                setFaceMessage(`Verifikasi AI berhasil! ${data.data.driver_name} terdeteksi.`);
+                setFaceMessage(`Verifikasi AI berhasil! ${data.data.driver_name} terdeteksi membawa unit ${currentVehicle.plateNo}.`);
                 setDriver({
                     name: data.data.driver_name,
                     id: data.data.employee_id,
                     match: data.data.confidence,
-                    position: 'Operator Alat Berat',
+                    position: data.data.position || 'Operator Alat Berat',
                     photoUrl: savedPhoto,
+                    plate_no: currentVehicle.plateNo,
+                    site: currentVehicle.site,
                     time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
                 });
+                await fetchHistoryLogs();
             } else {
                 throw new Error(data?.message || 'Wajah tidak dikenali oleh AI');
             }
@@ -1210,12 +1257,13 @@ export default function Page() {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify({ deviceId: DEVICE_ID }),
+                body: JSON.stringify({ deviceId: activeDeviceId, vehicleId: currentVehicle.id }),
             });
         } catch {}
         setDriver(null);
         setFaceStatus('idle');
-        setFaceMessage('Kabin telah dikosongkan. Pengemudi telah check-out.');
+        setFaceMessage(`Kabin unit ${currentVehicle.plateNo} telah dikosongkan. Pengemudi telah check-out.`);
+        await fetchHistoryLogs();
     };
 
     useEffect(() => {
@@ -1374,41 +1422,6 @@ export default function Page() {
                 setApiStatus('error');
             }
         };
-        const fetchActiveDriver = async () => {
-            try {
-                // 1. Cek dulu apakah di kabin ada orang
-                const photo = await captureCabinFrame();
-                let isCabinEmpty = false;
-                if (photo && photo.startsWith('data:image')) {
-                    const presence = await checkHumanFacePresence(photo);
-                    if (!presence.hasHuman) {
-                        isCabinEmpty = true;
-                    }
-                }
-
-                // 2. Jika kosong, jangan set driver, panggil checkout untuk amannya
-                if (isCabinEmpty) {
-                    await handleCheckout();
-                    return;
-                }
-
-                // 3. Jika ada orang, baru ambil dari database
-                const res = await fetch('/api/dashcam/active-driver');
-                const data = await res.json();
-                if (data.status === 'ok' && data.driver) {
-                    setDriver({
-                        name: data.driver.name,
-                        id: data.driver.id || '-',
-                        match: data.driver.confidence || 95,
-                        position: 'Operator Alat Berat',
-                        photoUrl: data.driver.photo_url,
-                        time: data.driver.received_at ? data.driver.received_at.split('·')[0].trim() : '-',
-                    });
-                }
-            } catch (err) {}
-        };
-
-
 
         const fetchAlarms = async () => {
             try {
@@ -1422,9 +1435,9 @@ export default function Page() {
             }
         };
 
-
         fetchDrivers('');
         fetchActiveDriver();
+        fetchHistoryLogs();
         fetchGPS();
         fetchAlarms();
         fetchGeofences();
@@ -1437,7 +1450,7 @@ export default function Page() {
             fetchGeofences();
         }, 5000);
         return () => clearInterval(interval);
-    }, [jsession, activeDeviceId]);
+    }, [jsession, activeDeviceId, currentVehicle.id]);
 
     // ── AKSI ALARM: HANDLE SATUAN ──
     const handleQuickAction = async (guid: string) => {
@@ -2241,13 +2254,13 @@ export default function Page() {
                                             </button>
                                         </div>
 
-                                        {/* Stream Engine Selector & Demo Toggle */}
+                                        {/* Stream Engine Selector */}
                                         <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-medium gap-0.5">
                                             <button
                                                 type="button"
-                                                onClick={() => { setStreamEngine('cmsv6'); setIsDemoMode(false); }}
+                                                onClick={() => setStreamEngine('cmsv6')}
                                                 className={`px-2 py-1 rounded-md transition cursor-pointer text-xs ${
-                                                    streamEngine === 'cmsv6' && !isDemoMode
+                                                    streamEngine === 'cmsv6'
                                                         ? 'bg-white text-gray-900 shadow-xs font-bold' 
                                                         : 'text-gray-500 hover:text-gray-900'
                                                 }`}
@@ -2257,28 +2270,15 @@ export default function Page() {
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => { setStreamEngine('flv'); setIsDemoMode(false); }}
+                                                onClick={() => setStreamEngine('flv')}
                                                 className={`px-2 py-1 rounded-md transition cursor-pointer text-xs ${
-                                                    streamEngine === 'flv' && !isDemoMode
+                                                    streamEngine === 'flv'
                                                         ? 'bg-white text-gray-900 shadow-xs font-bold' 
                                                         : 'text-gray-500 hover:text-gray-900'
                                                 }`}
                                                 title="Gunakan Direct HTTP-FLV Media Stream Port 6604"
                                             >
                                                 FLV Direct
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsDemoMode(!isDemoMode)}
-                                                className={`px-2.5 py-1 rounded-md transition cursor-pointer text-xs font-bold flex items-center gap-1 ${
-                                                    isDemoMode
-                                                        ? 'bg-emerald-600 text-white shadow-xs' 
-                                                        : 'text-slate-600 hover:text-emerald-700 bg-white/70'
-                                                }`}
-                                                title="Aktifkan simulasi streaming video demo pit hauling & kabin DMS saat armada offline"
-                                            >
-                                                <span>🎬</span>
-                                                <span>{isDemoMode ? 'Demo Aktif' : 'Demo Stream'}</span>
                                             </button>
                                         </div>
 
@@ -2378,7 +2378,7 @@ export default function Page() {
                                                         className="relative aspect-video bg-black rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group"
                                                     >
                                                         <iframe
-                                                            src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                            src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine)!}
                                                             className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
                                                             scrolling="no"
                                                             style={{ overflow: 'hidden' }}
@@ -2406,7 +2406,7 @@ export default function Page() {
                                         {cameraViewMode === 'cam1' && (
                                             <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden border border-slate-800">
                                                 <iframe
-                                                    src={camUrl(currentVehicle.deviceNo, 0, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                    src={camUrl(currentVehicle.deviceNo, 0, jsession, cmsBaseUrl, streamEngine)!}
                                                     className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
                                                     scrolling="no"
                                                     style={{ overflow: 'hidden' }}
@@ -2426,7 +2426,7 @@ export default function Page() {
                                         {cameraViewMode === 'cam2' && (
                                             <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden border border-slate-800">
                                                 <iframe
-                                                    src={camUrl(currentVehicle.deviceNo, 1, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                    src={camUrl(currentVehicle.deviceNo, 1, jsession, cmsBaseUrl, streamEngine)!}
                                                     className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
                                                     scrolling="no"
                                                     style={{ overflow: 'hidden' }}
@@ -2451,7 +2451,7 @@ export default function Page() {
                                                         className="relative bg-black rounded-lg overflow-hidden border border-slate-800 h-[360px]"
                                                     >
                                                         <iframe
-                                                            src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine, isDemoMode)!}
+                                                            src={camUrl(ch.deviceId, ch.apiChannel, jsession, cmsBaseUrl, streamEngine)!}
                                                             className="w-full h-full border-0 absolute inset-0 bg-slate-950 overflow-hidden"
                                                             scrolling="no"
                                                             style={{ overflow: 'hidden' }}
@@ -2962,28 +2962,36 @@ export default function Page() {
                                                     <User className="w-3.5 h-3.5 text-blue-600" />
                                                     OPERATOR DETAIL
                                                 </span>
-                                                <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> 4.6
-                                                </span>
+                                                {driver ? (
+                                                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Aktif Mengemudi
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[11px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <UserX className="w-3 h-3 text-slate-400" /> Kabin Kosong
+                                                    </span>
+                                                )}
                                             </div>
 
-                                            <div className="flex items-start justify-between gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                                            <div className={`flex items-start justify-between gap-3 p-3 rounded-xl border transition ${
+                                                driver ? 'bg-slate-50 border-slate-200/90' : 'bg-amber-50/40 border-amber-200/60'
+                                            }`}>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold text-gray-900 truncate">
-                                                        {driver ? driver.name : targetDriver.name}
+                                                    <div className="text-sm font-bold text-gray-900 truncate flex items-center gap-1.5">
+                                                        {driver ? driver.name : 'Belum Ada Driver'}
                                                     </div>
-                                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                                        <span className="bg-white text-gray-700 text-[11px] font-semibold px-2 py-0.2 rounded-full border border-slate-200">
+                                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                                        <span className="bg-white text-gray-700 text-[11px] font-semibold px-2 py-0.5 rounded-full border border-slate-200">
                                                             {currentVehicle.plateNo}
                                                         </span>
                                                         <span className="text-[11px] text-gray-400 font-mono">
-                                                            NIK: {driver ? driver.id : targetDriver.id}
+                                                            NIK: {driver ? driver.id : '-'}
                                                         </span>
                                                     </div>
                                                     <div className="mt-2 flex flex-col gap-1 text-[11px] text-gray-500">
                                                         <span className="flex items-center gap-1">
                                                             <Phone className="w-3 h-3 text-gray-400" />
-                                                            +62 812 3456 7890
+                                                            {driver?.position || 'Operator Alat Berat'}
                                                         </span>
                                                         <span className="flex items-center gap-1">
                                                             <MapPin className="w-3 h-3 text-gray-400" />
@@ -2991,18 +2999,31 @@ export default function Page() {
                                                         </span>
                                                     </div>
                                                     <div className="mt-2">
-                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                                                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Biometrik AI
-                                                        </span>
+                                                        {driver ? (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Biometrik AI ({driver.match}% Match)
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                                                                <AlertCircle className="w-2.5 h-2.5 text-amber-600" /> Siap Scan Wajah / Check-In
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
 
                                                 {/* Avatar Box */}
-                                                <div className="w-18 h-24 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-gray-400 overflow-hidden shrink-0">
-                                                    {previewPhoto ? (
-                                                        <img src={previewPhoto} alt="Operator" className="w-full h-full object-cover" />
+                                                <div className="w-18 h-24 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-gray-400 overflow-hidden shrink-0 shadow-xs">
+                                                    {(driver?.photoUrl || previewPhoto) ? (
+                                                        <img
+                                                            src={driver?.photoUrl || previewPhoto || ''}
+                                                            alt={driver?.name || 'Operator'}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLElement).style.display = 'none';
+                                                            }}
+                                                        />
                                                     ) : (
-                                                        <User size={36} strokeWidth={1.5} />
+                                                        <User size={36} strokeWidth={1.5} className="text-gray-300" />
                                                     )}
                                                 </div>
                                             </div>
@@ -3013,18 +3034,13 @@ export default function Page() {
                                             <button
                                                 type="button"
                                                 onClick={async () => {
-                                                    setIsScanningFace(true);
-                                                    const snap = await captureCabinFrame();
-                                                    if (snap) {
-                                                        setPreviewPhoto(snap);
-                                                    }
-                                                    setIsScanningFace(false);
+                                                    await scanCabinDriver();
                                                 }}
                                                 disabled={isScanningFace}
-                                                className="w-full py-1.5 px-3 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                                className="w-full py-2 px-3 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                                             >
-                                                <Camera className="w-3.5 h-3.5" />
-                                                {isScanningFace ? 'Memindai dari Kabin...' : 'Pindai Wajah di Kabin'}
+                                                <ScanFace className="w-4 h-4" />
+                                                {isScanningFace ? 'Memindai dari Kabin...' : 'Pindai Wajah di Kabin (AI)'}
                                             </button>
 
                                             <div className="flex items-center justify-between text-[11px] text-gray-400 pt-0.5">
@@ -3035,20 +3051,33 @@ export default function Page() {
                                                 >
                                                     {showCheckin ? 'Tutup Pilihan' : 'Pilih Manual Operator'}
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { fetchHistoryLogs(); setShowHistory(true); }}
-                                                    className="hover:text-blue-600 cursor-pointer flex items-center gap-1"
-                                                >
-                                                    <History className="w-3 h-3" /> Riwayat
-                                                </button>
+                                                
+                                                <div className="flex items-center gap-2">
+                                                    {driver && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleCheckout}
+                                                            className="text-rose-600 hover:underline font-semibold cursor-pointer flex items-center gap-1"
+                                                            title="Check-out driver dari unit ini"
+                                                        >
+                                                            <LogOut className="w-3 h-3" /> Check-out
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { fetchHistoryLogs(); setShowHistory(true); }}
+                                                        className="hover:text-blue-600 cursor-pointer flex items-center gap-1"
+                                                    >
+                                                        <History className="w-3 h-3" /> Riwayat
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {showCheckin && (
                                                 <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5 mt-2">
                                                     <input
                                                         type="text"
-                                                        placeholder="Cari nama atau NIK..."
+                                                        placeholder="Cari nama atau NIK pengemudi..."
                                                         value={searchDriver}
                                                         onChange={e => setSearchDriver(e.target.value)}
                                                         className="w-full text-xs p-1.5 rounded border border-slate-200 bg-white"
@@ -3058,12 +3087,14 @@ export default function Page() {
                                                             <div
                                                                 key={d.id}
                                                                 onClick={() => {
-                                                                    setTargetDriver({ name: d.name, id: d.id, position: d.position || 'Operator' });
-                                                                    setShowCheckin(false);
+                                                                    handleSelectManualDriver(d);
                                                                 }}
-                                                                className="p-1.5 hover:bg-slate-200/70 rounded cursor-pointer text-xs flex justify-between"
+                                                                className="p-1.5 hover:bg-blue-50 hover:text-blue-700 rounded cursor-pointer text-xs flex justify-between items-center transition"
                                                             >
-                                                                <span className="font-bold text-gray-800">{d.name}</span>
+                                                                <div>
+                                                                    <span className="font-bold text-gray-800 block">{d.name}</span>
+                                                                    <span className="text-[10px] text-gray-400">{d.position || 'Operator'}</span>
+                                                                </div>
                                                                 <span className="text-gray-400 font-mono text-[10px]">{d.id}</span>
                                                             </div>
                                                         ))}
@@ -3329,6 +3360,112 @@ export default function Page() {
                                 <button
                                     onClick={() => setShowRitasiHistoryModal(false)}
                                     className="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-xl font-bold cursor-pointer transition"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── MODAL: RIWAYAT SCAN WAJAH & PENUGASAN DRIVER ── */}
+                {showHistory && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-5 border border-gray-100 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                                <div>
+                                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                        <History className="w-4 h-4 text-blue-600" /> Riwayat Penugasan & Scan Wajah Pengemudi
+                                    </h4>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        Unit: <span className="font-semibold text-gray-700">{currentVehicle.plateNo}</span> • {currentVehicle.site}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowHistory(false)}
+                                    className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition cursor-pointer"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto border border-gray-100 rounded-xl">
+                                {historyLogs.length > 0 ? (
+                                    <table className="w-full text-left text-xs border-collapse">
+                                        <thead className="bg-gray-50 text-gray-600 font-bold sticky top-0 border-b border-gray-200">
+                                            <tr>
+                                                <th className="p-2.5">Foto</th>
+                                                <th className="p-2.5">Nama Pengemudi</th>
+                                                <th className="p-2.5">NIK</th>
+                                                <th className="p-2.5">Armada</th>
+                                                <th className="p-2.5 text-center">Status</th>
+                                                <th className="p-2.5 text-center">Metode</th>
+                                                <th className="p-2.5 text-center">Kecocokan</th>
+                                                <th className="p-2.5 text-right">Waktu</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {historyLogs.map(log => (
+                                                <tr key={log.id} className="hover:bg-gray-50/80 transition">
+                                                    <td className="p-2.5">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                                            {log.photo_url ? (
+                                                                <img
+                                                                    src={log.photo_url}
+                                                                    alt={log.name}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLElement).style.display = 'none';
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <User className="w-4 h-4 text-gray-400" />
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-2.5 font-bold text-gray-800">{log.name}</td>
+                                                    <td className="p-2.5 font-mono text-gray-500">{log.employee_id || '-'}</td>
+                                                    <td className="p-2.5 font-semibold text-gray-700">{log.plate_no || currentVehicle.plateNo}</td>
+                                                    <td className="p-2.5 text-center">
+                                                        {log.status === 'active' ? (
+                                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                Aktif
+                                                            </span>
+                                                        ) : (
+                                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                                                Selesai
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-2.5 text-center">
+                                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                            {log.verification_method === 'manual_selection' ? 'Manual Picker' : 'Biometrik AI'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-2.5 text-center font-mono font-bold text-emerald-600">
+                                                        {log.confidence ? `${log.confidence}%` : '-'}
+                                                    </td>
+                                                    <td className="p-2.5 text-right font-mono text-gray-400">{log.time}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <div className="py-12 text-center text-gray-400">
+                                        <History className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                        <p className="text-sm font-semibold text-gray-600">Belum ada riwayat verifikasi driver untuk unit ini.</p>
+                                        <p className="text-xs text-gray-400 mt-1">Lakukan scan wajah atau penugasan manual untuk merekam data ke database.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100 text-xs">
+                                <span className="text-gray-400 font-mono text-[11px]">
+                                    Total Catatan: {historyLogs.length} sesi verifikasi
+                                </span>
+                                <button
+                                    onClick={() => setShowHistory(false)}
+                                    className="px-4 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl cursor-pointer transition"
                                 >
                                     Tutup
                                 </button>

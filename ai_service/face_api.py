@@ -51,13 +51,28 @@ def get_base64_image(b64_string):
 
 def detect_face(gray_img):
     """Detect the largest face in the image."""
-    faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=4, minSize=(50, 50))
+    if gray_img is None:
+        return None
+    faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=4, minSize=(40, 40))
+    if len(faces) == 0:
+        # Fallback with relaxed parameters for lower light or angled webcam frames
+        faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.05, minNeighbors=2, minSize=(30, 30))
     if len(faces) == 0:
         return None
     # Pick largest face
     faces = sorted(faces, key=lambda f: f[2]*f[3], reverse=True)
     x, y, w, h = faces[0]
     return gray_img[y:y+h, x:x+w]
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({
+        'status': 'ok',
+        'service': 'HPU Face Recognition AI',
+        'model_loaded': os.path.exists(MODEL_PATH),
+        'trained_count': len(label_map),
+        'labels': label_map
+    })
 
 @app.route('/train', methods=['POST'])
 def train():

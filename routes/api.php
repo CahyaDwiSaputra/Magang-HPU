@@ -198,6 +198,7 @@ Route::controller(DashcamController::class)->prefix("/dashcam")->withoutMiddlewa
     Route::post("/face-recognition", "faceRecognition");
     Route::get("/face-recognition/history", "history");
     Route::get("/face-recognition/latest", "latest");
+    Route::get("/history", "history");
     Route::get("/drivers", "getDrivers");
     Route::post("/drivers/register", "registerDriver");
     Route::get("/active-driver", "getActiveDriver");
