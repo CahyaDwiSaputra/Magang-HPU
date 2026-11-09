@@ -468,14 +468,242 @@ class DashcamController extends Controller
     /**
      * Ambil daftar geofences
      */
-    public function getGeofences(): JsonResponse
+    public function getGeofences(Request $request): JsonResponse
     {
-        $geofences = \App\Models\Geofence::orderBy('id', 'asc')->get();
-        
+        $query = \App\Models\Geofence::query();
+
+        if ($site = $request->query('site')) {
+            if (strtoupper($site) !== 'ALL') {
+                $query->where('site', strtoupper($site));
+            }
+        }
+
+        if ($request->query('category') === 'operational') {
+            $query->where('type', '!=', 'road');
+        } elseif ($type = $request->query('type')) {
+            $query->where('type', $type);
+        }
+
+        $geofences = $query->orderBy('id', 'asc')->get();
+
         return response()->json([
             'status' => 'ok',
             'data'   => $geofences
         ]);
+    }
+
+    /**
+     * Ambil data GeoJSON rute jalur hauling tambang
+     */
+    public function getHaulingRoutes(): JsonResponse
+    {
+        $geoJsonPath = public_path('geojson/hauling_routes.geojson');
+        if (!file_exists($geoJsonPath)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'File rute hauling belum tersedia.'
+            ], 404);
+        }
+
+        $content = json_decode(file_get_contents($geoJsonPath), true);
+        return response()->json([
+            'status' => 'ok',
+            'data'   => $content
+        ]);
+    }
+
+    /**
+     * Ambil data GeoJSON Poligon Geofence Tambang Operasional (Dinamis dari Database)
+     */
+    public function getGeofencesGeoJson(Request $request): JsonResponse
+    {
+        $query = \App\Models\Geofence::where('type', '!=', 'road');
+        if ($site = $request->query('site')) {
+            if (strtoupper($site) !== 'ALL') {
+                $query->where('site', strtoupper($site));
+            }
+        }
+        $geofences = $query->get();
+
+        if ($geofences->isEmpty()) {
+            $geoJsonPath = public_path('geojson/operational_geofences.geojson');
+            if (file_exists($geoJsonPath)) {
+                $content = json_decode(file_get_contents($geoJsonPath), true);
+                return response()->json([
+                    'status' => 'ok',
+                    'data'   => $content
+                ]);
+            }
+            return response()->json([
+                'status' => 'ok',
+                'data'   => ['type' => 'FeatureCollection', 'features' => []]
+            ]);
+        }
+
+        $features = [];
+        $earthRadius = 6378137.0;
+
+        foreach ($geofences as $gf) {
+            $lat = (float) $gf->latitude;
+            $lng = (float) $gf->longitude;
+            $radius = (float) ($gf->radius ?: 150);
+            $geomType = strtolower($gf->geometry_type ?: 'circle');
+            $coordsJson = $gf->coordinates_json ? json_decode($gf->coordinates_json, true) : null;
+
+            if ($geomType === 'polygon' && is_array($coordsJson) && count($coordsJson) >= 3) {
+                // Konversi dari [[lat, lng], ...] ke GeoJSON [[lng, lat], ...]
+                $ring = [];
+                foreach ($coordsJson as $pt) {
+                    $ring[] = [round((float) $pt[1], 7), round((float) $pt[0], 7)];
+                }
+                // Pastikan closed ring
+                if ($ring[0] !== $ring[count($ring) - 1]) {
+                    $ring[] = $ring[0];
+                }
+                $geometry = [
+                    'type' => 'Polygon',
+                    'coordinates' => [$ring],
+                ];
+            } elseif ($geomType === 'line' && is_array($coordsJson) && count($coordsJson) >= 2) {
+                $line = [];
+                foreach ($coordsJson as $pt) {
+                    $line[] = [round((float) $pt[1], 7), round((float) $pt[0], 7)];
+                }
+                $geometry = [
+                    'type' => 'LineString',
+                    'coordinates' => $line,
+                ];
+            } else {
+                // Circle atau poligon default: generate 8-point polygon ring
+                $ring = [];
+                for ($i = 0; $i < 8; $i++) {
+                    $angle = (2 * M_PI * $i) / 8;
+                    $dLat = ($radius * cos($angle)) / $earthRadius;
+                    $dLng = ($radius * sin($angle)) / ($earthRadius * cos(M_PI * $lat / 180.0));
+                    $ptLat = round($lat + ($dLat * 180.0 / M_PI), 7);
+                    $ptLng = round($lng + ($dLng * 180.0 / M_PI), 7);
+                    $ring[] = [$ptLng, $ptLat];
+                }
+                $ring[] = $ring[0];
+                $geometry = [
+                    'type' => 'Polygon',
+                    'coordinates' => [$ring],
+                ];
+            }
+
+            $features[] = [
+                'type' => 'Feature',
+                'properties' => [
+                    'id'            => $gf->id,
+                    'name'          => $gf->name,
+                    'site'          => $gf->site ?: 'HPA',
+                    'type'          => $gf->type,
+                    'color'         => $gf->color ?: '#2563EB',
+                    'radius'        => $radius,
+                    'material'      => $gf->material ?: 'OB',
+                    'address'       => $gf->address ?: '',
+                    'geometry_type' => $geomType,
+                ],
+                'geometry' => $geometry,
+            ];
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'data'   => [
+                'type'     => 'FeatureCollection',
+                'features' => $features,
+            ]
+        ]);
+    }
+
+    /**
+     * Ambil daftar foto udara / ortofoto drone
+     */
+    public function getDronePhotos(): JsonResponse
+    {
+        $dataFile = database_path('data/drone_photos.json');
+        $photos = [];
+
+        if (file_exists($dataFile)) {
+            $photos = json_decode(file_get_contents($dataFile), true) ?: [];
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'data'   => $photos
+        ]);
+    }
+
+    /**
+     * Upload Photo Drone baru (Slide 26 - Upload Photo Drone)
+     */
+    public function uploadDronePhoto(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'title'       => ['required', 'string', 'min:3'],
+            'flight_date' => ['nullable', 'string'],
+            'latitude'    => ['nullable', 'numeric'],
+            'longitude'   => ['nullable', 'numeric'],
+            'altitude_m'  => ['nullable', 'numeric'],
+            'notes'       => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $photoUrl = null;
+
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $ext = $file->getClientOriginalExtension() ?: 'jpg';
+            $filename = 'drone_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $path = $file->storeAs('drone_photos', $filename, 'public');
+            $photoUrl = Storage::disk('public')->url($path);
+        } elseif ($rawBase64 = $request->input('photo')) {
+            if (str_starts_with($rawBase64, 'data:image')) {
+                @list($meta, $content) = explode(',', $rawBase64, 2);
+                $decoded = base64_decode($content);
+                $ext = str_contains($meta, 'png') ? 'png' : 'jpg';
+                $filename = 'drone_photos/drone_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                Storage::disk('public')->put($filename, $decoded);
+                $photoUrl = '/storage/' . $filename;
+            } else {
+                $photoUrl = $rawBase64;
+            }
+        }
+
+        if (!$photoUrl) {
+            $photoUrl = 'https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?auto=format&fit=crop&w=1400&q=80';
+        }
+
+        $dataFile = database_path('data/drone_photos.json');
+        $photos = file_exists($dataFile) ? (json_decode(file_get_contents($dataFile), true) ?: []) : [];
+
+        $newPhoto = [
+            'id'          => time(),
+            'title'       => trim((string) $request->input('title')),
+            'flight_date' => $request->input('flight_date', date('Y-m-d')),
+            'photo_url'   => $photoUrl,
+            'latitude'    => (float) $request->input('latitude', 2.045000),
+            'longitude'   => (float) $request->input('longitude', 117.200000),
+            'altitude_m'  => (int) $request->input('altitude_m', 200),
+            'notes'       => $request->input('notes', 'Survei ortofoto drone tambang HPU'),
+            'created_at'  => now()->toDateTimeString(),
+        ];
+
+        array_unshift($photos, $newPhoto);
+        @file_put_contents($dataFile, json_encode($photos, JSON_PRETTY_PRINT));
+
+        return response()->json([
+            'status'  => 'ok',
+            'message' => 'Foto udara drone berhasil diunggah dan dikaitkan ke peta.',
+            'data'    => $newPhoto,
+        ], 201);
     }
 
     /**
@@ -488,10 +716,11 @@ class DashcamController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name'          => ['required', 'string', 'min:2'],
+            'site'          => ['nullable', 'string', 'max:50'],
             'type'          => ['required', 'string', 'in:loading,dumping,parking,road,custom'],
             'latitude'      => ['required', 'numeric'],
             'longitude'     => ['required', 'numeric'],
-            'radius'        => ['required', 'numeric', 'min:10', 'max:10000'],
+            'radius'        => ['required', 'numeric', 'min:1', 'max:50000'],
             'color'         => ['nullable', 'string', 'max:20'],
             'address'       => ['nullable', 'string', 'max:255'],
             'material'      => ['nullable', 'string', 'max:30'],
@@ -520,17 +749,27 @@ class DashcamController extends Controller
             }
         }
 
+        $coordsJson = $request->input('coordinates_json');
+        if (is_array($coordsJson)) {
+            $coordsJson = json_encode($coordsJson);
+        } elseif (empty($coordsJson)) {
+            $lat = (float) $request->input('latitude');
+            $lng = (float) $request->input('longitude');
+            $coordsJson = json_encode([[$lat, $lng]]);
+        }
+
         $geofence = \App\Models\Geofence::create([
-            'name'          => trim((string) $request->input('name')),
-            'type'          => $request->input('type'),
-            'latitude'      => (float) $request->input('latitude'),
-            'longitude'     => (float) $request->input('longitude'),
-            'radius'        => (int) $request->input('radius'),
-            'color'         => $color,
-            'address'       => $request->input('address', 'Area Tambang HPU'),
-            'material'      => strtoupper((string) $request->input('material', 'OB')),
-            'geometry_type' => $request->input('geometry_type', 'circle'),
-            'coordinates_json' => $request->input('coordinates_json', null),
+            'name'             => trim((string) $request->input('name')),
+            'site'             => strtoupper(trim((string) $request->input('site', 'HPA'))),
+            'type'             => $request->input('type'),
+            'latitude'         => (float) $request->input('latitude'),
+            'longitude'        => (float) $request->input('longitude'),
+            'radius'           => (int) $request->input('radius'),
+            'color'            => $color,
+            'address'          => $request->input('address', 'Area Tambang HPU'),
+            'material'         => strtoupper((string) $request->input('material', 'OB')),
+            'geometry_type'    => $request->input('geometry_type', 'circle'),
+            'coordinates_json' => $coordsJson,
         ]);
 
         return response()->json([

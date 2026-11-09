@@ -114,7 +114,7 @@ exca_cards = """
                                             <Fuel className="w-6 h-6 text-amber-500 mb-1" />
                                             <p className="text-xl font-black text-slate-800">320 L</p>
                                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fuel Level</p>
-                                        </div>
+                                        </div>a
                                     </div>
                                 </div>
 """

@@ -28,5 +28,7 @@ class DatabaseSeeder extends Seeder
                 'email' =>"admin_test@gmail.com"
             ]
         );
+
+        $this->call(GeofenceSeeder::class);
     }
 }

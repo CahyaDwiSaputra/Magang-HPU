@@ -7,10 +7,11 @@ import {
     ShieldAlert, Check, CheckCheck, Sparkles, Bell, LandPlot, Play, RotateCw, 
     Plus, Trash2, MapPin, Clock, Gauge, Layers, Activity, FileText, CheckCircle,
     LayoutGrid, Rows, Star, ArrowUpRight, RotateCcw, Smartphone, Radio, Phone,
-    Maximize2, Minimize2, ZoomIn, ZoomOut, Crosshair, Globe, Compass
+    Maximize2, Minimize2, ZoomIn, ZoomOut, Crosshair, Globe, Compass,
+    Mic, MicOff, Volume2, Calendar, Coffee, AlertTriangle, Circle, Minus
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { Map, Marker, Overlay } from 'pigeon-maps';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { Map, Marker, Overlay, GeoJson } from 'pigeon-maps';
 
 export type FleetVehicle = {
     id: string;
@@ -25,6 +26,16 @@ export type FleetVehicle = {
     last_ping?: string | null;
     server_name?: string;
     channels?: { channel: number; name: string }[];
+};
+
+// ── REVISI 4: PENGKATEGORIAN MAX SPEED BERDASARKAN SIDE / SITE (40 - 60 KM/H) ──
+export const SITE_SPEED_LIMITS: Record<string, { maxSpeed: number; pitSpeed: number; label: string }> = {
+    'HPA': { maxSpeed: 60, pitSpeed: 40, label: 'Site HPA (Hauling 60 km/j • Pit 40 km/j)' },
+    'BDA': { maxSpeed: 50, pitSpeed: 35, label: 'Site BDA (Hauling 50 km/j • Pit 35 km/j)' },
+    'KDA': { maxSpeed: 40, pitSpeed: 30, label: 'Site KDA (Hauling 40 km/j • Pit 30 km/j)' },
+    'AMO': { maxSpeed: 50, pitSpeed: 35, label: 'Site AMO (Hauling 50 km/j • Pit 35 km/j)' },
+    'KJA': { maxSpeed: 60, pitSpeed: 40, label: 'Site KJA (Hauling 60 km/j • Pit 40 km/j)' },
+    'DEFAULT': { maxSpeed: 40, pitSpeed: 30, label: 'Standar Tambang (40 km/j)' }
 };
 
 export const HPU_FLEET: FleetVehicle[] = [
@@ -246,7 +257,7 @@ function camUrl(deviceId: string, channel: number, jsession: string | null, base
 export default function Page() {
     // ── STATE ARMADA DASHCAM PT. HPU ──
     const [fleet, setFleet] = useState<FleetVehicle[]>(HPU_FLEET);
-    const [selectedVehicleId, setSelectedVehicleId] = useState<string>('BDA-DT41107VV-RU-225');
+    const [selectedVehicleId, setSelectedVehicleId] = useState<string>('HPA-DT47103VV');
     const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
     const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
     const [vehicleTypeFilter, setVehicleTypeFilter] = useState<'ALL' | 'DT' | 'EXCA' | 'FT'>('ALL');
@@ -255,12 +266,26 @@ export default function Page() {
     // ── REVISI 1: ON/OFF LIVECAM (DEFAULT: OFF TERLEBIH DAHULU) ──
     const [isLivecamActive, setIsLivecamActive] = useState<boolean>(false);
 
+    // ── REVISI 5: ON/OFF MIC INTERCOM DRIVER & OPERATOR ──
+    const [isMicActive, setIsMicActive] = useState<boolean>(false);
+
+    // ── REVISI 7: INTERACTIVE DRAWING STATE (TARIK ZONA MANUAL PADA PETA SATELIT) ──
+    const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
+    const [drawShape, setDrawShape] = useState<'polygon' | 'line' | 'circle'>('polygon');
+    const [drawnPoints, setDrawnPoints] = useState<[number, number][]>([]);
+
     // ── REVISI 2: MAP HIGHLIGHT & EXPANSION (CITRA SATELIT / GOOGLE EARTH) ──
     const [mapLayer, setMapLayer] = useState<'satellite' | 'street'>('satellite');
-    const [mapZoom, setMapZoom] = useState<number>(15);
-    const [mapCenter, setMapCenter] = useState<[number, number]>([-7.658200, 111.189500]);
+    const [mapZoom, setMapZoom] = useState<number>(14);
+    const [mapCenter, setMapCenter] = useState<[number, number]>([2.045000, 117.200000]);
     const [isMapExpanded, setIsMapExpanded] = useState<boolean>(false);
     const [showZonesDrawer, setShowZonesDrawer] = useState<boolean>(false);
+    const [showStaMarkers, setShowStaMarkers] = useState<boolean>(false);
+    const [haulingRoutes, setHaulingRoutes] = useState<any>(null);
+    const [operationalPolygons, setOperationalPolygons] = useState<any>(null);
+    const [zoneFilterTab, setZoneFilterTab] = useState<'all' | 'operational' | 'sta'>('operational');
+    const [selectedSiteFilter, setSelectedSiteFilter] = useState<'ALL' | 'HPA' | 'BDA'>('ALL');
+    const [zoneSearchQuery, setZoneSearchQuery] = useState<string>('');
     // Flag: true saat vehicle baru dipilih & peta belum terpusat ke GPS terbaru
     const mapNeedsRecenter = useRef<boolean>(false);
     // Ref untuk melacak vehicle sebelumnya agar useEffect tidak jalan saat initial mount
@@ -315,9 +340,6 @@ export default function Page() {
         );
     });
 
-    // ── STATE DUMMY UNTUK PASSENGER DETECTION ──
-    const [passengerDetected, setPassengerDetected] = useState(true);
-
     // ── STATE UNTUK DATA GPS & TELEMETRI ──
     const [telemetry, setTelemetry] = useState<{
         lat: number | null;
@@ -332,15 +354,15 @@ export default function Page() {
         gpsLocked: boolean;
         isLastKnown: boolean;
     }>({
-        lat: -7.658200,
-        lng: 111.189500,
+        lat: 2.045000,
+        lng: 117.200000,
         speed: 0,
-        distance: 48.9,
-        fuel: 27,
+        distance: 0,
+        fuel: 0,
         satellites: 0,
         online: false,
         lastUpdate: '-',
-        inGeofence: true,
+        inGeofence: false,
         gpsLocked: false,
         isLastKnown: true,
     });
@@ -376,7 +398,6 @@ export default function Page() {
     };
     const [alarms, setAlarms] = useState<AlarmItem[]>([]);
     const [alarmTab, setAlarmTab] = useState<'all' | 'gsensor' | 'fd' | 'dms'>('all');
-    const [showSimulator, setShowSimulator] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(false);
     const [driverList, setDriverList] = useState<{ id: string; name: string; position?: string; dept?: number; site?: string }[]>([]);
     const [searchDriver, setSearchDriver] = useState<string>('');
@@ -419,6 +440,7 @@ export default function Page() {
     type GeofenceItem = {
         id: number;
         name: string;
+        site?: string;
         type: 'loading' | 'dumping' | 'parking' | 'road' | 'custom' | string;
         latitude: number;
         longitude: number;
@@ -427,6 +449,8 @@ export default function Page() {
         address?: string;
         material?: string;
         geometry_type?: 'circle' | 'polygon' | 'line' | string;
+        coordinates_json?: string;
+        coordinates?: { lat: number; lng: number };
     };
 
     type RitasiLogItem = {
@@ -449,22 +473,54 @@ export default function Page() {
     type MaterialType = 'OB' | 'COAL' | 'MUD' | 'TOP SOIL' | 'LIMONIT' | 'SAPROLIT';
 
     const [geofences, setGeofences] = useState<GeofenceItem[]>([]);
+
+    const operationalGeofences = useMemo(() => {
+        return geofences.filter(gf => {
+            if (gf.type === 'road') return false;
+            if (selectedSiteFilter !== 'ALL') {
+                return (gf.site || 'HPA').toUpperCase() === selectedSiteFilter;
+            }
+            return true;
+        });
+    }, [geofences, selectedSiteFilter]);
+
+    const roadGeofences = useMemo(() => {
+        return geofences.filter(gf => {
+            if (gf.type !== 'road') return false;
+            if (selectedSiteFilter !== 'ALL') {
+                return (gf.site || 'HPA').toUpperCase() === selectedSiteFilter;
+            }
+            return true;
+        });
+    }, [geofences, selectedSiteFilter]);
+
+    const filteredDrawerGeofences = useMemo(() => {
+        let list = geofences;
+        if (selectedSiteFilter !== 'ALL') {
+            list = list.filter(g => (g.site || 'HPA').toUpperCase() === selectedSiteFilter);
+        }
+        if (zoneFilterTab === 'operational') {
+            list = list.filter(g => g.type !== 'road');
+        } else if (zoneFilterTab === 'sta') {
+            list = list.filter(g => g.type === 'road');
+        }
+        if (zoneSearchQuery.trim()) {
+            const q = zoneSearchQuery.toLowerCase();
+            list = list.filter(g => (g.name && g.name.toLowerCase().includes(q)) || (g.address && g.address.toLowerCase().includes(q)));
+        }
+        return list;
+    }, [geofences, selectedSiteFilter, zoneFilterTab, zoneSearchQuery]);
+
     const [ritasiToday, setRitasiToday] = useState<number>(0);
-    const [totalDistanceKm, setTotalDistanceKm] = useState<number>(48.9);
-    const [avgCycleTimeToday, setAvgCycleTimeToday] = useState<number>(22.4);
+    const [totalDistanceKm, setTotalDistanceKm] = useState<number>(0);
+    const [avgCycleTimeToday, setAvgCycleTimeToday] = useState<number>(0);
     const [totalBcmToday, setTotalBcmToday] = useState<number>(0);
     const [materialBreakdown, setMaterialBreakdown] = useState<Record<string, number>>({
         OB: 0, COAL: 0, MUD: 0, 'TOP SOIL': 0, LIMONIT: 0, SAPROLIT: 0
     });
     const [ritasiLogs, setRitasiLogs] = useState<RitasiLogItem[]>([]);
-    const [activeGeofence, setActiveGeofence] = useState<{ id: number; name: string; type: string; distance: number } | null>({
-        id: 2,
-        name: 'Pit Front A (Loading OB)',
-        type: 'loading',
-        distance: 0,
-    });
+    const [activeGeofence, setActiveGeofence] = useState<{ id: number; name: string; type: string; distance: number } | null>(null);
     const [lastGeofenceId, setLastGeofenceId] = useState<number | null>(null);
-    const [isSimulatingTrip, setIsSimulatingTrip] = useState(false);
     const [showGeofenceModal, setShowGeofenceModal] = useState(false);
     const [showRitasiHistoryModal, setShowRitasiHistoryModal] = useState(false);
     const [cameraViewMode, setCameraViewMode] = useState<'dual' | 'cam1' | 'cam2' | 'stacked'>('dual');
@@ -480,29 +536,37 @@ export default function Page() {
         tripProgress: number;
         cycleTimeMinutes: number;
     }>({
-        startTime: '10:00 WITA',
-        nowTime: '10:25 WITA',
-        finishArea: 'Disposal Timur (Dumping Area)',
-        tripProgress: 45,
-        cycleTimeMinutes: 22,
+        startTime: '-',
+        nowTime: '-',
+        finishArea: '-',
+        tripProgress: 0,
+        cycleTimeMinutes: 0,
     });
 
     const [newGeofence, setNewGeofence] = useState<{
         name: string;
+        site: string;
         type: string;
+        latitude: number;
+        longitude: number;
         radius: number;
         color: string;
         address: string;
         material: string;
         geometry_type: string;
+        coordinates_json: string;
     }>({
         name: '',
-        type: 'dumping',
-        radius: 150,
-        color: '#8B5CF6',
-        address: 'Blok Disposal Tambang HPU',
+        site: 'HPA',
+        type: 'loading',
+        latitude: 2.045000,
+        longitude: 117.200000,
+        radius: 250,
+        color: '#10B981',
+        address: 'Area Konsesi Tambang PT HPU',
         material: 'OB',
         geometry_type: 'circle',
+        coordinates_json: '',
     });
     const [geofenceNotice, setGeofenceNotice] = useState<string | null>(null);
 
@@ -521,9 +585,21 @@ export default function Page() {
                 gpsLocked: false,
                 isLastKnown: true,
             }));
+
+            // Auto-pan ke lokasi konsesi site armada terkait
+            const isBda = currentVehicle.site?.includes('BDA') || currentVehicle.id.startsWith('BDA') || currentVehicle.plateNo.startsWith('BDA');
+            if (isBda) {
+                setSelectedSiteFilter('BDA');
+                setMapCenter([-1.119625, 115.020731]);
+                setMapZoom(12);
+            } else {
+                setSelectedSiteFilter('HPA');
+                setMapCenter([2.045000, 117.200000]);
+                setMapZoom(14);
+            }
         }
         prevVehicleId.current = selectedVehicleId;
-    }, [selectedVehicleId]);
+    }, [selectedVehicleId, currentVehicle]);
 
     // Auto-pusatkan peta begitu GPS terbaru masuk setelah armada diganti
     useEffect(() => {
@@ -711,6 +787,205 @@ export default function Page() {
         return Math.round(R * c);
     };
 
+    // Helper: Evaluasi Ray-Casting Point-in-Polygon (apakah titik berada di dalam poligon)
+    const isPointInPolygon = (lat: number, lng: number, polygon: [number, number][]): boolean => {
+        let inside = false;
+        const count = polygon.length;
+        if (count < 3) return false;
+
+        for (let i = 0, j = count - 1; i < count; j = i++) {
+            const xi = polygon[i][0];
+            const yi = polygon[i][1];
+            const xj = polygon[j][0];
+            const yj = polygon[j][1];
+
+            const intersect = ((yi > lng) !== (yj > lng)) &&
+                (lat < (xj - xi) * (lng - yi) / ((yj - yi) || 0.000000001) + xi);
+
+            if (intersect) inside = !inside;
+        }
+
+        return inside;
+    };
+
+    // ── REVISI 7: LIVE DRAWING PREVIEW GEOJSON & HANDLERS ──
+    const activeDrawingGeoJson = useMemo(() => {
+        if (!isDrawingMode || drawnPoints.length < 2) return null;
+
+        if (drawShape === 'line') {
+            return {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { color: '#F59E0B' },
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: drawnPoints.map(p => [p[1], p[0]])
+                    }
+                }]
+            };
+        }
+
+        if (drawShape === 'polygon') {
+            if (drawnPoints.length === 2) {
+                return {
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        properties: { color: '#F59E0B' },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: drawnPoints.map(p => [p[1], p[0]])
+                        }
+                    }]
+                };
+            }
+            // Closed polygon
+            const ring = drawnPoints.map(p => [p[1], p[0]]);
+            ring.push([drawnPoints[0][1], drawnPoints[0][0]]);
+            return {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { color: '#10B981' },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [ring]
+                    }
+                }]
+            };
+        }
+
+        if (drawShape === 'circle') {
+            const center = drawnPoints[0];
+            const edge = drawnPoints[1];
+            const rMeters = calculateDistance(center[0], center[1], edge[0], edge[1]);
+            const ring: [number, number][] = [];
+            for (let i = 0; i < 16; i++) {
+                const angle = (2 * Math.PI * i) / 16;
+                const dLat = (rMeters * Math.cos(angle)) / 6378137.0;
+                const dLng = (rMeters * Math.sin(angle)) / (6378137.0 * Math.cos(Math.PI * center[0] / 180.0));
+                ring.push([Number((center[1] + (dLng * 180.0 / Math.PI)).toFixed(7)), Number((center[0] + (dLat * 180.0 / Math.PI)).toFixed(7))]);
+            }
+            ring.push(ring[0]);
+            return {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { color: '#3B82F6' },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [ring]
+                    }
+                }]
+            };
+        }
+
+        return null;
+    }, [isDrawingMode, drawnPoints, drawShape]);
+
+    const handleUndoPoint = () => {
+        if (drawnPoints.length === 0) return;
+        const next = drawnPoints.slice(0, -1);
+        setDrawnPoints(next);
+        if (next.length === 0) {
+            setGeofenceNotice('Titik gambar di-reset. Silakan klik pada peta satelit untuk mulai menggambar titik.');
+        } else {
+            setGeofenceNotice(`Titik terakhir dihapus. Tersisa ${next.length} titik.`);
+        }
+    };
+
+    const handleResetDrawing = () => {
+        setDrawnPoints([]);
+        setGeofenceNotice('Semua titik gambar telah dihapus. Silakan klik pada peta satelit untuk menggambar ulang.');
+    };
+
+    const handleCancelDrawing = () => {
+        setIsDrawingMode(false);
+        setDrawnPoints([]);
+        setGeofenceNotice(null);
+    };
+
+    const handleFinishDrawing = () => {
+        if (drawnPoints.length === 0) return;
+
+        if (drawShape === 'polygon' && drawnPoints.length < 3) {
+            alert('Poligon membutuhkan minimal 3 titik sudut.');
+            return;
+        }
+        if (drawShape === 'line' && drawnPoints.length < 2) {
+            alert('Garis jalur jalan membutuhkan minimal 2 titik.');
+            return;
+        }
+        if (drawShape === 'circle' && drawnPoints.length < 2) {
+            alert('Lingkaran membutuhkan 2 titik (titik 1: pusat, titik 2: batas radius).');
+            return;
+        }
+
+        // Hitung centroid (titik tengah rata-rata)
+        let sumLat = 0, sumLng = 0;
+        drawnPoints.forEach(p => { sumLat += p[0]; sumLng += p[1]; });
+        const centerLat = Number((sumLat / drawnPoints.length).toFixed(6));
+        const centerLng = Number((sumLng / drawnPoints.length).toFixed(6));
+
+        let calculatedRadius = 150;
+        if (drawShape === 'circle' && drawnPoints.length >= 2) {
+            calculatedRadius = calculateDistance(drawnPoints[0][0], drawnPoints[0][1], drawnPoints[1][0], drawnPoints[1][1]);
+        } else {
+            let maxDist = 0;
+            drawnPoints.forEach(p => {
+                const d = calculateDistance(centerLat, centerLng, p[0], p[1]);
+                if (d > maxDist) maxDist = d;
+            });
+            calculatedRadius = Math.max(50, Math.round(maxDist));
+        }
+
+        const defaultName = drawShape === 'polygon'
+            ? `POLIGON TAMBANG ${operationalGeofences.length + 1}`
+            : (drawShape === 'line' ? `JALUR AKSES HAULING ${roadGeofences.length + 1}` : `PIT LINGKARAN ${operationalGeofences.length + 1}`);
+
+        const defaultType = drawShape === 'line' ? 'road' : 'loading';
+        const defaultColor = drawShape === 'line' ? '#EA580C' : (drawShape === 'polygon' ? '#10B981' : '#3B82F6');
+
+        const detectedSite = selectedSiteFilter !== 'ALL' ? selectedSiteFilter : (centerLng < 116.0 ? 'BDA' : 'HPA');
+
+        setNewGeofence({
+            name: `${defaultName} (${detectedSite})`,
+            site: detectedSite,
+            type: defaultType,
+            latitude: drawShape === 'circle' ? drawnPoints[0][0] : centerLat,
+            longitude: drawShape === 'circle' ? drawnPoints[0][1] : centerLng,
+            radius: calculatedRadius,
+            color: defaultColor,
+            address: `Area Konsesi Tambang PT HPU Site ${detectedSite} (Pusat: ${centerLat}, ${centerLng})`,
+            material: 'OB',
+            geometry_type: drawShape,
+            coordinates_json: JSON.stringify(drawnPoints),
+        });
+
+        setShowGeofenceModal(true);
+    };
+
+    const fetchHaulingRoutes = async () => {
+        try {
+            const res = await fetch('/api/dashcam/hauling-routes');
+            const data = await res.json();
+            if (data.status === 'ok' && data.data) {
+                setHaulingRoutes(data.data);
+            }
+        } catch (err) {}
+    };
+
+    const fetchOperationalPolygons = async () => {
+        try {
+            const res = await fetch('/api/dashcam/geofences-geojson');
+            const data = await res.json();
+            if (data.status === 'ok' && data.data) {
+                setOperationalPolygons(data.data);
+            }
+        } catch (err) {}
+    };
+
     const fetchGeofences = async () => {
         try {
             const res = await fetch('/api/dashcam/geofences');
@@ -803,8 +1078,8 @@ export default function Page() {
             alert('Mohon isi nama geofence');
             return;
         }
-        const latToUse = telemetry.lat ?? -7.6582;
-        const lngToUse = telemetry.lng ?? 111.1895;
+        const latToUse = Number(newGeofence.latitude) || telemetry.lat || 2.045000;
+        const lngToUse = Number(newGeofence.longitude) || telemetry.lng || 117.200000;
         try {
             const res = await fetch('/api/dashcam/geofences', {
                 method: 'POST',
@@ -814,6 +1089,7 @@ export default function Page() {
                 },
                 body: JSON.stringify({
                     name: newGeofence.name.trim(),
+                    site: newGeofence.site || 'HPA',
                     type: newGeofence.type,
                     latitude: latToUse,
                     longitude: lngToUse,
@@ -822,22 +1098,30 @@ export default function Page() {
                     address: newGeofence.address,
                     material: newGeofence.material,
                     geometry_type: newGeofence.geometry_type,
+                    coordinates_json: newGeofence.coordinates_json || undefined,
                 }),
             });
             const data = await res.json();
             if (data.status === 'ok') {
                 await fetchGeofences();
+                await fetchOperationalPolygons();
+                setIsDrawingMode(false);
+                setDrawnPoints([]);
                 setShowGeofenceModal(false);
                 setNewGeofence({
                     name: '',
-                    type: 'dumping',
-                    radius: 150,
-                    color: '#8B5CF6',
-                    address: 'Blok Disposal Tambang HPU',
+                    site: selectedSiteFilter !== 'ALL' ? selectedSiteFilter : 'HPA',
+                    type: 'loading',
+                    latitude: selectedSiteFilter === 'BDA' ? -1.130544 : 2.045000,
+                    longitude: selectedSiteFilter === 'BDA' ? 115.161056 : 117.200000,
+                    radius: 250,
+                    color: '#10B981',
+                    address: `Area Konsesi Tambang PT HPU Site ${selectedSiteFilter !== 'ALL' ? selectedSiteFilter : 'HPA'}`,
                     material: 'OB',
                     geometry_type: 'circle',
+                    coordinates_json: '',
                 });
-                setGeofenceNotice(`Geofence "${data.data.name}" (${data.data.type}) berhasil ditambahkan.`);
+                setGeofenceNotice(`Geofence "${data.data.name}" (${data.data.type} - ${data.data.geometry_type}) berhasil ditambahkan.`);
                 setTimeout(() => setGeofenceNotice(null), 4000);
             } else {
                 alert(data.message || 'Gagal menambahkan geofence');
@@ -859,116 +1143,14 @@ export default function Page() {
             const data = await res.json();
             if (data.status === 'ok') {
                 await fetchGeofences();
+                await fetchOperationalPolygons();
                 setGeofenceNotice(`Geofence "${name}" berhasil dihapus.`);
                 setTimeout(() => setGeofenceNotice(null), 4000);
             }
         } catch {}
     };
 
-    // ── SIMULASI 5 SIKLUS HAULING LENGKAP (Slide 25 & Slide 6) ──
-    // 1. Loading: Pit Front A (Speed 0, Engine On, Exca swing)
-    // 2. Travel Isi: Kecepatan 28 km/h menuju Disposal Timur (Warna Biru)
-    // 3. Dumping: Speed rendah, Engine On, PTO ON! (Hidrolik Dump aktif)
-    // 4. Travel Kosong: Kembali ke Pit Front A (Kecepatan 32 km/h, Warna Hijau)
-    // 5. Kembali ke PIT: 1 Ritasi Tercatat (+1 RIT), Cycle Time dihitung, PTO Off
-    const runHaulingSimulation = async () => {
-        if (isSimulatingTrip) return;
-        setIsSimulatingTrip(true);
-
-        const simulationStages = [
-            {
-                stage: 'LOADING' as HaulingStage,
-                pto: false,
-                lat: -7.658200,
-                lng: 111.189500,
-                speed: 0,
-                progress: 15,
-                notice: `⛏️ [1/5 SIKLUS RITASI] LOADING: Exca PC2000 memuat [${selectedMaterial}] ke HD-78501 di Pit Front A (Speed 0 km/h, Engine ON).`,
-                activeGf: { id: 2, name: 'Pit Front A (Loading OB)', type: 'loading', distance: 0 },
-            },
-            {
-                stage: 'TRAVEL_ISI' as HaulingStage,
-                pto: false,
-                lat: -7.658700,
-                lng: 111.190200,
-                speed: 28,
-                progress: 45,
-                notice: `🚛 [2/5 SIKLUS RITASI] TRAVEL ISI: Unit bergerak keluar geofence PIT membawa muatan [${selectedMaterial}] (28 km/jam - Biru).`,
-                activeGf: null,
-            },
-            {
-                stage: 'DUMPING' as HaulingStage,
-                pto: true, // PTO ON SESUAI SLIDE 25!
-                lat: -7.659397,
-                lng: 111.191127,
-                speed: 5,
-                progress: 75,
-                notice: `⚡ [3/5 SIKLUS RITASI] DUMPING: Tiba di Disposal Timur, SENSOR PTO ON! Hidrolik dump mengangkat muatan.`,
-                activeGf: { id: 3, name: 'Disposal Timur (Waste Dump)', type: 'dumping', distance: 0 },
-            },
-            {
-                stage: 'TRAVEL_KOSONG' as HaulingStage,
-                pto: false, // PTO OFF KEMBALI
-                lat: -7.658600,
-                lng: 111.190000,
-                speed: 32,
-                progress: 90,
-                notice: `🚛 [4/5 SIKLUS RITASI] TRAVEL KOSONG: Keluar Disposal Timur kembali menuju Pit Front A (32 km/jam - Hijau).`,
-                activeGf: null,
-            },
-            {
-                stage: 'LOADING' as HaulingStage,
-                pto: false,
-                lat: -7.658200,
-                lng: 111.189500,
-                speed: 0,
-                progress: 100,
-                notice: `✅ [5/5 SIKLUS SELESAI] Unit tiba kembali di Pit Front A! 1 Ritasi Lengkap Tercatat (+1 RIT, PTO Verified, 20 BCM).`,
-                activeGf: { id: 2, name: 'Pit Front A (Loading OB)', type: 'loading', distance: 0 },
-            }
-        ];
-
-        for (let i = 0; i < simulationStages.length; i++) {
-            const step = simulationStages[i];
-            setHaulingStage(step.stage);
-            setPtoActive(step.pto);
-            setGeofenceNotice(step.notice);
-            setActiveGeofence(step.activeGf);
-
-            setTelemetry(prev => ({
-                ...prev,
-                lat: step.lat,
-                lng: step.lng,
-                speed: step.speed,
-                distance: parseFloat((prev.distance + (i > 0 ? 0.6 : 0)).toFixed(2)),
-                gpsLocked: true,
-                isLastKnown: false,
-            }));
-
-            setCurrentTrip(prev => ({
-                ...prev,
-                tripProgress: step.progress,
-                nowTime: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WITA',
-            }));
-
-            // Saat stage DUMPING (step 2) atau stage selesai (step 4), catat ritasi
-            if (i === simulationStages.length - 1) {
-                await recordRitasi({
-                    dumpingGeofenceId: 3,
-                    pitGeofenceId: 2,
-                    dumpingName: 'Disposal Timur (Waste Dump)',
-                    loadType: selectedMaterial,
-                    cycleTimeMinutes: 21.5,
-                    distanceKm: 2.4,
-                    ptoConfirmed: true,
-                });
-            }
-
-            await new Promise(r => setTimeout(r, 2200));
-        }
-
-        setIsSimulatingTrip(false);
-    };
+    // Helper pencocokan alarm dengan unit armada yang sedang aktif dilihat
 
     const takeDashcamSnapshot = async (): Promise<string | null> => {
         try {
@@ -1266,9 +1448,23 @@ export default function Page() {
         await fetchHistoryLogs();
     };
 
+    const fetchAlarms = async () => {
+        try {
+            const res = await fetch('/api/cmsv6/alarms');
+            const data = await res.json();
+            if (data.result === 0 && Array.isArray(data.alarms)) {
+                setAlarms(data.alarms);
+            }
+        } catch (err) {
+            console.error('Failed to fetch alarms:', err);
+        }
+    };
+
     useEffect(() => {
         login();
         fetchGeofences();
+        fetchHaulingRoutes();
+        fetchOperationalPolygons();
         fetchRitasiToday();
 
         // Ambil daftar unit real-time dari server backend
@@ -1277,7 +1473,9 @@ export default function Page() {
             .then(data => {
                 if (data.result === 0 && Array.isArray(data.vehicles) && data.vehicles.length > 0) {
                     setFleet(data.vehicles);
-                    const onlineUnit = data.vehicles.find((v: FleetVehicle) => v.status === 'ONLINE');
+                    // Prioritaskan unit online dari Site HPA (yang selaras dengan peta rute hauling HPA)
+                    const onlineHpaUnit = data.vehicles.find((v: FleetVehicle) => v.status === 'ONLINE' && v.plateNo.startsWith('HPA'));
+                    const onlineUnit = onlineHpaUnit || data.vehicles.find((v: FleetVehicle) => v.status === 'ONLINE');
                     if (onlineUnit) {
                         setSelectedVehicleId(prev => {
                             const cur = data.vehicles.find((v: FleetVehicle) => v.id === prev);
@@ -1361,8 +1559,25 @@ export default function Page() {
 
                     if (geofences.length > 0) {
                         for (let g of geofences) {
-                            const dist = calculateDistance(effectiveLat, effectiveLng, g.latitude, g.longitude);
-                            if (dist <= g.radius) {
+                            let match = false;
+                            let dist = calculateDistance(effectiveLat, effectiveLng, g.latitude, g.longitude);
+
+                            // 1. Evaluasi Poligon Fisik jika tersedia koordinat poligon
+                            if (g.geometry_type === 'polygon' && g.coordinates_json) {
+                                try {
+                                    const poly = JSON.parse(g.coordinates_json);
+                                    if (Array.isArray(poly) && poly.length >= 3) {
+                                        match = isPointInPolygon(effectiveLat, effectiveLng, poly);
+                                    }
+                                } catch {}
+                            }
+
+                            // 2. Evaluasi Haversine Radius sebagai fallback
+                            if (!match && dist <= g.radius) {
+                                match = true;
+                            }
+
+                            if (match) {
                                 inGeofence = true;
                                 currentFoundGeofence = { id: g.id, name: g.name, type: g.type, distance: dist };
                                 break;
@@ -1370,25 +1585,26 @@ export default function Page() {
                         }
                     }
 
-                    if (!isSimulatingTrip) {
-                        if (currentFoundGeofence) {
-                            setActiveGeofence(currentFoundGeofence);
-                            if (currentFoundGeofence.type === 'dumping' && lastGeofenceId !== currentFoundGeofence.id) {
-                                void recordRitasi(currentFoundGeofence.id, currentFoundGeofence.name);
-                            }
-                            setLastGeofenceId(currentFoundGeofence.id);
-                        } else {
-                            setActiveGeofence(null);
-                            setLastGeofenceId(null);
+                    if (currentFoundGeofence) {
+                        setActiveGeofence(currentFoundGeofence);
+                        if (currentFoundGeofence.type === 'dumping' && lastGeofenceId !== currentFoundGeofence.id) {
+                            void recordRitasi({
+                                dumpingGeofenceId: currentFoundGeofence.id,
+                                dumpingName: currentFoundGeofence.name,
+                                loadType: selectedMaterial,
+                                ptoConfirmed: ptoActive,
+                            });
                         }
+                        setLastGeofenceId(currentFoundGeofence.id);
+                    } else {
+                        setActiveGeofence(null);
+                        setLastGeofenceId(null);
                     }
 
                     const rawSpeed = Math.round((s.sp || 0) / 10);
                     const speed = rawSpeed <= 1 ? 0 : rawSpeed;
 
                     setTelemetry(prev => {
-                        if (isSimulatingTrip) return prev;
-
                         let newDistance = prev.distance;
 
                         // Jika API mengirimkan 'lc' (Mileage), gunakan itu (asumsi dalam satuan meter -> km)
@@ -1420,18 +1636,6 @@ export default function Page() {
                 }
             } catch {
                 setApiStatus('error');
-            }
-        };
-
-        const fetchAlarms = async () => {
-            try {
-                const res = await fetch('/api/cmsv6/alarms');
-                const data = await res.json();
-                if (data.result === 0 && Array.isArray(data.alarms)) {
-                    setAlarms(data.alarms);
-                }
-            } catch (err) {
-                console.error('Failed to fetch alarms:', err);
             }
         };
 
@@ -1491,34 +1695,6 @@ export default function Page() {
         }
     };
 
-    // ── AKSI ALARM: SIMULASI TRIGGER ALARM BARU ──
-    const triggerTestAlarm = async (type: string, desc: string, category: string, severity: 'critical' | 'high' | 'medium' | 'low') => {
-        try {
-            const res = await fetch('/api/cmsv6/alarms/trigger', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    type, 
-                    desc, 
-                    category, 
-                    severity,
-                    vehicle: currentVehicle.plateNo,
-                    deviceId: currentVehicle.deviceNo,
-                }),
-            });
-            const data = await res.json();
-            if (data.result === 0 && Array.isArray(data.alarms)) {
-                setAlarms(data.alarms);
-                setBannerDismissed(false);
-            }
-        } catch (e) {
-            console.error('Failed to trigger test alarm:', e);
-        }
-    };
-
     // Helper pencocokan alarm dengan unit armada yang sedang aktif dilihat
     const doesAlarmMatchVehicle = (alarm: any, vehicle: FleetVehicle) => {
         if (!alarm || !vehicle) return false;
@@ -1561,8 +1737,14 @@ export default function Page() {
 
     const untreatedCount = currentVehicleAlarms.filter(a => (a.handle_status ?? 'Untreated') === 'Untreated').length;
 
-    // Evaluasi kondisi keselamatan armada saat ini
-    const speedLimit = 40;
+    // ── REVISI 4: PENGKATEGORIAN MAX SPEED BERDASARKAN SIDE / SITE (40 - 60 KM/H) ──
+    const siteKey = Object.keys(SITE_SPEED_LIMITS).find(k => (currentVehicle.site || '').toUpperCase().includes(k)) || 'DEFAULT';
+    const siteSpeedConfig = SITE_SPEED_LIMITS[siteKey];
+    const speedLimit = (activeGeofence?.type === 'loading' || activeGeofence?.type === 'dumping')
+        ? siteSpeedConfig.pitSpeed
+        : (activeGeofence?.name?.includes('HANDAK') || activeGeofence?.name?.includes('CURAM'))
+        ? 25
+        : siteSpeedConfig.maxSpeed;
     const isCurrentVehicleSpeeding = (telemetry.speed || 0) > speedLimit;
 
     // Cari alarm kritis/tinggi yang belum ditangani KHUSUS untuk unit ini
@@ -1592,6 +1774,17 @@ export default function Page() {
             severity: untreatedCriticalAlarm.severity,
             isRealtimeOverspeed: false,
         } : null);
+
+    // ── JADWAL SHIFT OPERASIONAL TAMBANG (Shift 1 & Shift 2) ──
+    const currentHour = new Date().getHours();
+    const isShift1 = currentHour >= 6 && currentHour < 18;
+    const shiftSchedule = {
+        name: isShift1 ? 'Shift 1 (Siang)' : 'Shift 2 (Malam)',
+        startTime: isShift1 ? '06:00 WITA' : '18:00 WITA',
+        restTime: isShift1 ? '12:00 – 13:00 WITA' : '00:00 – 01:00 WITA',
+        endTime: isShift1 ? '18:00 WITA' : '06:00 WITA',
+        isResting: isShift1 ? (currentHour === 12) : (currentHour === 0),
+    };
 
     return (
         <>
@@ -1906,7 +2099,57 @@ export default function Page() {
 
                                     {/* Right: Map Controls */}
                                     <div className="flex flex-wrap items-center gap-2">
-                                        {/* Layer Switcher: Satelit (Google Earth) vs Topo */}
+                                        {/* Site Switcher: HPA vs BDA */}
+                                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedSiteFilter('ALL')}
+                                                className={`px-2 py-1 rounded-md transition cursor-pointer text-[11px] ${
+                                                    selectedSiteFilter === 'ALL'
+                                                        ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200'
+                                                        : 'text-slate-600 hover:text-slate-900'
+                                                }`}
+                                                title="Tampilkan semua site konsesi tambang PT HPU"
+                                            >
+                                                Semua Site
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedSiteFilter('HPA');
+                                                    setMapCenter([2.045000, 117.200000]);
+                                                    setMapZoom(14);
+                                                }}
+                                                className={`px-2 py-1 rounded-md transition cursor-pointer text-[11px] flex items-center gap-1 ${
+                                                    selectedSiteFilter === 'HPA'
+                                                        ? 'bg-blue-600 text-white shadow-xs font-bold'
+                                                        : 'text-slate-600 hover:text-slate-900'
+                                                }`}
+                                                title="Fokus ke Site HPA (Berau, Kaltim • 21 KM & 28.3 KM Hauling)"
+                                            >
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                <span>HPA (Berau)</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedSiteFilter('BDA');
+                                                    setMapCenter([-1.119625, 115.020731]);
+                                                    setMapZoom(12);
+                                                }}
+                                                className={`px-2 py-1 rounded-md transition cursor-pointer text-[11px] flex items-center gap-1 ${
+                                                    selectedSiteFilter === 'BDA'
+                                                        ? 'bg-amber-600 text-white shadow-xs font-bold'
+                                                        : 'text-slate-600 hover:text-slate-900'
+                                                }`}
+                                                title="Fokus ke Site BDA (Barito Daya • 45.2 KM Hauling Road)"
+                                            >
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                                <span>BDA (Barito)</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Layer Switcher: Satelit vs Peta */}
                                         <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
                                             <button
                                                 type="button"
@@ -1965,7 +2208,7 @@ export default function Page() {
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                setMapCenter([telemetry.lat || -7.6582, telemetry.lng || 111.1895]);
+                                                setMapCenter([telemetry.lat || 2.025000, telemetry.lng || 117.200000]);
                                                 setMapZoom(16);
                                             }}
                                             className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
@@ -1980,9 +2223,24 @@ export default function Page() {
                                             type="button"
                                             onClick={() => setIsMapExpanded(!isMapExpanded)}
                                             className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-gray-600 transition cursor-pointer"
-                                            title={isMapExpanded ? 'Tampilan Standar (340px)' : 'Perbesar Peta (500px)'}
+                                            title={isMapExpanded ? 'Tampilan Standar (400px)' : 'Perbesar Peta (580px)'}
                                         >
                                             {isMapExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                                        </button>
+
+                                        {/* Toggle STA Markers */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowStaMarkers(!showStaMarkers)}
+                                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                                showStaMarkers 
+                                                    ? 'bg-amber-600 text-white' 
+                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                            }`}
+                                            title="Tampilkan/sembunyikan titik STA pada rute hauling"
+                                        >
+                                            <Radio className="w-3.5 h-3.5" />
+                                            <span>STA ({roadGeofences.length})</span>
                                         </button>
 
                                         {/* Toggle Zones Drawer */}
@@ -1997,7 +2255,31 @@ export default function Page() {
                                             title="Tampilkan daftar zona geofence tambang"
                                         >
                                             <Layers className="w-3.5 h-3.5" />
-                                            <span>Zona ({geofences.length})</span>
+                                            <span>Zona ({operationalGeofences.length})</span>
+                                        </button>
+
+                                        {/* REVISI 7: Tarik Zona Manual pada Peta */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!isDrawingMode) {
+                                                    setIsDrawingMode(true);
+                                                    setMapLayer('satellite'); // Pastikan otomatis beralih ke citra satelit Google Earth
+                                                    setDrawnPoints([]);
+                                                    setGeofenceNotice('🖱️ Mode Tarik Zona Aktif: Peta beralih ke Satelit Google Earth. Pilih bentuk (Poligon / Garis / Lingkaran) lalu klik di peta.');
+                                                } else {
+                                                    handleCancelDrawing();
+                                                }
+                                            }}
+                                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                                isDrawingMode 
+                                                    ? 'bg-amber-600 text-white animate-pulse ring-2 ring-amber-300' 
+                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                            }`}
+                                            title="Tarik atau tentukan titik zona ritasi/geofence secara manual langsung pada citra satelit Google Earth"
+                                        >
+                                            <LandPlot className="w-3.5 h-3.5" />
+                                            <span>{isDrawingMode ? 'Batal Tarik' : 'Tarik Zona'}</span>
                                         </button>
 
                                         {/* Add Zone */}
@@ -2013,7 +2295,130 @@ export default function Page() {
                                 </div>
 
                                 {/* Map Viewport (Enlarged) */}
-                                <div className={`relative ${isMapExpanded ? 'h-[500px]' : 'h-[340px]'} w-full rounded-xl overflow-hidden border border-slate-300 shadow-inner bg-slate-950 transition-all duration-300`}>
+                                <div className={`relative ${isMapExpanded ? 'h-[580px]' : 'h-[400px]'} w-full rounded-xl overflow-hidden border border-slate-300 shadow-inner bg-slate-950 transition-all duration-300`}>
+                                    {/* ── REVISI 7: FLOATING TOOLBAR TARIK ZONA MANUAL (CITRA SATELIT GOOGLE EARTH) ── */}
+                                    {isDrawingMode && (
+                                        <div className="absolute top-2.5 left-2.5 right-2.5 z-30 max-w-2xl mx-auto bg-slate-900/95 backdrop-blur-md border-2 border-amber-500 rounded-xl p-2.5 shadow-2xl text-white animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-2 mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                                                    <span className="font-bold text-xs text-amber-300 flex items-center gap-1.5">
+                                                        <LandPlot className="w-4 h-4 text-amber-400" />
+                                                        Tarik Zona Manual di Google Earth
+                                                    </span>
+                                                    <span className="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-full text-slate-300 font-mono">
+                                                        {drawnPoints.length} Titik Sudut
+                                                    </span>
+                                                </div>
+
+                                                {/* Shape Selector (Polygon / Line / Circle - Slide 26) */}
+                                                <div className="flex items-center bg-slate-800/90 p-0.5 rounded-lg border border-slate-700 text-xs">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setDrawShape('polygon');
+                                                            setDrawnPoints([]);
+                                                            setGeofenceNotice('Mode Poligon: Klik titik-titik sudut pada peta satelit untuk membentuk area.');
+                                                        }}
+                                                        className={`px-2 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                                                            drawShape === 'polygon' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                                                        }`}
+                                                        title="Poligon: Area Pit, Disposal, Workshop, Office, dll."
+                                                    >
+                                                        <LandPlot className="w-3 h-3" />
+                                                        <span>Poligon</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setDrawShape('line');
+                                                            setDrawnPoints([]);
+                                                            setGeofenceNotice('Mode Garis: Klik titik di sepanjang rute jalan hauling untuk membentuk garis jalur.');
+                                                        }}
+                                                        className={`px-2 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                                                            drawShape === 'line' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                                                        }`}
+                                                        title="Garis: Jalur jalan hauling / rute akses tambang"
+                                                    >
+                                                        <Minus className="w-3 h-3" />
+                                                        <span>Garis/Jalan</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setDrawShape('circle');
+                                                            setDrawnPoints([]);
+                                                            setGeofenceNotice('Mode Lingkaran: Klik 1 untuk titik pusat, klik 2 untuk radius lingkaran.');
+                                                        }}
+                                                        className={`px-2 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                                                            drawShape === 'circle' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                                                        }`}
+                                                        title="Lingkaran: Luas area PIT melingkar dengan radius meter"
+                                                    >
+                                                        <Circle className="w-3 h-3" />
+                                                        <span>Lingkaran</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Instructions & Action Buttons */}
+                                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                                                <p className="text-[11px] text-slate-300 flex items-center gap-1.5 flex-1 min-w-[220px]">
+                                                    <Globe className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                                                    <span>
+                                                        {drawShape === 'polygon' && (drawnPoints.length < 3 ? `Klik peta satelit Google Earth untuk menambah titik (butuh ${3 - drawnPoints.length} titik lagi).` : `Poligon ${drawnPoints.length} sudut siap disimpan.`)}
+                                                        {drawShape === 'line' && (drawnPoints.length < 2 ? 'Klik titik awal dan titik lanjutan di sepanjang jalan.' : `Jalur ${drawnPoints.length} titik siap disimpan.`)}
+                                                        {drawShape === 'circle' && (drawnPoints.length === 0 ? 'Klik titik 1 sebagai pusat lingkaran.' : (drawnPoints.length === 1 ? 'Klik titik 2 pada batas luar untuk menentukan radius.' : 'Radius lingkaran telah ditentukan.'))}
+                                                    </span>
+                                                </p>
+
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleUndoPoint}
+                                                        disabled={drawnPoints.length === 0}
+                                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-semibold transition flex items-center gap-1 cursor-pointer border border-slate-700"
+                                                        title="Hapus titik terakhir"
+                                                    >
+                                                        <RotateCcw className="w-3 h-3" />
+                                                        <span>Undo</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleResetDrawing}
+                                                        disabled={drawnPoints.length === 0}
+                                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-semibold transition flex items-center gap-1 cursor-pointer border border-slate-700"
+                                                        title="Bersihkan semua titik gambar"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                        <span>Reset</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleFinishDrawing}
+                                                        disabled={
+                                                            (drawShape === 'polygon' && drawnPoints.length < 3) ||
+                                                            (drawShape === 'line' && drawnPoints.length < 2) ||
+                                                            (drawShape === 'circle' && drawnPoints.length < 2)
+                                                        }
+                                                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-bold shadow-xs transition flex items-center gap-1 cursor-pointer"
+                                                    >
+                                                        <Check className="w-3.5 h-3.5" />
+                                                        <span>Selesai & Simpan</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleCancelDrawing}
+                                                        className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
+                                                        title="Batal mode tarik zona"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <Map
                                         center={mapCenter}
                                         zoom={mapZoom}
@@ -2021,44 +2426,178 @@ export default function Page() {
                                             setMapCenter(center);
                                             setMapZoom(zoom);
                                         }}
+                                        onClick={({ latLng }) => {
+                                            if (isDrawingMode) {
+                                                const [cLat, cLng] = latLng;
+                                                const newPt: [number, number] = [Number(cLat.toFixed(6)), Number(cLng.toFixed(6))];
+
+                                                if (drawShape === 'circle' && drawnPoints.length >= 2) {
+                                                    setDrawnPoints([newPt]);
+                                                    setGeofenceNotice(`Titik pusat lingkaran baru: [${newPt[0]}, ${newPt[1]}]. Klik titik ke-2 untuk radius.`);
+                                                    return;
+                                                }
+
+                                                const nextPoints = [...drawnPoints, newPt];
+                                                setDrawnPoints(nextPoints);
+
+                                                if (drawShape === 'polygon') {
+                                                    if (nextPoints.length === 1) {
+                                                        setGeofenceNotice(`Titik 1 (sudut poligon): [${newPt[0]}, ${newPt[1]}]. Klik titik ke-2.`);
+                                                    } else if (nextPoints.length === 2) {
+                                                        setGeofenceNotice(`Garis sisi 1 terbentuk. Klik titik ke-3 untuk membentuk bidang poligon.`);
+                                                    } else {
+                                                        setGeofenceNotice(`Poligon ${nextPoints.length} titik terbentuk. Lanjutkan klik atau tekan 'Selesai & Simpan'.`);
+                                                    }
+                                                } else if (drawShape === 'line') {
+                                                    setGeofenceNotice(`Jalur ${nextPoints.length} titik. Lanjutkan klik di sepanjang rute jalan hauling.`);
+                                                } else if (drawShape === 'circle') {
+                                                    if (nextPoints.length === 1) {
+                                                        setGeofenceNotice(`Titik pusat lingkaran: [${newPt[0]}, ${newPt[1]}]. Klik titik ke-2 pada batas luar untuk menentukan radius.`);
+                                                    } else {
+                                                        const rM = calculateDistance(nextPoints[0][0], nextPoints[0][1], newPt[0], newPt[1]);
+                                                        setGeofenceNotice(`Lingkaran terbentuk dengan radius ${rM} meter. Klik 'Selesai & Simpan' untuk menyimpan zona ini.`);
+                                                    }
+                                                }
+                                            }
+                                        }}
                                         provider={mapTileProvider}
                                         attribution={false}
                                     >
-                                        {/* Geofence Circles */}
-                                        {geofences.map(gf => {
-                                            const lat = gf.coordinates?.lat || -7.6582;
-                                            const lng = gf.coordinates?.lng || 111.1895;
-                                            const r = gf.radius || 100;
-                                            const pxRadius = Math.max(26, Math.min(130, Math.round(r / 3.2)));
-                                            return (
-                                                <Overlay key={gf.id} anchor={[lat, lng]} offset={[pxRadius, pxRadius]}>
-                                                    <div
-                                                        style={{
-                                                            width: `${pxRadius * 2}px`,
-                                                            height: `${pxRadius * 2}px`,
-                                                            borderColor: gf.color || '#2563EB',
-                                                            backgroundColor: `${gf.color || '#2563EB'}28`,
-                                                        }}
-                                                        className="rounded-full border-2 border-dashed pointer-events-none flex items-center justify-center shadow-xs"
-                                                    >
-                                                        <span
-                                                            style={{ 
-                                                                color: '#ffffff', 
-                                                                backgroundColor: 'rgba(15, 23, 42, 0.88)',
-                                                                borderColor: gf.color || '#2563EB'
-                                                            }}
-                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-md truncate max-w-[120px] backdrop-blur-xs"
-                                                        >
-                                                            {gf.name}
-                                                        </span>
+                                        {/* Active Interactive Drawing GeoJson Preview Layer */}
+                                        {activeDrawingGeoJson && (
+                                            <GeoJson
+                                                data={activeDrawingGeoJson}
+                                                styleCallback={(feature: any) => ({
+                                                    stroke: feature?.properties?.color || '#F59E0B',
+                                                    strokeWidth: '3.5',
+                                                    strokeDasharray: drawShape === 'polygon' ? '5, 5' : 'none',
+                                                    fill: drawShape === 'polygon' ? '#10B981' : (drawShape === 'circle' ? '#3B82F6' : 'none'),
+                                                    fillOpacity: 0.25,
+                                                    strokeLinecap: 'round',
+                                                    strokeLinejoin: 'round',
+                                                })}
+                                            />
+                                        )}
+
+                                        {/* Interactive Numbered Pins for Drawn Points */}
+                                        {isDrawingMode && drawnPoints.map((pt, idx) => (
+                                            <Overlay key={`drawn-pt-${idx}`} anchor={[pt[0], pt[1]]} offset={[10, 10]}>
+                                                <div className="relative pointer-events-none">
+                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-slate-900 shadow-lg border-2 border-white ${
+                                                        idx === drawnPoints.length - 1 ? 'bg-amber-400 ring-4 ring-amber-400/50 animate-pulse' : 'bg-emerald-400'
+                                                    }`}>
+                                                        {idx + 1}
                                                     </div>
+                                                    {idx === 0 && drawShape === 'polygon' && drawnPoints.length >= 3 && (
+                                                        <span className="absolute -top-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-1 rounded whitespace-nowrap border border-emerald-400">
+                                                            Awal
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </Overlay>
+                                        ))}
+                                        {/* Hauling Routes GeoJSON LineStrings */}
+                                        {haulingRoutes && (
+                                            <GeoJson
+                                                data={haulingRoutes}
+                                                styleCallback={(feature: any) => {
+                                                    const featSite = (feature?.properties?.site || 'HPA').toUpperCase();
+                                                    const isSelectedSite = selectedSiteFilter === 'ALL' || featSite === selectedSiteFilter;
+                                                    return {
+                                                        stroke: feature?.properties?.stroke || feature?.properties?.color || '#F59E0B',
+                                                        strokeWidth: isSelectedSite ? '4.5' : '1.5',
+                                                        strokeOpacity: isSelectedSite ? '0.95' : '0.25',
+                                                        strokeLinecap: 'round',
+                                                        strokeLinejoin: 'round',
+                                                    };
+                                                }}
+                                            />
+                                        )}
+
+                                        {/* Operational Geofence Polygons GeoJSON (Bentuk Fisik Tambang Aktual) */}
+                                        {operationalPolygons && (
+                                            <GeoJson
+                                                data={operationalPolygons}
+                                                styleCallback={(feature: any) => {
+                                                    const featSite = (feature?.properties?.site || 'HPA').toUpperCase();
+                                                    const isSelectedSite = selectedSiteFilter === 'ALL' || featSite === selectedSiteFilter;
+                                                    return {
+                                                        stroke: feature?.properties?.color || '#2563EB',
+                                                        strokeWidth: isSelectedSite ? '2.5' : '1',
+                                                        strokeDasharray: '4, 4',
+                                                        fill: feature?.properties?.color || '#2563EB',
+                                                        fillOpacity: isSelectedSite ? 0.20 : 0.04,
+                                                    };
+                                                }}
+                                            />
+                                        )}
+
+                                        {/* Operational Geofence Labels (Pin Papan Nama di Titik Pusat Poligon) */}
+                                        {operationalGeofences.map(gf => {
+                                            const lat = gf.latitude ?? gf.coordinates?.lat ?? 2.025;
+                                            const lng = gf.longitude ?? gf.coordinates?.lng ?? 117.200;
+                                            const r = gf.radius || 150;
+                                            const isCompactView = mapZoom < 14;
+
+                                            return (
+                                                <Overlay key={gf.id} anchor={[lat, lng]} offset={[0, 0]}>
+                                                    <div className="relative pointer-events-none -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                                                        <div 
+                                                            style={{ backgroundColor: gf.color || '#2563EB' }}
+                                                            className="w-2 h-2 rounded-full ring-2 ring-white shadow-xs mb-0.5"
+                                                        />
+                                                        {(!isCompactView || r >= 250) && (
+                                                            <span
+                                                                style={{ 
+                                                                    color: '#ffffff', 
+                                                                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                                                                    borderColor: gf.color || '#2563EB'
+                                                                }}
+                                                                className="text-[9px] font-bold px-1.5 py-0.5 rounded-md border shadow-md truncate max-w-[145px] backdrop-blur-xs whitespace-nowrap pointer-events-auto flex items-center gap-1 group/badge"
+                                                                title={`${gf.name} (${gf.geometry_type === 'polygon' ? 'Poligon Tambang' : 'Lingkaran'} • Radius: ${r}m)`}
+                                                            >
+                                                                <span className="truncate">{gf.name}</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteGeofence(gf.id, gf.name);
+                                                                    }}
+                                                                    className="opacity-50 hover:opacity-100 hover:text-rose-400 p-0.5 rounded transition cursor-pointer"
+                                                                    title={`Hapus "${gf.name}"`}
+                                                                >
+                                                                    <X className="w-2.5 h-2.5" />
+                                                                </button>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </Overlay>
+                                            );
+                                        })}
+
+                                        {/* STA Checkpoints Points (If enabled) */}
+                                        {showStaMarkers && roadGeofences.map(gf => {
+                                            const lat = gf.latitude ?? gf.coordinates?.lat;
+                                            const lng = gf.longitude ?? gf.coordinates?.lng;
+                                            if (!lat || !lng) return null;
+                                            return (
+                                                <Overlay key={gf.id} anchor={[lat, lng]} offset={[4, 4]}>
+                                                    <div
+                                                        style={{ backgroundColor: gf.color || '#64748B' }}
+                                                        className="w-2.5 h-2.5 rounded-full border border-white shadow-xs pointer-events-auto cursor-pointer hover:scale-150 transition-transform"
+                                                        title={`${gf.name} - ${gf.address || ''}`}
+                                                        onClick={() => {
+                                                            setMapCenter([lat, lng]);
+                                                            setMapZoom(16);
+                                                        }}
+                                                    />
                                                 </Overlay>
                                             );
                                         })}
 
                                         {/* Live Unit Marker */}
                                         <Marker
-                                            anchor={[telemetry.lat || -7.6582, telemetry.lng || 111.1895]}
+                                            anchor={[telemetry.lat || 2.025, telemetry.lng || 117.200]}
                                             payload={1}
                                         >
                                             <div className="relative flex flex-col items-center justify-center -translate-x-1/2 -translate-y-1/2 pointer-events-auto group">
@@ -2083,50 +2622,133 @@ export default function Page() {
 
                                     {/* Floating Zones Drawer (Top Right Overlay) */}
                                     {showZonesDrawer && (
-                                        <div className="absolute top-3 right-3 z-20 w-72 max-h-[380px] bg-slate-900/92 backdrop-blur-md border border-slate-700 rounded-xl p-3 shadow-2xl overflow-y-auto text-xs text-white">
+                                        <div className="absolute top-3 right-3 z-20 w-80 max-h-[420px] bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-xl p-3 shadow-2xl overflow-hidden flex flex-col text-xs text-white">
                                             <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-700/80">
                                                 <span className="font-bold flex items-center gap-1.5">
                                                     <MapPin className="w-3.5 h-3.5 text-blue-400" />
-                                                    Zona Tambang ({geofences.length})
+                                                    Zona & Checkpoint ({filteredDrawerGeofences.length})
+                                                    {selectedSiteFilter !== 'ALL' && (
+                                                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-400 font-mono">
+                                                            {selectedSiteFilter}
+                                                        </span>
+                                                    )}
                                                 </span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowZonesDrawer(false)}
-                                                    className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
+                                                    className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
                                                 >
                                                     <X className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
-                                            <div className="space-y-1.5">
-                                                {geofences.map(gf => (
-                                                    <div
-                                                        key={gf.id}
-                                                        onClick={() => {
-                                                            const lat = gf.coordinates?.lat || gf.latitude;
-                                                            const lng = gf.coordinates?.lng || gf.longitude;
-                                                            if (lat && lng) {
-                                                                setMapCenter([lat, lng]);
-                                                                setMapZoom(16);
-                                                            }
-                                                        }}
-                                                        className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700/60 cursor-pointer transition flex items-center justify-between group"
-                                                    >
-                                                        <div className="flex items-center gap-2 min-w-0">
-                                                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: gf.color || '#2563EB' }}></span>
-                                                            <div className="truncate">
-                                                                <p className="font-bold text-[11px] text-white truncate group-hover:text-blue-300">
-                                                                    {gf.name}
-                                                                </p>
-                                                                <p className="text-[10px] text-slate-400 uppercase font-mono">
-                                                                    {gf.type} • R: {gf.radius}m
-                                                                </p>
+
+                                            {/* Search Filter */}
+                                            <div className="relative mb-2">
+                                                <input
+                                                    type="text"
+                                                    value={zoneSearchQuery}
+                                                    onChange={e => setZoneSearchQuery(e.target.value)}
+                                                    placeholder="Cari zona / STA..."
+                                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                                                />
+                                            </div>
+
+                                            {/* Filter Tabs */}
+                                            <div className="grid grid-cols-3 gap-1 mb-2 pb-2 border-b border-slate-700/80">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setZoneFilterTab('operational')}
+                                                    className={`py-1 rounded text-[10px] font-bold transition cursor-pointer text-center ${
+                                                        zoneFilterTab === 'operational'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-slate-800 text-slate-400 hover:text-white'
+                                                    }`}
+                                                >
+                                                    Fasilitas ({operationalGeofences.length})
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setZoneFilterTab('sta')}
+                                                    className={`py-1 rounded text-[10px] font-bold transition cursor-pointer text-center ${
+                                                        zoneFilterTab === 'sta'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-slate-800 text-slate-400 hover:text-white'
+                                                    }`}
+                                                >
+                                                    STA ({roadGeofences.length})
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setZoneFilterTab('all')}
+                                                    className={`py-1 rounded text-[10px] font-bold transition cursor-pointer text-center ${
+                                                        zoneFilterTab === 'all'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-slate-800 text-slate-400 hover:text-white'
+                                                    }`}
+                                                >
+                                                    Semua ({geofences.length})
+                                                </button>
+                                            </div>
+
+                                            {/* Scrollable List */}
+                                            <div className="space-y-1.5 overflow-y-auto pr-1 flex-1 max-h-[290px]">
+                                                {filteredDrawerGeofences.length === 0 ? (
+                                                    <p className="text-slate-400 text-center py-4 text-[11px]">Tidak ada zona yang cocok.</p>
+                                                ) : (
+                                                    filteredDrawerGeofences.map(gf => {
+                                                        const lat = gf.latitude ?? gf.coordinates?.lat;
+                                                        const lng = gf.longitude ?? gf.coordinates?.lng;
+                                                        return (
+                                                            <div
+                                                                key={gf.id}
+                                                                onClick={() => {
+                                                                    if (lat && lng) {
+                                                                        setMapCenter([lat, lng]);
+                                                                        setMapZoom(16);
+                                                                    }
+                                                                }}
+                                                                className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700/60 cursor-pointer transition flex items-center justify-between group"
+                                                            >
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: gf.color || '#2563EB' }}></span>
+                                                                    <div className="truncate">
+                                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                                            <p className="font-bold text-[11px] text-white truncate group-hover:text-blue-300">
+                                                                                {gf.name}
+                                                                            </p>
+                                                                            <span className={`text-[8px] font-mono px-1 rounded font-extrabold shrink-0 border ${
+                                                                                (gf.site || 'HPA') === 'BDA' 
+                                                                                    ? 'bg-amber-950/80 text-amber-300 border-amber-700/80' 
+                                                                                    : 'bg-blue-950/80 text-blue-300 border-blue-700/80'
+                                                                            }`}>
+                                                                                {gf.site || 'HPA'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <p className="text-[10px] text-slate-400 uppercase font-mono truncate">
+                                                                            {gf.type} • R: {gf.radius}m {gf.material ? `• [${gf.material}]` : ''}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                                    <span className="text-[10px] text-blue-400 font-semibold group-hover:underline">
+                                                                        Fokus
+                                                                    </span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleDeleteGeofence(gf.id, gf.name);
+                                                                        }}
+                                                                        className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition cursor-pointer"
+                                                                        title={`Hapus geofence "${gf.name}"`}
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        <span className="text-[10px] text-blue-400 font-semibold group-hover:underline">
-                                                            Fokus
-                                                        </span>
-                                                    </div>
-                                                ))}
+                                                        );
+                                                    })
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -2134,9 +2756,14 @@ export default function Page() {
 
                                 {/* Integrated Fleet Telemetry Strip under Map */}
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center p-2 rounded-xl bg-slate-50 border border-slate-200">
-                                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                                    <div className={`p-1.5 rounded-lg border transition ${
+                                        isCurrentVehicleSpeeding ? 'bg-rose-50 border-rose-300' : 'bg-white border-slate-200/80'
+                                    }`}>
                                         <p className="text-gray-400 font-bold uppercase text-[9px]">Kecepatan GPS</p>
-                                        <p className="font-black text-gray-900 text-sm">{telemetry.speed} <span className="text-[10px] font-normal text-gray-500">km/j</span></p>
+                                        <p className={`font-black text-sm ${isCurrentVehicleSpeeding ? 'text-rose-600' : 'text-gray-900'}`}>
+                                            {telemetry.speed} <span className="text-[10px] font-normal text-gray-500">km/j</span>
+                                        </p>
+                                        <span className="text-[9px] font-mono text-slate-500">Batas: {speedLimit} km/j</span>
                                     </div>
                                     <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
                                         <p className="text-gray-400 font-bold uppercase text-[9px]">Odometer Hari Ini</p>
@@ -2303,6 +2930,38 @@ export default function Page() {
                                                 <>
                                                     <Video className="w-3.5 h-3.5" />
                                                     <span>Nyalakan Livecam</span>
+                                                </>
+                                            )}
+                                        </button>
+
+                                        {/* REVISI 5: Tombol On/Off Mic (Intercom Dua Arah Driver & Operator) */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsMicActive(!isMicActive);
+                                                setGeofenceNotice(
+                                                    !isMicActive
+                                                        ? `🎙️ Intercom Aktif: Terhubung ke speaker kabin unit ${currentVehicle.plateNo}. Operator dapat berbicara langsung ke pengemudi.`
+                                                        : `🔇 Intercom Dimatikan: Mikrofon operator di-mute.`
+                                                );
+                                                setTimeout(() => setGeofenceNotice(null), 4000);
+                                            }}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                                                isMicActive
+                                                    ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
+                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                                            }`}
+                                            title="Nyalakan/matikan mikrofon interkom untuk berbicara langsung dengan pengemudi unit"
+                                        >
+                                            {isMicActive ? (
+                                                <>
+                                                    <Mic className="w-3.5 h-3.5 text-white animate-bounce" />
+                                                    <span>MIC ON (Bicara)</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <MicOff className="w-3.5 h-3.5 text-slate-500" />
+                                                    <span>MIC OFF</span>
                                                 </>
                                             )}
                                         </button>
@@ -2533,25 +3192,25 @@ export default function Page() {
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                                             <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Start Pit:</span>
-                                                            <span className="font-bold text-gray-800">{currentTrip.startTime}, {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                                                            <span className="font-bold text-gray-800 truncate">{activeGeofence?.type === 'loading' ? activeGeofence.name : (ritasiLogs.length > 0 ? (ritasiLogs[0].pit_name || 'PIT HPU') : '-')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Durasi:</span>
-                                                            <span className="font-bold text-gray-800">{currentTrip.nowTime}</span>
+                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Sensor PTO:</span>
+                                                            <span className={`font-bold ${ptoActive ? 'text-rose-600' : 'text-slate-700'}`}>{ptoActive ? 'PTO AKTIF (Dumping)' : 'PTO OFF (Normal)'}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                                                             <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Tujuan:</span>
-                                                            <span className="font-bold text-gray-800 truncate">{currentTrip.finishArea}</span>
+                                                            <span className="font-bold text-gray-800 truncate">{activeGeofence?.type === 'dumping' ? activeGeofence.name : (activeGeofence ? activeGeofence.name : 'Jalur Hauling Tambang')}</span>
                                                         </div>
                                                         <div className="mt-1">
                                                             <div className="flex justify-between text-xs font-semibold text-gray-500 mb-1">
-                                                                <span>Progress Trip</span>
-                                                                <span className="font-mono text-blue-600 font-bold">{currentTrip.tripProgress}%</span>
+                                                                <span>Produksi Terakumulasi</span>
+                                                                <span className="font-mono text-blue-600 font-bold">{totalBcmToday} BCM</span>
                                                             </div>
                                                             <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
-                                                                <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style={{ width: `${currentTrip.tripProgress}%` }}></div>
+                                                                <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, ritasiToday * 5)}%` }}></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2563,12 +3222,11 @@ export default function Page() {
                                                         </p>
                                                         <button
                                                             type="button"
-                                                            onClick={runHaulingSimulation}
-                                                            disabled={isSimulatingTrip}
-                                                            className="w-full mt-1.5 py-1 px-2 rounded-md text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 shadow-xs transition flex items-center justify-center gap-1 disabled:opacity-50 cursor-pointer"
+                                                            onClick={() => setShowRitasiHistoryModal(true)}
+                                                            className="w-full mt-1.5 py-1 px-2 rounded-md text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition flex items-center justify-center gap-1 cursor-pointer"
                                                         >
-                                                            <Play className="w-2.5 h-2.5 fill-white" />
-                                                            {isSimulatingTrip ? 'Berjalan...' : 'Simulasi 5 Siklus'}
+                                                            <FileText className="w-3 h-3 text-blue-600" />
+                                                            Riwayat Ritasi
                                                         </button>
                                                     </div>
                                                 </div>
@@ -2613,34 +3271,37 @@ export default function Page() {
                                             </div>
                                         </div>
                                     ) : (
-                                        /* Card 6 (Excavator): AI TRUCK DETECTION */
+                                        /* Card 6 (Excavator): OPERASIONAL EXCAVATOR */
                                         <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
                                             <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
                                                 <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                                    <Scan className="w-3.5 h-3.5 text-blue-600" />
-                                                    AI TRUCK DETECTION & LOADING ZONE
+                                                    <LandPlot className="w-3.5 h-3.5 text-amber-600" />
+                                                    UNIT EXCAVATOR & FRONT LOADING
                                                 </span>
-                                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                                    <Truck className="w-3 h-3" /> TRUK TERDETEKSI
+                                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                                                    currentVehicle.status === 'ONLINE' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-600 bg-slate-50 border-slate-200'
+                                                }`}>
+                                                    <span className={`w-2 h-2 rounded-full ${currentVehicle.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                    {currentVehicle.status === 'ONLINE' ? 'EXCA ONLINE' : 'EXCA STANDBY'}
                                                 </span>
                                             </div>
                                             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 flex flex-col gap-2">
                                                 <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-400 font-semibold uppercase text-[10px]">Unit DT Terkunci</span>
-                                                    <span className="text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-gray-700">Jarak: 3.2m</span>
+                                                    <span className="text-gray-400 font-semibold uppercase text-[10px]">Identitas Unit</span>
+                                                    <span className="text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-gray-700">{currentVehicle.site}</span>
                                                 </div>
                                                 <div className="flex items-baseline gap-2">
-                                                    <h4 className="text-xl font-bold text-blue-700">HD-78501</h4>
-                                                    <span className="text-xs text-gray-400 font-mono">ID: 240078916116</span>
+                                                    <h4 className="text-xl font-bold text-amber-600">{currentVehicle.plateNo}</h4>
+                                                    <span className="text-xs text-gray-400 font-mono">ID: {currentVehicle.deviceNo}</span>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
                                                     <div className="bg-white p-2 rounded border border-slate-200">
-                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Operator DT</p>
-                                                        <p className="font-bold text-gray-800">Sandi Setiawan</p>
+                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Operator Kabin</p>
+                                                        <p className="font-bold text-gray-800 truncate">{driver?.name || 'Kabin Standby'}</p>
                                                     </div>
                                                     <div className="bg-white p-2 rounded border border-slate-200">
-                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Kapasitas Vessel</p>
-                                                        <p className="font-bold text-gray-800">~20 BCM (30 Ton)</p>
+                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Zona Operasional</p>
+                                                        <p className="font-bold text-gray-800 truncate">{activeGeofence ? activeGeofence.name : 'Area Tambang'}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2683,7 +3344,7 @@ export default function Page() {
                                                             <Clock className="w-3.5 h-3.5" />
                                                         </div>
                                                         <p className="text-sm font-bold text-purple-700 leading-tight">
-                                                            {avgCycleTimeToday || 22} <span className="text-[10px] font-normal text-gray-500">min</span>
+                                                            {avgCycleTimeToday > 0 ? avgCycleTimeToday : '-'} <span className="text-[10px] font-normal text-gray-500">min</span>
                                                         </p>
                                                         <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Cycle Time</p>
                                                     </div>
@@ -2692,16 +3353,16 @@ export default function Page() {
                                                             <Power className="w-3.5 h-3.5" />
                                                         </div>
                                                         <p className="text-sm font-bold text-emerald-700 leading-tight">
-                                                            98,765 <span className="text-[10px] font-normal text-gray-500">HM</span>
+                                                            {telemetry.distance > 0 ? telemetry.distance.toFixed(1) : '-'} <span className="text-[10px] font-normal text-gray-500">KM</span>
                                                         </p>
-                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Hour Meter</p>
+                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Odometer GPS</p>
                                                     </div>
                                                     <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
                                                         <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1">
                                                             <Fuel className="w-3.5 h-3.5" />
                                                         </div>
                                                         <p className="text-sm font-bold text-amber-700 leading-tight">
-                                                            {telemetry.fuel} <span className="text-[10px] font-normal text-gray-500">L</span>
+                                                            {telemetry.fuel > 0 ? telemetry.fuel : '-'} <span className="text-[10px] font-normal text-gray-500">L</span>
                                                         </p>
                                                         <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Konsumsi BBM</p>
                                                     </div>
@@ -2803,46 +3464,15 @@ export default function Page() {
                                             </span>
                                         )}
                                         <button
-                                            onClick={() => setShowSimulator(!showSimulator)}
-                                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                                            type="button"
+                                            onClick={fetchAlarms}
+                                            className="text-xs font-semibold text-gray-500 hover:text-gray-800 flex items-center gap-1 cursor-pointer"
+                                            title="Segarkan data alarm dari server CMSV6"
                                         >
-                                            <Sparkles className="w-3 h-3" /> Tes Simulasi
+                                            <RotateCw className="w-3 h-3" /> Refresh
                                         </button>
                                     </div>
                                 </div>
-
-                                {/* Simulator Drawer */}
-                                {showSimulator && (
-                                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
-                                        <p className="font-bold text-gray-700 mb-1.5 text-[11px]">Pemicu Uji Alarm AI Safety ({currentVehicle.plateNo}):</p>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                                            <button
-                                                onClick={() => triggerTestAlarm('fatigue', 'Driver Fatigue (Mengantuk Berat)', 'DMS Camera AI', 'critical')}
-                                                className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded border border-rose-200 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Mengantuk
-                                            </button>
-                                            <button
-                                                onClick={() => triggerTestAlarm('phone', 'Penggunaan Ponsel saat Mengemudi', 'DMS Camera AI', 'high')}
-                                                className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded border border-amber-200 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Main Ponsel
-                                            </button>
-                                            <button
-                                                onClick={() => triggerTestAlarm('smoking', 'Merokok di Kabin', 'DMS Camera AI', 'medium')}
-                                                className="p-1.5 bg-slate-200 hover:bg-slate-300 text-gray-800 rounded border border-slate-300 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Merokok
-                                            </button>
-                                            <button
-                                                onClick={() => triggerTestAlarm('yawn', 'Menguap Berulang', 'DMS Camera AI', 'low')}
-                                                className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded border border-blue-200 font-semibold text-[11px] cursor-pointer"
-                                            >
-                                                Uji Menguap
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* Category Filter Tabs */}
                                 <div className="flex items-center justify-between gap-2">
@@ -3109,70 +3739,126 @@ export default function Page() {
                 </div>
                 </div>
 
-                {/* ── MODAL: TAMBAH GEOFENCE BARU ── */}
+                {/* ── MODAL: TAMBAH GEOFENCE SESUAI KETENTUAN SLIDE 26 ── */}
                 {showGeofenceModal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
                                 <div>
-                                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                        <LandPlot className="w-4 h-4 text-blue-600" /> Tambah Geofence Tambang Baru
+                                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                        <LandPlot className="w-4 h-4 text-blue-600" /> Konfigurasi Geofence Tambang
                                     </h4>
-                                    <p className="text-xs text-gray-400">Konfigurasi zona pagar virtual GPS sesuai standar PT. HPU</p>
+                                    <p className="text-[11px] text-slate-500">Penetapan batas perimeter virtual operasional tambang (Slide 26)</p>
                                 </div>
-                                <button onClick={() => setShowGeofenceModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                                <button onClick={() => setShowGeofenceModal(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer p-1">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
                             <form onSubmit={handleCreateGeofence} className="space-y-3">
+                                {/* Banner Status Tarik Zona Manual */}
+                                {newGeofence.coordinates_json && (
+                                    <div className="bg-amber-50 border border-amber-300 rounded-xl p-2.5 flex items-center justify-between text-xs shadow-2xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                                            <div>
+                                                <p className="font-bold text-amber-950 text-[11px] flex items-center gap-1">
+                                                    <LandPlot className="w-3.5 h-3.5 text-amber-600" />
+                                                    Titik Ditarik Manual dari Citra Satelit Google Earth
+                                                </p>
+                                                <p className="text-[10px] text-amber-800">
+                                                    Geometri: <span className="font-bold uppercase font-mono">{newGeofence.geometry_type}</span> • Pusat: [{newGeofence.latitude}, {newGeofence.longitude}]
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-mono text-[10px] font-bold border border-amber-300 shrink-0">
+                                            {newGeofence.radius}m Radius
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* 1. NAMA (Field: Nama) */}
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Nama Zona / Area</label>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="text-xs font-bold text-slate-800">
+                                            Nama Geofence <span className="text-rose-500">*</span>
+                                        </label>
+                                        {newGeofence.name && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewGeofence({ ...newGeofence, name: '' })}
+                                                className="text-[10px] text-slate-400 hover:text-rose-600 font-semibold cursor-pointer"
+                                            >
+                                                Bersihkan teks
+                                            </button>
+                                        )}
+                                    </div>
                                     <input
                                         type="text"
-                                        placeholder="Contoh: Pit Front C (Loading), Disposal Selatan"
+                                        placeholder="Contoh: PIT SELATAN (Front Loading), Workshop HPU, STA +10.200"
                                         value={newGeofence.name}
                                         onChange={e => setNewGeofence({ ...newGeofence, name: e.target.value })}
-                                        className="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
+                                        className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
                                         required
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2">
+                                {/* 2. JENIS GEOFENCE (Slide 26: Polygon, Line, Circle) */}
+                                <div>
+                                    <label className="text-xs font-bold text-slate-800 block mb-1">
+                                        Jenis Geofence <span className="text-rose-500">*</span>
+                                    </label>
+                                    <select
+                                        value={newGeofence.geometry_type}
+                                        onChange={e => {
+                                            const gType = e.target.value;
+                                            let autoType = newGeofence.type;
+                                            if (gType === 'polygon' && autoType === 'road') autoType = 'loading';
+                                            if (gType === 'line') autoType = 'road';
+                                            setNewGeofence({ ...newGeofence, geometry_type: gType, type: autoType });
+                                        }}
+                                        className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                    >
+                                        <option value="polygon">Polygon: Pembuatan area Office, Workshop, PIT, Dumping area, dll.</option>
+                                        <option value="line">Line: Pembuatan Jalan (Jalur Hauling / Akses Tambang)</option>
+                                        <option value="circle">Circle: Pembuatan Luas area PIT melingkar (Radius)</option>
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Tipe Zona</label>
+                                        <label className="text-xs font-bold text-slate-800 block mb-1">Site Konsesi</label>
+                                        <select
+                                            value={newGeofence.site}
+                                            onChange={e => setNewGeofence({ ...newGeofence, site: e.target.value })}
+                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                        >
+                                            <option value="HPA">HPA (Berau, Kaltim)</option>
+                                            <option value="BDA">BDA (Barito, Kalteng/Kalsel)</option>
+                                            <option value="KDA">KDA Site</option>
+                                            <option value="KJA">KJA Site</option>
+                                            <option value="AMO">AMO Site</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-800 block mb-1">Kategori Zona</label>
                                         <select
                                             value={newGeofence.type}
                                             onChange={e => setNewGeofence({ ...newGeofence, type: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
+                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
                                         >
-                                            <option value="dumping">Dumping Area (Disposal)</option>
                                             <option value="loading">Loading Point (PIT)</option>
-                                            <option value="road">Jalan Hauling (Line)</option>
-                                            <option value="parking">Workshop / Parkir</option>
-                                            <option value="custom">Zona Khusus Lainnya</option>
+                                            <option value="dumping">Dumping Area (Disposal / Port)</option>
+                                            <option value="parking">Office / Workshop / Parkir</option>
+                                            <option value="road">Jalur Jalan Hauling</option>
+                                            <option value="custom">Zona Khusus / Bahaya (Handak / WMP)</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Jenis Geometri</label>
-                                        <select
-                                            value={newGeofence.geometry_type}
-                                            onChange={e => setNewGeofence({ ...newGeofence, geometry_type: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="circle">Circle (Radius Melingkar)</option>
-                                            <option value="polygon">Polygon (Area Tertutup)</option>
-                                            <option value="line">Line (Jalur Jalan)</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Material Utama</label>
+                                        <label className="text-xs font-bold text-slate-800 block mb-1">Material Utama</label>
                                         <select
                                             value={newGeofence.material}
                                             onChange={e => setNewGeofence({ ...newGeofence, material: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
+                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
                                         >
                                             <option value="OB">OB (Overburden)</option>
                                             <option value="COAL">Coal (Batubara)</option>
@@ -3182,39 +3868,159 @@ export default function Page() {
                                             <option value="SAPROLIT">Saprolit</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label className="text-xs font-semibold text-gray-700 block mb-1">Radius (Meter)</label>
-                                        <input
-                                            type="number"
-                                            min="20"
-                                            max="2000"
-                                            value={newGeofence.radius}
-                                            onChange={e => setNewGeofence({ ...newGeofence, radius: Number(e.target.value) })}
-                                            className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
-                                            required
-                                        />
+                                </div>
+
+                                {/* 3. KOORDINAT : LAT, LONG (Field: Koordinat : Lat,Long) */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="text-xs font-bold text-slate-800">
+                                            Koordinat Pusat (Lat, Long) <span className="text-rose-500">*</span>
+                                        </label>
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const lat = telemetry.lat || 2.045000;
+                                                    const lng = telemetry.lng || 117.200000;
+                                                    setNewGeofence(prev => ({
+                                                        ...prev,
+                                                        latitude: Number(lat.toFixed(6)),
+                                                        longitude: Number(lng.toFixed(6))
+                                                    }));
+                                                }}
+                                                className="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-0.5 cursor-pointer"
+                                                title="Ambil koordinat GPS armada saat ini"
+                                            >
+                                                <Crosshair className="w-3 h-3" /> GPS Unit
+                                            </button>
+                                            <span className="text-slate-300">•</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setNewGeofence(prev => ({
+                                                        ...prev,
+                                                        latitude: Number(mapCenter[0].toFixed(6)),
+                                                        longitude: Number(mapCenter[1].toFixed(6))
+                                                    }));
+                                                }}
+                                                className="text-[10px] text-emerald-600 hover:text-emerald-800 font-bold flex items-center gap-0.5 cursor-pointer"
+                                                title="Ambil koordinat tengah layar peta"
+                                            >
+                                                <Globe className="w-3 h-3" /> Pusat Peta
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <div className="relative">
+                                                <span className="absolute left-2.5 top-2 text-[10px] font-mono font-bold text-slate-400">Lat:</span>
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={newGeofence.latitude}
+                                                    onChange={e => setNewGeofence({ ...newGeofence, latitude: parseFloat(e.target.value) || 0 })}
+                                                    placeholder="2.045000"
+                                                    className="w-full text-xs p-2 pl-9 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="relative">
+                                                <span className="absolute left-2.5 top-2 text-[10px] font-mono font-bold text-slate-400">Long:</span>
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={newGeofence.longitude}
+                                                    onChange={e => setNewGeofence({ ...newGeofence, longitude: parseFloat(e.target.value) || 0 })}
+                                                    placeholder="117.200000"
+                                                    className="w-full text-xs p-2 pl-11 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
+                                {/* 4. RADIUS (Field: Radius - Terutama untuk Circle / Luas Area PIT) */}
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Alamat / Blok Tambang</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Contoh: Pit Front Barat Blok 4, KM 15 Hauling Road"
-                                        value={newGeofence.address}
-                                        onChange={e => setNewGeofence({ ...newGeofence, address: e.target.value })}
-                                        className="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500"
-                                    />
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="text-xs font-bold text-slate-800">
+                                            Radius (Meter) {newGeofence.geometry_type === 'circle' && <span className="text-rose-500">*</span>}
+                                        </label>
+                                        <span className="text-[10px] text-slate-500 font-medium">
+                                            {newGeofence.geometry_type === 'circle' ? 'Menentukan luas jangkauan PIT' : 'Toleransi perimeter buffer'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="50000"
+                                            value={newGeofence.radius}
+                                            onChange={e => setNewGeofence({ ...newGeofence, radius: Math.max(1, Number(e.target.value)) })}
+                                            className="w-32 text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                            required
+                                        />
+                                        <div className="flex items-center gap-1 flex-wrap">
+                                            {[100, 250, 500, 1000, 2500, 5000].map(r => (
+                                                <button
+                                                    key={r}
+                                                    type="button"
+                                                    onClick={() => setNewGeofence({ ...newGeofence, radius: r })}
+                                                    className={`text-[10px] px-2 py-1 rounded-lg border font-bold cursor-pointer transition ${
+                                                        newGeofence.radius === r ? 'bg-blue-50 border-blue-400 text-blue-700 shadow-2xs' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    {r >= 1000 ? `${r/1000}km` : `${r}m`}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
 
+                                {/* Poligon / Line Coordinates Field (Jika tipe Polygon atau Line) */}
+                                {(newGeofence.geometry_type === 'polygon' || newGeofence.geometry_type === 'line') && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-xs font-bold text-slate-800">
+                                                Koordinat Poligon/Jalur (JSON Array)
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const lat = newGeofence.latitude || 2.045000;
+                                                    const lng = newGeofence.longitude || 117.200000;
+                                                    const d = 0.0015;
+                                                    const sample = newGeofence.geometry_type === 'polygon'
+                                                        ? `[[${(lat+d).toFixed(6)}, ${(lng-d).toFixed(6)}], [${(lat+d).toFixed(6)}, ${(lng+d).toFixed(6)}], [${(lat-d).toFixed(6)}, ${(lng+d).toFixed(6)}], [${(lat-d).toFixed(6)}, ${(lng-d).toFixed(6)}]]`
+                                                        : `[[${(lat-d).toFixed(6)}, ${(lng-d).toFixed(6)}], [${lat.toFixed(6)}, ${lng.toFixed(6)}], [${(lat+d).toFixed(6)}, ${(lng+d).toFixed(6)}]]`;
+                                                    setNewGeofence({ ...newGeofence, coordinates_json: sample });
+                                                }}
+                                                className="text-[10px] text-blue-600 hover:underline font-bold"
+                                            >
+                                                Isi Sampel Koordinat
+                                            </button>
+                                        </div>
+                                        <textarea
+                                            rows={2}
+                                            placeholder='Contoh: [[2.0451, 117.1998], [2.0460, 117.2012], [2.0440, 117.2010]]'
+                                            value={newGeofence.coordinates_json}
+                                            onChange={e => setNewGeofence({ ...newGeofence, coordinates_json: e.target.value })}
+                                            className="w-full text-[11px] p-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* 5. WARNA (Field: Warna) */}
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Warna Zona</label>
+                                    <label className="text-xs font-bold text-slate-800 block mb-1">Warna Poligon/Zona</label>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="color"
                                             value={newGeofence.color}
                                             onChange={e => setNewGeofence({ ...newGeofence, color: e.target.value })}
-                                            className="w-8 h-8 rounded-lg border border-gray-200 p-0.5 cursor-pointer"
+                                            className="w-8 h-8 rounded-lg border border-slate-300 p-0.5 cursor-pointer bg-white"
                                         />
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             {[
@@ -3223,30 +4029,41 @@ export default function Page() {
                                                 { label: 'Hitam (ROM)', hex: '#0F172A' },
                                                 { label: 'Biru (Office)', hex: '#3B82F6' },
                                                 { label: 'Orange (Jalan)', hex: '#EA580C' },
+                                                { label: 'Merah (Hazard)', hex: '#EF4444' },
                                             ].map(c => (
                                                 <button
                                                     key={c.hex}
                                                     type="button"
                                                     onClick={() => setNewGeofence({ ...newGeofence, color: c.hex })}
-                                                    className="text-[11px] px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1 font-semibold"
+                                                    className={`text-[11px] px-2 py-0.5 rounded border flex items-center gap-1 font-bold cursor-pointer transition ${
+                                                        newGeofence.color === c.hex ? 'border-slate-800 ring-2 ring-slate-400 bg-slate-50' : 'border-slate-200 hover:bg-slate-50'
+                                                    }`}
                                                 >
                                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.hex }}></span>
-                                                    {c.label}
+                                                    <span className="text-slate-800">{c.label}</span>
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
 
-                                <p className="text-[11px] text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                                    Titik pusat otomatis menggunakan posisi GPS unit saat ini: ({telemetry.lat?.toFixed(5) ?? '-7.6582'}, {telemetry.lng?.toFixed(5) ?? '111.1895'})
-                                </p>
+                                {/* 6. ALAMAT (Field: Alamat) */}
+                                <div>
+                                    <label className="text-xs font-bold text-slate-800 block mb-1">Alamat / Lokasi Tambang</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Contoh: Pit Front Barat Blok 4, KM 15 Hauling Road HPA"
+                                        value={newGeofence.address}
+                                        onChange={e => setNewGeofence({ ...newGeofence, address: e.target.value })}
+                                        className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                    />
+                                </div>
 
-                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                                     <button
                                         type="button"
                                         onClick={() => setShowGeofenceModal(false)}
-                                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 cursor-pointer"
+                                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
                                     >
                                         Batal
                                     </button>

@@ -40,6 +40,33 @@ class MonitorDashcamTelemetry extends Command
     }
 
     /**
+     * Algoritma Ray-Casting untuk menentukan apakah titik (lat, lng) berada di dalam Poligon
+     * $polygon adalah array koordinat [[lat, lng], [lat, lng], ...]
+     */
+    private function isPointInPolygon($lat, $lng, array $polygon): bool
+    {
+        $inside = false;
+        $count = count($polygon);
+        if ($count < 3) return false;
+
+        for ($i = 0, $j = $count - 1; $i < $count; $j = $i++) {
+            $xi = $polygon[$i][0];
+            $yi = $polygon[$i][1];
+            $xj = $polygon[$j][0];
+            $yj = $polygon[$j][1];
+
+            $intersect = (($yi > $lng) !== ($yj > $lng)) &&
+                ($lat < ($xj - $xi) * ($lng - $yi) / (($yj - $yi) ?: 0.000000001) + $xi);
+
+            if ($intersect) {
+                $inside = !$inside;
+            }
+        }
+
+        return $inside;
+    }
+
+    /**
      * Execute the console command.
      */
     public function handle()
@@ -51,6 +78,7 @@ class MonitorDashcamTelemetry extends Command
         $deviceId = config('services.cmsv6.device_id', '240078916116');
         
         $currentGeofenceId = null;
+        $currentStaId      = null;
         $currentStage      = 'IDLE'; // IDLE, LOADING, TRAVEL_ISI, DUMPING, TRAVEL_KOSONG
         $lastPitId         = null;
         $activeLoadType    = 'OB';
@@ -110,54 +138,80 @@ class MonitorDashcamTelemetry extends Command
 
                         $isMoving = $speed > 0;
 
-                        // ── SIKLUS RITASI SESUAI SPESIFIKASI HPU (Slide 25) ──
+                        // ── SIKLUS RITASI & EVALUASI GEOFENCE HPU ──
                         if ($lat != 0 && $lng != 0) {
                             $geofences = \App\Models\Geofence::all();
-                            $inAnyGeofence = null;
-                            
+                            $inOperationalGeofence = null;
+                            $inRoadGeofence = null;
+
                             foreach ($geofences as $geofence) {
-                                $distance = $this->calculateDistance($lat, $lng, $geofence->latitude, $geofence->longitude);
-                                
-                                if ($distance <= $geofence->radius) {
-                                    $inAnyGeofence = $geofence;
-                                    break;
+                                $isInside = false;
+
+                                // 1. Evaluasi Poligon Fisik jika tersedia koordinat poligon
+                                if ($geofence->geometry_type === 'polygon' && !empty($geofence->coordinates_json)) {
+                                    $polyCoords = json_decode($geofence->coordinates_json, true);
+                                    if (is_array($polyCoords) && count($polyCoords) >= 3) {
+                                        $isInside = $this->isPointInPolygon($lat, $lng, $polyCoords);
+                                    }
+                                }
+
+                                // 2. Evaluasi Haversine Radius sebagai fallback/titik
+                                if (!$isInside) {
+                                    $distance = $this->calculateDistance($lat, $lng, $geofence->latitude, $geofence->longitude);
+                                    if ($distance <= $geofence->radius) {
+                                        $isInside = true;
+                                    }
+                                }
+
+                                if ($isInside) {
+                                    if ($geofence->type === 'road') {
+                                        $inRoadGeofence = $geofence;
+                                    } elseif (!$inOperationalGeofence) {
+                                        $inOperationalGeofence = $geofence;
+                                    }
                                 }
                             }
-                            
-                            $inGeofenceId = $inAnyGeofence?->id;
+
+                            // Update log checkpoint STA saat melintas
+                            if ($inRoadGeofence && $currentStaId !== $inRoadGeofence->id) {
+                                $currentStaId = $inRoadGeofence->id;
+                                $this->info("[".now()->format('H:i:s')."] 📍 CHECKPOINT: Unit melintas di {$inRoadGeofence->name} ({$speed} km/j).");
+                            }
+
+                            $inGeofenceId = $inOperationalGeofence?->id;
 
                             // 1. Loading di Pit Front: Unit Exca & DT berdekatan, Speed 0, Engine ON
-                            if ($inAnyGeofence && $inAnyGeofence->type === 'loading') {
+                            if ($inOperationalGeofence && $inOperationalGeofence->type === 'loading') {
                                 if ($currentStage !== 'LOADING') {
                                     $currentStage   = 'LOADING';
-                                    $lastPitId      = $inAnyGeofence->id;
-                                    $activeLoadType = $inAnyGeofence->material ?: 'OB';
+                                    $lastPitId      = $inOperationalGeofence->id;
+                                    $activeLoadType = $inOperationalGeofence->material ?: 'OB';
                                     $cycleStartAt   = now();
-                                    $this->info("[".now()->format('H:i:s')."] ⛏️ UNIT MEMASUKI PIT: {$inAnyGeofence->name}. Memulai Loading material [{$activeLoadType}].");
+                                    $this->info("[".now()->format('H:i:s')."] ⛏️ UNIT MEMASUKI PIT: {$inOperationalGeofence->name}. Memulai Loading material [{$activeLoadType}].");
                                 }
                             }
                             // 2. Travel Isi: Bergerak keluar dari Pit menuju Dumping
-                            elseif (!$inAnyGeofence && $currentStage === 'LOADING' && $isMoving) {
+                            elseif (!$inOperationalGeofence && $currentStage === 'LOADING' && $isMoving) {
                                 $currentStage = 'TRAVEL_ISI';
                                 $this->info("[".now()->format('H:i:s')."] 🚛 TRAVEL ISI: Unit keluar Pit membawa muatan [{$activeLoadType}] menuju Disposal.");
                             }
                             // 3. Dumping di Disposal: Berada di geofence Dumping, PTO ON & dumping material
-                            elseif ($inAnyGeofence && $inAnyGeofence->type === 'dumping') {
-                                if ($currentGeofenceId !== $inAnyGeofence->id) {
+                            elseif ($inOperationalGeofence && $inOperationalGeofence->type === 'dumping') {
+                                if ($currentGeofenceId !== $inOperationalGeofence->id) {
                                     $currentStage = 'DUMPING';
-                                    
+
                                     // Hitung estimasi durasi dan jarak
                                     $cycleDurationSec = max(60, now()->diffInSeconds($cycleStartAt));
                                     $cycleMinutes     = round($cycleDurationSec / 60, 1);
-                                    
+
                                     // Rekam 1 ritasi lengkap ke database!
                                     $newRitasi = \App\Models\RitasiLog::create([
                                         'device_id'           => $deviceId,
-                                        'unit_code'           => 'HD-78501',
+                                        'unit_code'           => config('services.cmsv6.unit_code', 'DT-' . substr($deviceId, -5)),
                                         'load_type'           => $activeLoadType,
-                                        'geofence_id'         => $inAnyGeofence->id,
+                                        'geofence_id'         => $inOperationalGeofence->id,
                                         'pit_geofence_id'     => $lastPitId,
-                                        'dumping_geofence_id' => $inAnyGeofence->id,
+                                        'dumping_geofence_id' => $inOperationalGeofence->id,
                                         'loading_time'        => 180,
                                         'travel_load_time'    => 480,
                                         'dumping_time'        => 90,
@@ -173,15 +227,15 @@ class MonitorDashcamTelemetry extends Command
                                         ->whereDate('entered_at', \Carbon\Carbon::today())
                                         ->count();
 
-                                    $this->info("[".now()->format('H:i:s')."] 🎯 RITASI #{$totalRitasi} TERCATAT! Unit dumping [{$activeLoadType}] di {$inAnyGeofence->name} dengan konfirmasi PTO On.");
+                                    $this->info("[".now()->format('H:i:s')."] 🎯 RITASI #{$totalRitasi} TERCATAT! Unit dumping [{$activeLoadType}] di {$inOperationalGeofence->name} dengan konfirmasi PTO On.");
                                 }
                             }
                             // 4. Travel Kosong: Keluar dari Disposal menuju kembali ke Pit
-                            elseif (!$inAnyGeofence && $currentStage === 'DUMPING' && $isMoving) {
+                            elseif (!$inOperationalGeofence && $currentStage === 'DUMPING' && $isMoving) {
                                 $currentStage = 'TRAVEL_KOSONG';
                                 $this->info("[".now()->format('H:i:s')."] 💨 TRAVEL KOSONG: Unit keluar Disposal kembali menuju Pit.");
                             }
-                            
+
                             $currentGeofenceId = $inGeofenceId;
                         }
 

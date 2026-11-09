@@ -204,6 +204,10 @@ Route::controller(DashcamController::class)->prefix("/dashcam")->withoutMiddlewa
     Route::get("/active-driver", "getActiveDriver");
     Route::post("/checkout", "checkout");
     Route::get("/geofences", "getGeofences");
+    Route::get("/geofences-geojson", "getGeofencesGeoJson");
+    Route::get("/hauling-routes", "getHaulingRoutes");
+    Route::get("/drone-photos", "getDronePhotos");
+    Route::post("/drone-photos", "uploadDronePhoto");
     Route::post("/geofences", "createGeofence");
     Route::delete("/geofences/{id}", "deleteGeofence");
     Route::get("/ritasi-today", "getRitasiToday");
