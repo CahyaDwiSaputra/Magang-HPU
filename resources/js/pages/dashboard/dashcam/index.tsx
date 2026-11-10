@@ -808,7 +808,39 @@ export default function Page() {
         return inside;
     };
 
-    // ── REVISI 7: LIVE DRAWING PREVIEW GEOJSON & HANDLERS ──
+    // Helper: Hitung keliling perimeter (meter)
+    const calculatePerimeter = (points: [number, number][]): number => {
+        if (points.length < 2) return 0;
+        let total = 0;
+        for (let i = 0; i < points.length; i++) {
+            const nextIdx = (i + 1) % points.length;
+            total += calculateDistance(points[i][0], points[i][1], points[nextIdx][0], points[nextIdx][1]);
+        }
+        return Math.round(total);
+    };
+
+    // Helper: Hitung estimasi luas poligon tambang (m2 & Hektar)
+    const calculatePolygonArea = (points: [number, number][]): { m2: number; ha: number } => {
+        if (points.length < 3) return { m2: 0, ha: 0 };
+        const R = 6378137.0;
+        let area = 0;
+        const len = points.length;
+        for (let i = 0; i < len; i++) {
+            const j = (i + 1) % len;
+            const p1 = points[i];
+            const p2 = points[j];
+            const x1 = (p1[1] * Math.PI / 180.0) * R * Math.cos((p1[0] * Math.PI) / 180.0);
+            const y1 = (p1[0] * Math.PI / 180.0) * R;
+            const x2 = (p2[1] * Math.PI / 180.0) * R * Math.cos((p2[0] * Math.PI) / 180.0);
+            const y2 = (p2[0] * Math.PI / 180.0) * R;
+            area += (x1 * y2 - x2 * y1);
+        }
+        const m2 = Math.round(Math.abs(area) / 2.0);
+        const ha = Number((m2 / 10000.0).toFixed(2));
+        return { m2, ha };
+    };
+
+    // ── LIVE DRAWING PREVIEW GEOJSON & HANDLERS ──
     const activeDrawingGeoJson = useMemo(() => {
         if (!isDrawingMode || drawnPoints.length < 2) return null;
 
@@ -884,6 +916,31 @@ export default function Page() {
         return null;
     }, [isDrawingMode, drawnPoints, drawShape]);
 
+    // Statistik Geometri Gambar (Luas Ha, Keliling m, Panjang Jalur)
+    const drawnStats = useMemo(() => {
+        if (!drawnPoints || drawnPoints.length === 0) return null;
+        const count = drawnPoints.length;
+        if (drawShape === 'polygon' && count >= 3) {
+            const area = calculatePolygonArea(drawnPoints);
+            const perimeter = calculatePerimeter(drawnPoints);
+            return { type: 'polygon', count, areaHa: area.ha, areaM2: area.m2, perimeterM: perimeter };
+        }
+        if (drawShape === 'line' && count >= 2) {
+            let length = 0;
+            for (let i = 0; i < count - 1; i++) {
+                length += calculateDistance(drawnPoints[i][0], drawnPoints[i][1], drawnPoints[i + 1][0], drawnPoints[i + 1][1]);
+            }
+            return { type: 'line', count, lengthM: Math.round(length) };
+        }
+        if (drawShape === 'circle' && count >= 2) {
+            const r = calculateDistance(drawnPoints[0][0], drawnPoints[0][1], drawnPoints[1][0], drawnPoints[1][1]);
+            const areaM2 = Math.round(Math.PI * r * r);
+            const areaHa = Number((areaM2 / 10000.0).toFixed(2));
+            return { type: 'circle', count: 2, radiusM: r, areaHa, areaM2 };
+        }
+        return { type: drawShape, count };
+    }, [drawnPoints, drawShape]);
+
     const handleUndoPoint = () => {
         if (drawnPoints.length === 0) return;
         const next = drawnPoints.slice(0, -1);
@@ -928,36 +985,42 @@ export default function Page() {
         const centerLat = Number((sumLat / drawnPoints.length).toFixed(6));
         const centerLng = Number((sumLng / drawnPoints.length).toFixed(6));
 
-        let calculatedRadius = 150;
-        if (drawShape === 'circle' && drawnPoints.length >= 2) {
-            calculatedRadius = calculateDistance(drawnPoints[0][0], drawnPoints[0][1], drawnPoints[1][0], drawnPoints[1][1]);
-        } else {
-            let maxDist = 0;
-            drawnPoints.forEach(p => {
-                const d = calculateDistance(centerLat, centerLng, p[0], p[1]);
-                if (d > maxDist) maxDist = d;
-            });
-            calculatedRadius = Math.max(50, Math.round(maxDist));
+        let maxDist = 0;
+        drawnPoints.forEach(p => {
+            const d = calculateDistance(centerLat, centerLng, p[0], p[1]);
+            if (d > maxDist) maxDist = d;
+        });
+
+        // Deteksi jika user menggambar di skala provinsi / zoom terlalu jauh
+        if (maxDist > 15000) {
+            alert(`Peringatan: Rentang area gambar mencapai ${(maxDist / 1000).toFixed(1)} km. Disarankan memperbesar zoom peta pada area tambang sebelum menggambar.`);
         }
 
+        let calculatedRadius = 150;
+        if (drawShape === 'circle' && drawnPoints.length >= 2) {
+            calculatedRadius = Math.min(5000, calculateDistance(drawnPoints[0][0], drawnPoints[0][1], drawnPoints[1][0], drawnPoints[1][1]));
+        } else {
+            calculatedRadius = Math.min(2500, Math.max(50, Math.round(maxDist)));
+        }
+
+        const detectedSite = selectedSiteFilter !== 'ALL' ? selectedSiteFilter : (centerLng < 116.0 ? 'BDA' : 'HPA');
+
         const defaultName = drawShape === 'polygon'
-            ? `POLIGON TAMBANG ${operationalGeofences.length + 1}`
-            : (drawShape === 'line' ? `JALUR AKSES HAULING ${roadGeofences.length + 1}` : `PIT LINGKARAN ${operationalGeofences.length + 1}`);
+            ? `Pit Front (${detectedSite})`
+            : (drawShape === 'line' ? `Jalur Hauling (${detectedSite})` : `Area Stockpile (${detectedSite})`);
 
         const defaultType = drawShape === 'line' ? 'road' : 'loading';
         const defaultColor = drawShape === 'line' ? '#EA580C' : (drawShape === 'polygon' ? '#10B981' : '#3B82F6');
 
-        const detectedSite = selectedSiteFilter !== 'ALL' ? selectedSiteFilter : (centerLng < 116.0 ? 'BDA' : 'HPA');
-
         setNewGeofence({
-            name: `${defaultName} (${detectedSite})`,
+            name: defaultName,
             site: detectedSite,
             type: defaultType,
             latitude: drawShape === 'circle' ? drawnPoints[0][0] : centerLat,
             longitude: drawShape === 'circle' ? drawnPoints[0][1] : centerLng,
             radius: calculatedRadius,
             color: defaultColor,
-            address: `Area Konsesi Tambang PT HPU Site ${detectedSite} (Pusat: ${centerLat}, ${centerLng})`,
+            address: `Area Konsesi Tambang PT HPU Site ${detectedSite}`,
             material: 'OB',
             geometry_type: drawShape,
             coordinates_json: JSON.stringify(drawnPoints),
@@ -2296,36 +2359,38 @@ export default function Page() {
 
                                 {/* Map Viewport (Enlarged) */}
                                 <div className={`relative ${isMapExpanded ? 'h-[580px]' : 'h-[400px]'} w-full rounded-xl overflow-hidden border border-slate-300 shadow-inner bg-slate-950 transition-all duration-300`}>
-                                    {/* ── REVISI 7: FLOATING TOOLBAR TARIK ZONA MANUAL (CITRA SATELIT GOOGLE EARTH) ── */}
+                                    {/* ── DIGITASI PERIMETER ZONA (PRECISION INDUSTRIAL GIS HUD) ── */}
                                     {isDrawingMode && (
-                                        <div className="absolute top-2.5 left-2.5 right-2.5 z-30 max-w-2xl mx-auto bg-slate-900/95 backdrop-blur-md border-2 border-amber-500 rounded-xl p-2.5 shadow-2xl text-white animate-in fade-in slide-in-from-top-2 duration-200">
-                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-2 mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-                                                    <span className="font-bold text-xs text-amber-300 flex items-center gap-1.5">
-                                                        <LandPlot className="w-4 h-4 text-amber-400" />
-                                                        Tarik Zona Manual di Google Earth
+                                        <div className="absolute top-3 left-4 right-4 z-30 max-w-xl mx-auto bg-slate-900/95 backdrop-blur-md border border-slate-700/90 rounded-lg p-2.5 shadow-xl text-slate-100 animate-in fade-in slide-in-from-top-1 duration-150">
+                                            <div className="flex items-center justify-between gap-3 pb-2 mb-2 border-b border-slate-800">
+                                                {/* Left: Mode Title & Vertex Counter */}
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                                                    <span className="text-xs font-semibold text-slate-200 truncate">
+                                                        Digitasi Perimeter Zona
                                                     </span>
-                                                    <span className="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-full text-slate-300 font-mono">
-                                                        {drawnPoints.length} Titik Sudut
+                                                    <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-medium shrink-0">
+                                                        {drawnPoints.length} titik
                                                     </span>
                                                 </div>
 
-                                                {/* Shape Selector (Polygon / Line / Circle - Slide 26) */}
-                                                <div className="flex items-center bg-slate-800/90 p-0.5 rounded-lg border border-slate-700 text-xs">
+                                                {/* Right: Shape Mode Selector (Segmented Control) */}
+                                                <div className="flex items-center bg-slate-800/90 p-0.5 rounded-md border border-slate-700/80 text-xs shrink-0">
                                                     <button
                                                         type="button"
                                                         onClick={() => {
                                                             setDrawShape('polygon');
                                                             setDrawnPoints([]);
-                                                            setGeofenceNotice('Mode Poligon: Klik titik-titik sudut pada peta satelit untuk membentuk area.');
+                                                            setGeofenceNotice('Mode Poligon: Klik titik sudut pada peta satelit untuk membentuk perimeter area.');
                                                         }}
-                                                        className={`px-2 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                                                            drawShape === 'polygon' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                                                        className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                                                            drawShape === 'polygon'
+                                                                ? 'bg-slate-700 text-white shadow-2xs font-semibold'
+                                                                : 'text-slate-400 hover:text-slate-200'
                                                         }`}
-                                                        title="Poligon: Area Pit, Disposal, Workshop, Office, dll."
+                                                        title="Poligon: Area Pit, Disposal, Workshop, dll."
                                                     >
-                                                        <LandPlot className="w-3 h-3" />
+                                                        <LandPlot className="w-3 h-3 text-emerald-400" />
                                                         <span>Poligon</span>
                                                     </button>
                                                     <button
@@ -2333,51 +2398,66 @@ export default function Page() {
                                                         onClick={() => {
                                                             setDrawShape('line');
                                                             setDrawnPoints([]);
-                                                            setGeofenceNotice('Mode Garis: Klik titik di sepanjang rute jalan hauling untuk membentuk garis jalur.');
+                                                            setGeofenceNotice('Mode Garis: Klik titik-titik di sepanjang koridor jalan hauling.');
                                                         }}
-                                                        className={`px-2 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                                                            drawShape === 'line' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                                                        className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                                                            drawShape === 'line'
+                                                                ? 'bg-slate-700 text-white shadow-2xs font-semibold'
+                                                                : 'text-slate-400 hover:text-slate-200'
                                                         }`}
                                                         title="Garis: Jalur jalan hauling / rute akses tambang"
                                                     >
-                                                        <Minus className="w-3 h-3" />
-                                                        <span>Garis/Jalan</span>
+                                                        <Minus className="w-3 h-3 text-amber-400" />
+                                                        <span>Jalur</span>
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => {
                                                             setDrawShape('circle');
                                                             setDrawnPoints([]);
-                                                            setGeofenceNotice('Mode Lingkaran: Klik 1 untuk titik pusat, klik 2 untuk radius lingkaran.');
+                                                            setGeofenceNotice('Mode Lingkaran: Klik 1 untuk titik pusat, klik 2 untuk batas radius.');
                                                         }}
-                                                        className={`px-2 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                                                            drawShape === 'circle' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'
+                                                        className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                                                            drawShape === 'circle'
+                                                                ? 'bg-slate-700 text-white shadow-2xs font-semibold'
+                                                                : 'text-slate-400 hover:text-slate-200'
                                                         }`}
-                                                        title="Lingkaran: Luas area PIT melingkar dengan radius meter"
+                                                        title="Lingkaran: Radius buffer membulat"
                                                     >
-                                                        <Circle className="w-3 h-3" />
-                                                        <span>Lingkaran</span>
+                                                        <Circle className="w-3 h-3 text-blue-400" />
+                                                        <span>Radius</span>
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            {/* Instructions & Action Buttons */}
-                                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                                                <p className="text-[11px] text-slate-300 flex items-center gap-1.5 flex-1 min-w-[220px]">
-                                                    <Globe className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                                                    <span>
-                                                        {drawShape === 'polygon' && (drawnPoints.length < 3 ? `Klik peta satelit Google Earth untuk menambah titik (butuh ${3 - drawnPoints.length} titik lagi).` : `Poligon ${drawnPoints.length} sudut siap disimpan.`)}
-                                                        {drawShape === 'line' && (drawnPoints.length < 2 ? 'Klik titik awal dan titik lanjutan di sepanjang jalan.' : `Jalur ${drawnPoints.length} titik siap disimpan.`)}
-                                                        {drawShape === 'circle' && (drawnPoints.length === 0 ? 'Klik titik 1 sebagai pusat lingkaran.' : (drawnPoints.length === 1 ? 'Klik titik 2 pada batas luar untuk menentukan radius.' : 'Radius lingkaran telah ditentukan.'))}
-                                                    </span>
-                                                </p>
+                                            {/* Bottom: Dimension Summary / Instruction & Clean Action Buttons */}
+                                            <div className="flex items-center justify-between gap-2 text-xs">
+                                                <div className="text-[11px] text-slate-300 truncate flex-1 pr-2">
+                                                    {drawShape === 'polygon' && (
+                                                        drawnPoints.length < 3
+                                                            ? `Klik peta satelit untuk menetapkan sudut batas (${3 - drawnPoints.length} titik lagi).`
+                                                            : (drawnStats?.areaHa ? `Area ~${drawnStats.areaHa} Ha • Keliling ~${drawnStats.perimeterM}m` : `Poligon ${drawnPoints.length} titik siap disimpan.`)
+                                                    )}
+                                                    {drawShape === 'line' && (
+                                                        drawnPoints.length < 2
+                                                            ? 'Klik titik awal dan lanjutan di sepanjang koridor jalan.'
+                                                            : (drawnStats?.lengthM ? `Panjang rute ~${drawnStats.lengthM}m (${drawnPoints.length} titik).` : `Jalur ${drawnPoints.length} titik siap.`)
+                                                    )}
+                                                    {drawShape === 'circle' && (
+                                                        drawnPoints.length === 0
+                                                            ? 'Klik titik 1 sebagai pusat lingkaran.'
+                                                            : (drawnPoints.length === 1
+                                                                ? 'Klik titik 2 pada batas luar untuk mengunci radius.'
+                                                                : `Radius ~${drawnStats?.radiusM || 0}m (Luas ~${drawnStats?.areaHa || 0} Ha).`)
+                                                    )}
+                                                </div>
 
                                                 <div className="flex items-center gap-1.5 shrink-0">
                                                     <button
                                                         type="button"
                                                         onClick={handleUndoPoint}
                                                         disabled={drawnPoints.length === 0}
-                                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-semibold transition flex items-center gap-1 cursor-pointer border border-slate-700"
+                                                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-medium transition cursor-pointer border border-slate-700 flex items-center gap-1"
                                                         title="Hapus titik terakhir"
                                                     >
                                                         <RotateCcw className="w-3 h-3" />
@@ -2387,10 +2467,9 @@ export default function Page() {
                                                         type="button"
                                                         onClick={handleResetDrawing}
                                                         disabled={drawnPoints.length === 0}
-                                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-semibold transition flex items-center gap-1 cursor-pointer border border-slate-700"
-                                                        title="Bersihkan semua titik gambar"
+                                                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-medium transition cursor-pointer border border-slate-700 flex items-center gap-1"
+                                                        title="Hapus semua titik"
                                                     >
-                                                        <Trash2 className="w-3 h-3" />
                                                         <span>Reset</span>
                                                     </button>
                                                     <button
@@ -2401,18 +2480,18 @@ export default function Page() {
                                                             (drawShape === 'line' && drawnPoints.length < 2) ||
                                                             (drawShape === 'circle' && drawnPoints.length < 2)
                                                         }
-                                                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-bold shadow-xs transition flex items-center gap-1 cursor-pointer"
+                                                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 shadow-xs"
                                                     >
                                                         <Check className="w-3.5 h-3.5" />
-                                                        <span>Selesai & Simpan</span>
+                                                        <span>Simpan Zona</span>
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={handleCancelDrawing}
-                                                        className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
-                                                        title="Batal mode tarik zona"
+                                                        className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                                                        title="Batal"
                                                     >
-                                                        <X className="w-4 h-4" />
+                                                        <X className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -3739,54 +3818,63 @@ export default function Page() {
                 </div>
                 </div>
 
-                {/* ── MODAL: TAMBAH GEOFENCE SESUAI KETENTUAN SLIDE 26 ── */}
+                {/* ── MODAL: KONFIGURASI GEOFENCE & PARAMETER ZONA ── */}
                 {showGeofenceModal && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-5 border border-slate-200 text-slate-900 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
                                 <div>
                                     <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                                        <LandPlot className="w-4 h-4 text-blue-600" /> Konfigurasi Geofence Tambang
+                                        <LandPlot className="w-4 h-4 text-blue-600" /> Konfigurasi Geofence & Parameter Zona
                                     </h4>
-                                    <p className="text-[11px] text-slate-500">Penetapan batas perimeter virtual operasional tambang (Slide 26)</p>
+                                    <p className="text-[11px] text-slate-500">Penetapan batas perimeter virtual dan parameter operasional tambang</p>
                                 </div>
-                                <button onClick={() => setShowGeofenceModal(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer p-1">
+                                <button onClick={() => setShowGeofenceModal(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer p-1 rounded-md hover:bg-slate-100 transition">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
-                            <form onSubmit={handleCreateGeofence} className="space-y-3">
-                                {/* Banner Status Tarik Zona Manual */}
+                            <form onSubmit={handleCreateGeofence} className="space-y-3.5">
+                                {/* Ringkasan Hasil Digitasi Perimeter */}
                                 {newGeofence.coordinates_json && (
-                                    <div className="bg-amber-50 border border-amber-300 rounded-xl p-2.5 flex items-center justify-between text-xs shadow-2xs">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-[11px]">
+                                                <LandPlot className="w-3.5 h-3.5 text-blue-600" />
+                                                Hasil Digitasi Perimeter
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-medium text-[10px] uppercase font-mono">
+                                                {newGeofence.geometry_type}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/80 text-[11px] text-slate-600">
                                             <div>
-                                                <p className="font-bold text-amber-950 text-[11px] flex items-center gap-1">
-                                                    <LandPlot className="w-3.5 h-3.5 text-amber-600" />
-                                                    Titik Ditarik Manual dari Citra Satelit Google Earth
-                                                </p>
-                                                <p className="text-[10px] text-amber-800">
-                                                    Geometri: <span className="font-bold uppercase font-mono">{newGeofence.geometry_type}</span> • Pusat: [{newGeofence.latitude}, {newGeofence.longitude}]
-                                                </p>
+                                                <span className="text-slate-400">Pusat: </span>
+                                                <span className="font-mono text-slate-800">[{newGeofence.latitude}, {newGeofence.longitude}]</span>
+                                            </div>
+                                            <div className="text-right">
+                                                {newGeofence.geometry_type === 'polygon' && drawnStats?.areaHa ? (
+                                                    <span>Luas: <strong className="text-slate-800">{drawnStats.areaHa} Ha</strong> • {drawnStats.perimeterM}m keliling</span>
+                                                ) : newGeofence.geometry_type === 'line' && drawnStats?.lengthM ? (
+                                                    <span>Panjang: <strong className="text-slate-800">{drawnStats.lengthM}m</strong></span>
+                                                ) : (
+                                                    <span>Radius: <strong className="text-slate-800">{newGeofence.radius}m</strong></span>
+                                                )}
                                             </div>
                                         </div>
-                                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-mono text-[10px] font-bold border border-amber-300 shrink-0">
-                                            {newGeofence.radius}m Radius
-                                        </span>
                                     </div>
                                 )}
 
-                                {/* 1. NAMA (Field: Nama) */}
+                                {/* 1. NAMA GEOFENCE */}
                                 <div>
                                     <div className="flex items-center justify-between mb-1">
-                                        <label className="text-xs font-bold text-slate-800">
+                                        <label className="text-xs font-semibold text-slate-800">
                                             Nama Geofence <span className="text-rose-500">*</span>
                                         </label>
                                         {newGeofence.name && (
                                             <button
                                                 type="button"
                                                 onClick={() => setNewGeofence({ ...newGeofence, name: '' })}
-                                                className="text-[10px] text-slate-400 hover:text-rose-600 font-semibold cursor-pointer"
+                                                className="text-[10px] text-slate-400 hover:text-rose-600 font-medium cursor-pointer"
                                             >
                                                 Bersihkan teks
                                             </button>
@@ -3794,18 +3882,65 @@ export default function Page() {
                                     </div>
                                     <input
                                         type="text"
-                                        placeholder="Contoh: PIT SELATAN (Front Loading), Workshop HPU, STA +10.200"
+                                        placeholder="Contoh: Pit Front Barat (Loading OB), Workshop BDA, KM 15 Hauling"
                                         value={newGeofence.name}
                                         onChange={e => setNewGeofence({ ...newGeofence, name: e.target.value })}
-                                        className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                        className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                         required
                                     />
                                 </div>
 
-                                {/* 2. JENIS GEOFENCE (Slide 26: Polygon, Line, Circle) */}
+                                {/* 2. KLASIFIKASI OPERASIONAL (SITE, KATEGORI, MATERIAL) */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-800 block mb-1">Site Konsesi</label>
+                                        <select
+                                            value={newGeofence.site}
+                                            onChange={e => setNewGeofence({ ...newGeofence, site: e.target.value })}
+                                            className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                            <option value="HPA">Site HPA (Berau)</option>
+                                            <option value="BDA">Site BDA (Barito)</option>
+                                            <option value="KDA">Site KDA</option>
+                                            <option value="KJA">Site KJA</option>
+                                            <option value="AMO">Site AMO</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-800 block mb-1">Kategori Zona</label>
+                                        <select
+                                            value={newGeofence.type}
+                                            onChange={e => setNewGeofence({ ...newGeofence, type: e.target.value })}
+                                            className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                            <option value="loading">Loading Point (PIT)</option>
+                                            <option value="dumping">Dumping Area (Disposal/Port)</option>
+                                            <option value="parking">Office / Workshop / Parkir</option>
+                                            <option value="road">Jalur Jalan Hauling</option>
+                                            <option value="custom">Zona Khusus / Bahaya</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-800 block mb-1">Material Utama</label>
+                                        <select
+                                            value={newGeofence.material}
+                                            onChange={e => setNewGeofence({ ...newGeofence, material: e.target.value })}
+                                            className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                            <option value="OB">OB (Overburden)</option>
+                                            <option value="COAL">Coal (Batubara)</option>
+                                            <option value="MUD">Mud (Lumpur)</option>
+                                            <option value="TOP SOIL">Top Soil</option>
+                                            <option value="LIMONIT">Limonit</option>
+                                            <option value="SAPROLIT">Saprolit</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* 3. JENIS GEOMETRI */}
                                 <div>
-                                    <label className="text-xs font-bold text-slate-800 block mb-1">
-                                        Jenis Geofence <span className="text-rose-500">*</span>
+                                    <label className="text-xs font-semibold text-slate-800 block mb-1">
+                                        Jenis Geometri Perimeter <span className="text-rose-500">*</span>
                                     </label>
                                     <select
                                         value={newGeofence.geometry_type}
@@ -3816,67 +3951,21 @@ export default function Page() {
                                             if (gType === 'line') autoType = 'road';
                                             setNewGeofence({ ...newGeofence, geometry_type: gType, type: autoType });
                                         }}
-                                        className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                        className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <option value="polygon">Polygon: Pembuatan area Office, Workshop, PIT, Dumping area, dll.</option>
-                                        <option value="line">Line: Pembuatan Jalan (Jalur Hauling / Akses Tambang)</option>
-                                        <option value="circle">Circle: Pembuatan Luas area PIT melingkar (Radius)</option>
+                                        <option value="polygon">Polygon: Batas area terbuka/tertutup (PIT, Disposal, Workshop)</option>
+                                        <option value="line">Line: Jalur koridor jalan (Jalur Hauling / Akses Tambang)</option>
+                                        <option value="circle">Circle: Lingkaran radius (Stockpile membulat / Buffer)</option>
                                     </select>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-800 block mb-1">Site Konsesi</label>
-                                        <select
-                                            value={newGeofence.site}
-                                            onChange={e => setNewGeofence({ ...newGeofence, site: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
-                                        >
-                                            <option value="HPA">HPA (Berau, Kaltim)</option>
-                                            <option value="BDA">BDA (Barito, Kalteng/Kalsel)</option>
-                                            <option value="KDA">KDA Site</option>
-                                            <option value="KJA">KJA Site</option>
-                                            <option value="AMO">AMO Site</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-800 block mb-1">Kategori Zona</label>
-                                        <select
-                                            value={newGeofence.type}
-                                            onChange={e => setNewGeofence({ ...newGeofence, type: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
-                                        >
-                                            <option value="loading">Loading Point (PIT)</option>
-                                            <option value="dumping">Dumping Area (Disposal / Port)</option>
-                                            <option value="parking">Office / Workshop / Parkir</option>
-                                            <option value="road">Jalur Jalan Hauling</option>
-                                            <option value="custom">Zona Khusus / Bahaya (Handak / WMP)</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-800 block mb-1">Material Utama</label>
-                                        <select
-                                            value={newGeofence.material}
-                                            onChange={e => setNewGeofence({ ...newGeofence, material: e.target.value })}
-                                            className="w-full text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
-                                        >
-                                            <option value="OB">OB (Overburden)</option>
-                                            <option value="COAL">Coal (Batubara)</option>
-                                            <option value="MUD">Mud (Lumpur)</option>
-                                            <option value="TOP SOIL">Top Soil (Tanah Pucuk)</option>
-                                            <option value="LIMONIT">Limonit</option>
-                                            <option value="SAPROLIT">Saprolit</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* 3. KOORDINAT : LAT, LONG (Field: Koordinat : Lat,Long) */}
+                                {/* 4. KOORDINAT PUSAT */}
                                 <div>
                                     <div className="flex items-center justify-between mb-1">
-                                        <label className="text-xs font-bold text-slate-800">
+                                        <label className="text-xs font-semibold text-slate-800">
                                             Koordinat Pusat (Lat, Long) <span className="text-rose-500">*</span>
                                         </label>
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -3888,10 +3977,10 @@ export default function Page() {
                                                         longitude: Number(lng.toFixed(6))
                                                     }));
                                                 }}
-                                                className="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-0.5 cursor-pointer"
+                                                className="text-[10px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 cursor-pointer"
                                                 title="Ambil koordinat GPS armada saat ini"
                                             >
-                                                <Crosshair className="w-3 h-3" /> GPS Unit
+                                                <Crosshair className="w-3 h-3" /> Posisi Unit
                                             </button>
                                             <span className="text-slate-300">•</span>
                                             <button
@@ -3903,173 +3992,152 @@ export default function Page() {
                                                         longitude: Number(mapCenter[1].toFixed(6))
                                                     }));
                                                 }}
-                                                className="text-[10px] text-emerald-600 hover:text-emerald-800 font-bold flex items-center gap-0.5 cursor-pointer"
+                                                className="text-[10px] text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1 cursor-pointer"
                                                 title="Ambil koordinat tengah layar peta"
                                             >
-                                                <Globe className="w-3 h-3" /> Pusat Peta
+                                                Pusat Peta
                                             </button>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <div className="relative">
-                                                <span className="absolute left-2.5 top-2 text-[10px] font-mono font-bold text-slate-400">Lat:</span>
-                                                <input
-                                                    type="number"
-                                                    step="any"
-                                                    value={newGeofence.latitude}
-                                                    onChange={e => setNewGeofence({ ...newGeofence, latitude: parseFloat(e.target.value) || 0 })}
-                                                    placeholder="2.045000"
-                                                    className="w-full text-xs p-2 pl-9 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
-                                                    required
-                                                />
-                                            </div>
+                                        <div className="relative">
+                                            <span className="absolute left-2.5 top-2 text-[10px] font-mono text-slate-400">Lat:</span>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={newGeofence.latitude}
+                                                onChange={e => setNewGeofence({ ...newGeofence, latitude: parseFloat(e.target.value) || 0 })}
+                                                placeholder="2.045000"
+                                                className="w-full text-xs p-2 pl-9 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
                                         </div>
-                                        <div>
-                                            <div className="relative">
-                                                <span className="absolute left-2.5 top-2 text-[10px] font-mono font-bold text-slate-400">Long:</span>
-                                                <input
-                                                    type="number"
-                                                    step="any"
-                                                    value={newGeofence.longitude}
-                                                    onChange={e => setNewGeofence({ ...newGeofence, longitude: parseFloat(e.target.value) || 0 })}
-                                                    placeholder="117.200000"
-                                                    className="w-full text-xs p-2 pl-11 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
-                                                    required
-                                                />
-                                            </div>
+                                        <div className="relative">
+                                            <span className="absolute left-2.5 top-2 text-[10px] font-mono text-slate-400">Long:</span>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={newGeofence.longitude}
+                                                onChange={e => setNewGeofence({ ...newGeofence, longitude: parseFloat(e.target.value) || 0 })}
+                                                placeholder="117.200000"
+                                                className="w-full text-xs p-2 pl-11 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* 4. RADIUS (Field: Radius - Terutama untuk Circle / Luas Area PIT) */}
-                                <div>
-                                    <div className="flex items-center justify-between mb-1">
-                                        <label className="text-xs font-bold text-slate-800">
-                                            Radius (Meter) {newGeofence.geometry_type === 'circle' && <span className="text-rose-500">*</span>}
-                                        </label>
-                                        <span className="text-[10px] text-slate-500 font-medium">
-                                            {newGeofence.geometry_type === 'circle' ? 'Menentukan luas jangkauan PIT' : 'Toleransi perimeter buffer'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="50000"
-                                            value={newGeofence.radius}
-                                            onChange={e => setNewGeofence({ ...newGeofence, radius: Math.max(1, Number(e.target.value)) })}
-                                            className="w-32 text-xs p-2 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
-                                            required
-                                        />
-                                        <div className="flex items-center gap-1 flex-wrap">
-                                            {[100, 250, 500, 1000, 2500, 5000].map(r => (
-                                                <button
-                                                    key={r}
-                                                    type="button"
-                                                    onClick={() => setNewGeofence({ ...newGeofence, radius: r })}
-                                                    className={`text-[10px] px-2 py-1 rounded-lg border font-bold cursor-pointer transition ${
-                                                        newGeofence.radius === r ? 'bg-blue-50 border-blue-400 text-blue-700 shadow-2xs' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                                                    }`}
-                                                >
-                                                    {r >= 1000 ? `${r/1000}km` : `${r}m`}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Poligon / Line Coordinates Field (Jika tipe Polygon atau Line) */}
-                                {(newGeofence.geometry_type === 'polygon' || newGeofence.geometry_type === 'line') && (
+                                {/* 5. DIMENSI SPESIFIK GEOMETRI */}
+                                {newGeofence.geometry_type === 'circle' ? (
                                     <div>
                                         <div className="flex items-center justify-between mb-1">
-                                            <label className="text-xs font-bold text-slate-800">
-                                                Koordinat Poligon/Jalur (JSON Array)
+                                            <label className="text-xs font-semibold text-slate-800">
+                                                Radius Lingkaran (Meter) <span className="text-rose-500">*</span>
                                             </label>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const lat = newGeofence.latitude || 2.045000;
-                                                    const lng = newGeofence.longitude || 117.200000;
-                                                    const d = 0.0015;
-                                                    const sample = newGeofence.geometry_type === 'polygon'
-                                                        ? `[[${(lat+d).toFixed(6)}, ${(lng-d).toFixed(6)}], [${(lat+d).toFixed(6)}, ${(lng+d).toFixed(6)}], [${(lat-d).toFixed(6)}, ${(lng+d).toFixed(6)}], [${(lat-d).toFixed(6)}, ${(lng-d).toFixed(6)}]]`
-                                                        : `[[${(lat-d).toFixed(6)}, ${(lng-d).toFixed(6)}], [${lat.toFixed(6)}, ${lng.toFixed(6)}], [${(lat+d).toFixed(6)}, ${(lng+d).toFixed(6)}]]`;
-                                                    setNewGeofence({ ...newGeofence, coordinates_json: sample });
-                                                }}
-                                                className="text-[10px] text-blue-600 hover:underline font-bold"
-                                            >
-                                                Isi Sampel Koordinat
-                                            </button>
+                                            <span className="text-[10px] text-slate-500">Jangkauan radial dari titik pusat</span>
                                         </div>
-                                        <textarea
-                                            rows={2}
-                                            placeholder='Contoh: [[2.0451, 117.1998], [2.0460, 117.2012], [2.0440, 117.2010]]'
-                                            value={newGeofence.coordinates_json}
-                                            onChange={e => setNewGeofence({ ...newGeofence, coordinates_json: e.target.value })}
-                                            className="w-full text-[11px] p-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                min="10"
+                                                max="5000"
+                                                value={newGeofence.radius}
+                                                onChange={e => setNewGeofence({ ...newGeofence, radius: Math.max(10, Number(e.target.value)) })}
+                                                className="w-28 text-xs p-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                            <div className="flex items-center gap-1 flex-wrap">
+                                                {[50, 100, 200, 350, 500].map(r => (
+                                                    <button
+                                                        key={r}
+                                                        type="button"
+                                                        onClick={() => setNewGeofence({ ...newGeofence, radius: r })}
+                                                        className={`text-[11px] px-2 py-1 rounded border font-medium cursor-pointer transition ${
+                                                            newGeofence.radius === r
+                                                                ? 'bg-blue-50 border-blue-400 text-blue-700 font-semibold'
+                                                                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                        }`}
+                                                    >
+                                                        {r}m
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
+                                        <div className="flex items-center justify-between text-slate-700">
+                                            <span className="font-medium">Data Verteks Perimeter</span>
+                                            <span className="text-[11px] text-slate-500 font-medium">
+                                                {drawnPoints.length || (newGeofence.coordinates_json ? (JSON.parse(newGeofence.coordinates_json) as any[]).length : 0)} titik tersimpan
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                                            Batas fisik dievaluasi secara dinamis menggunakan algoritma Ray-Casting untuk memastikan deteksi siklus ritasi armada secara presisi.
+                                        </p>
                                     </div>
                                 )}
 
-                                {/* 5. WARNA (Field: Warna) */}
+                                {/* 6. WARNA IDENTITAS ZONA */}
                                 <div>
-                                    <label className="text-xs font-bold text-slate-800 block mb-1">Warna Poligon/Zona</label>
+                                    <label className="text-xs font-semibold text-slate-800 block mb-1">Warna Identitas Peta</label>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="color"
                                             value={newGeofence.color}
                                             onChange={e => setNewGeofence({ ...newGeofence, color: e.target.value })}
-                                            className="w-8 h-8 rounded-lg border border-slate-300 p-0.5 cursor-pointer bg-white"
+                                            className="w-8 h-8 rounded border border-slate-300 p-0.5 cursor-pointer bg-white shrink-0"
                                         />
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             {[
                                                 { label: 'Hijau (PIT)', hex: '#10B981' },
                                                 { label: 'Ungu (Disposal)', hex: '#8B5CF6' },
                                                 { label: 'Hitam (ROM)', hex: '#0F172A' },
-                                                { label: 'Biru (Office)', hex: '#3B82F6' },
-                                                { label: 'Orange (Jalan)', hex: '#EA580C' },
-                                                { label: 'Merah (Hazard)', hex: '#EF4444' },
+                                                { label: 'Biru (Fasilitas)', hex: '#2563EB' },
+                                                { label: 'Oranye (Jalan)', hex: '#EA580C' },
+                                                { label: 'Merah (Bahaya)', hex: '#EF4444' },
                                             ].map(c => (
                                                 <button
                                                     key={c.hex}
                                                     type="button"
                                                     onClick={() => setNewGeofence({ ...newGeofence, color: c.hex })}
-                                                    className={`text-[11px] px-2 py-0.5 rounded border flex items-center gap-1 font-bold cursor-pointer transition ${
-                                                        newGeofence.color === c.hex ? 'border-slate-800 ring-2 ring-slate-400 bg-slate-50' : 'border-slate-200 hover:bg-slate-50'
+                                                    className={`text-[11px] px-2 py-1 rounded border flex items-center gap-1.5 cursor-pointer transition ${
+                                                        newGeofence.color === c.hex
+                                                            ? 'border-slate-800 bg-slate-100 font-semibold'
+                                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                                                     }`}
                                                 >
-                                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.hex }}></span>
-                                                    <span className="text-slate-800">{c.label}</span>
+                                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.hex }}></span>
+                                                    <span>{c.label}</span>
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* 6. ALAMAT (Field: Alamat) */}
+                                {/* 7. KETERANGAN / LOKASI BLOK */}
                                 <div>
-                                    <label className="text-xs font-bold text-slate-800 block mb-1">Alamat / Lokasi Tambang</label>
+                                    <label className="text-xs font-semibold text-slate-800 block mb-1">Keterangan / Lokasi Blok</label>
                                     <input
                                         type="text"
-                                        placeholder="Contoh: Pit Front Barat Blok 4, KM 15 Hauling Road HPA"
+                                        placeholder="Contoh: Blok Barat Pit 3, dekat Sump Utama"
                                         value={newGeofence.address}
                                         onChange={e => setNewGeofence({ ...newGeofence, address: e.target.value })}
-                                        className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                                        className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     />
                                 </div>
 
-                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                                     <button
                                         type="button"
                                         onClick={() => setShowGeofenceModal(false)}
-                                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer transition"
                                     >
                                         Batal
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs cursor-pointer"
+                                        className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-xs cursor-pointer transition"
                                     >
                                         Simpan Geofence
                                     </button>
