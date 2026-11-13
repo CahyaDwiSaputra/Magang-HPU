@@ -6,41 +6,43 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 
-def create_dense_deck():
+def build_presentation():
     prs = Presentation()
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
     blank_layout = prs.slide_layouts[6]
 
-    # Palet Warna Modern & Industrial Tambang
+    # Palet Warna Korporat & K3 Tambang PT HPU
     C_NAVY_DARK   = RGBColor(15, 23, 42)      # #0F172A
-    C_NAVY_CARD   = RGBColor(30, 41, 59)      # #1E293B
-    C_BLUE_MAIN   = RGBColor(37, 99, 235)     # #2563EB
+    C_NAVY_CARD   = RGBColor(24, 34, 53)      # #182235
+    C_NAVY_LIGHT  = RGBColor(30, 41, 59)      # #1E293B
+    C_BLUE_MAIN   = RGBColor(29, 78, 216)     # #1D4ED8
     C_BLUE_LIGHT  = RGBColor(239, 246, 255)   # #EFF6FF
-    C_BLUE_BORDER = RGBColor(191, 219, 254)   # #BFDBFE
+    C_BLUE_BORDER = RGBColor(147, 197, 253)   # #93C5FD
     C_AMBER       = RGBColor(217, 119, 6)     # #D97706
     C_AMBER_LIGHT = RGBColor(254, 243, 199)   # #FEF3C7
     C_ORANGE_MINE = RGBColor(234, 88, 12)     # #EA580C
-    C_GREEN_OK    = RGBColor(16, 185, 129)    # #10B981
-    C_GREEN_LIGHT = RGBColor(236, 253, 245)   # #ECFDF5
+    C_GREEN_OK    = RGBColor(5, 150, 105)     # #059669
+    C_GREEN_LIGHT = RGBColor(209, 250, 229)   # #D1FAE5
+    C_PURPLE      = RGBColor(147, 51, 234)    # #9333EA
+    C_PURPLE_BG   = RGBColor(243, 232, 255)   # #F3E8FF
     C_TEXT_DARK   = RGBColor(15, 23, 42)      # #0F172A
     C_TEXT_SLATE  = RGBColor(51, 65, 85)      # #334155
     C_TEXT_MUTED  = RGBColor(100, 116, 139)   # #64748B
-    C_BORDER      = RGBColor(226, 232, 240)   # #E2E8F0
+    C_BORDER      = RGBColor(203, 213, 225)   # #CBD5E1
     C_BG_CARD     = RGBColor(248, 250, 252)   # #F8FAFC
     C_WHITE       = RGBColor(255, 255, 255)
 
-    def add_top_bar(slide, title_text, category_text, page_num):
-        # Header banner
-        header_box = slide.shapes.add_textbox(Inches(0.6), Inches(0.35), Inches(12.133), Inches(0.85))
-        tf = header_box.text_frame
+    def add_slide_header(slide, title_text, category_text, page_num):
+        h_box = slide.shapes.add_textbox(Inches(0.6), Inches(0.32), Inches(10.5), Inches(0.92))
+        tf = h_box.text_frame
         tf.word_wrap = True
         tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = Inches(0)
 
         p0 = tf.paragraphs[0]
         p0.text = f"PT HARMONI PANCA UTAMA • SMART FLEET TELEMATICS | {category_text.upper()}"
         p0.font.name = "Arial"
-        p0.font.size = Pt(8.5)
+        p0.font.size = Pt(10.5)
         p0.font.bold = True
         p0.font.color.rgb = C_BLUE_MAIN
         p0.space_after = Pt(2)
@@ -48,42 +50,40 @@ def create_dense_deck():
         p1 = tf.add_paragraph()
         p1.text = title_text
         p1.font.name = "Arial"
-        p1.font.size = Pt(18)
+        p1.font.size = Pt(22)
         p1.font.bold = True
         p1.font.color.rgb = C_NAVY_DARK
 
-        # Page badge di kanan atas
-        badge = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(11.3), Inches(0.4), Inches(1.4), Inches(0.32))
+        badge = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(11.3), Inches(0.40), Inches(1.4), Inches(0.42))
         badge.fill.solid()
         badge.fill.fore_color.rgb = C_BLUE_LIGHT
         badge.line.color.rgb = C_BLUE_BORDER
-        badge.line.width = Pt(1)
+        badge.line.width = Pt(1.5)
         tf_b = badge.text_frame
         tf_b.vertical_anchor = MSO_ANCHOR.MIDDLE
         p_b = tf_b.paragraphs[0]
         p_b.text = f"SLIDE {page_num} / 5"
         p_b.font.name = "Arial"
-        p_b.font.size = Pt(8.5)
+        p_b.font.size = Pt(10)
         p_b.font.bold = True
         p_b.font.color.rgb = C_BLUE_MAIN
         p_b.alignment = PP_ALIGN.CENTER
 
-        # Separator line
-        line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.6), Inches(1.25), Inches(12.133), Inches(0.015))
+        line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.6), Inches(1.3), Inches(12.133), Inches(0.02))
         line.fill.solid()
         line.fill.fore_color.rgb = C_BORDER
         line.line.color.rgb = C_BORDER
 
-    def add_card(slide, left, top, width, height, bg_color=C_WHITE, border_color=C_BORDER):
-        card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
-        card.fill.solid()
-        card.fill.fore_color.rgb = bg_color
-        card.line.color.rgb = border_color
-        card.line.width = Pt(1)
-        return card
+    def add_card_shape(slide, left, top, width, height, bg_color=C_WHITE, border_color=C_BORDER, border_width=1.5):
+        c = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
+        c.fill.solid()
+        c.fill.fore_color.rgb = bg_color
+        c.line.color.rgb = border_color
+        c.line.width = Pt(border_width)
+        return c
 
     # ==========================================================
-    # SLIDE 1: JUDUL & RINGKASAN EKSEKUTIF PROYEK (DENSE HERO)
+    # SLIDE 1: HERO & DASHBOARD MILESTONES (EXECUTIVE BALANCED)
     # ==========================================================
     s1 = prs.slides.add_slide(blank_layout)
     bg1 = s1.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(7.5))
@@ -91,384 +91,639 @@ def create_dense_deck():
     bg1.fill.fore_color.rgb = C_NAVY_DARK
     bg1.line.fill.background()
 
-    # Top Brand Pill
-    pill = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(0.6), Inches(3.6), Inches(0.35))
-    pill.fill.solid()
-    pill.fill.fore_color.rgb = C_NAVY_CARD
-    pill.line.color.rgb = C_BLUE_MAIN
-    tf_p = pill.text_frame
-    tf_p.vertical_anchor = MSO_ANCHOR.MIDDLE
-    p_p = tf_p.paragraphs[0]
-    p_p.text = "SMART FLEET MANAGEMENT SYSTEM • PT HPU"
-    p_p.font.name = "Arial"
-    p_p.font.size = Pt(8.5)
-    p_p.font.bold = True
-    p_p.font.color.rgb = RGBColor(147, 197, 253)
-    p_p.alignment = PP_ALIGN.CENTER
+    # Left Pill
+    p_badge = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(0.55), Inches(4.5), Inches(0.42))
+    p_badge.fill.solid()
+    p_badge.fill.fore_color.rgb = C_NAVY_LIGHT
+    p_badge.line.color.rgb = C_BLUE_MAIN
+    p_badge.line.width = Pt(1.5)
+    tf_pb = p_badge.text_frame
+    tf_pb.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf_pb.paragraphs[0]
+    p.text = "SMART FLEET SYSTEM • PT HARMONI PANCA UTAMA"
+    p.font.name = "Arial"
+    p.font.size = Pt(10)
+    p.font.bold = True
+    p.font.color.rgb = RGBColor(147, 197, 253)
+    p.alignment = PP_ALIGN.CENTER
 
-    # Main Hero Title
-    t_box = s1.shapes.add_textbox(Inches(0.8), Inches(1.05), Inches(11.733), Inches(1.5))
-    tf_hero = t_box.text_frame
-    tf_hero.word_wrap = True
-    tf_hero.margin_left = tf_hero.margin_top = tf_hero.margin_right = tf_hero.margin_bottom = Inches(0)
+    # Right Executive Status Box
+    r_badge = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.8), Inches(0.55), Inches(4.733), Inches(0.42))
+    r_badge.fill.solid()
+    r_badge.fill.fore_color.rgb = C_NAVY_LIGHT
+    r_badge.line.color.rgb = C_GREEN_OK
+    r_badge.line.width = Pt(1.5)
+    tf_rb = r_badge.text_frame
+    tf_rb.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf_rb.paragraphs[0]
+    p.text = "STATUS: DEPLOYED & TESTED • HOST 10.10.0.54"
+    p.font.name = "Arial"
+    p.font.size = Pt(10)
+    p.font.bold = True
+    p.font.color.rgb = RGBColor(110, 231, 183)
+    p.alignment = PP_ALIGN.CENTER
+
+    # Title & Subtitle Box
+    t_box = s1.shapes.add_textbox(Inches(0.8), Inches(1.1), Inches(11.733), Inches(1.3))
+    tf_t = t_box.text_frame
+    tf_t.word_wrap = True
+    tf_t.margin_left = tf_t.margin_top = tf_t.margin_right = tf_t.margin_bottom = Inches(0)
     
-    p = tf_hero.paragraphs[0]
+    p = tf_t.paragraphs[0]
     p.text = "Laporan Perkembangan Teknis: Realisasi 8 Butir Revisi Dashcam & Geofencing"
     p.font.name = "Arial"
-    p.font.size = Pt(23)
+    p.font.size = Pt(25)
     p.font.bold = True
     p.font.color.rgb = C_WHITE
     p.space_after = Pt(4)
 
-    p = tf_hero.add_paragraph()
-    p.text = "Implementasi Arsitektur Multi-Site (HPA Berau & BDA Barito 45.2 KM), Otomasi Siklus Ritasi Sensor PTO, Ray-Casting Spasial, dan Deployment Server 10.10.0.54"
+    p = tf_t.add_paragraph()
+    p.text = "Implementasi Sistem Telematika Multi-Site (HPA Berau & BDA Barito 45.2 KM), Otomasi Siklus Ritasi PTO, dan Deployment Server 10.10.0.54"
     p.font.name = "Arial"
-    p.font.size = Pt(11)
+    p.font.size = Pt(13)
     p.font.color.rgb = RGBColor(203, 213, 225)
 
-    # 4 Key Stat Cards
-    stats = [
-        ("1.445", "Total Master Geofence", "530 HPA + 915 BDA di PostgreSQL 16"),
-        ("45.2 KM", "Koridor Hauling BDA", "1.081 Koordinat Kontinu + 905 Patok STA"),
-        ("100% LIVE", "Server Development", "Host 10.10.0.54 Ubuntu Docker & Nginx"),
-        ("8 DARI 8", "Status Butir Revisi", "Semua Poin Selesai, Teruji & Terverifikasi")
+    # 4 Large Stat Cards
+    metrics = [
+        ("1.445", "Master Geofence", "530 Site HPA Berau + 915 Site BDA Barito aktif di database PostgreSQL 16.", C_BLUE_MAIN),
+        ("45.2 KM", "Koridor Rute BDA", "1.081 titik koordinat hauling kontinu + 905 patok STA checkpoint tiap 50 meter.", C_AMBER),
+        ("100% LIVE", "Server Development", "Host 10.10.0.54 beroperasi penuh via Docker, Nginx Proxy, dan database internal.", C_GREEN_OK),
+        ("8 DARI 8", "Status Revisi Tuntas", "Seluruh 8 butir revisi selesai dikerjakan, diuji coba, dan terverifikasi di lapangan.", C_PURPLE)
     ]
-    for idx, (val, lbl, sub) in enumerate(stats):
+    for idx, (val, label, desc, col) in enumerate(metrics):
         x = 0.8 + idx * (2.8 + 0.177)
-        c = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(2.7), Inches(2.8), Inches(1.15))
+        c = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(2.55), Inches(2.8), Inches(1.7))
         c.fill.solid()
         c.fill.fore_color.rgb = C_NAVY_CARD
-        c.line.color.rgb = RGBColor(51, 65, 85)
+        c.line.color.rgb = RGBColor(71, 85, 105)
+        c.line.width = Pt(1.5)
         tf_c = c.text_frame
         tf_c.word_wrap = True
-        tf_c.margin_left = Inches(0.15)
-        tf_c.margin_top = Inches(0.12)
-        
+        tf_c.margin_left = tf_c.margin_right = Inches(0.18)
+        tf_c.margin_top = Inches(0.16)
+
         p = tf_c.paragraphs[0]
         p.text = val
         p.font.name = "Arial"
-        p.font.size = Pt(18)
+        p.font.size = Pt(30)
         p.font.bold = True
-        p.font.color.rgb = C_AMBER if idx == 1 else (C_GREEN_OK if idx >= 2 else C_BLUE_MAIN)
-        
+        p.font.color.rgb = col
+        p.space_after = Pt(2)
+
         p = tf_c.add_paragraph()
-        p.text = lbl
+        p.text = label
         p.font.name = "Arial"
-        p.font.size = Pt(9.5)
+        p.font.size = Pt(12)
         p.font.bold = True
         p.font.color.rgb = C_WHITE
-        
-        p = tf_c.add_paragraph()
-        p.text = sub
-        p.font.name = "Arial"
-        p.font.size = Pt(8)
-        p.font.color.rgb = RGBColor(148, 163, 184)
-
-    # Executive Overview Table / Matrix on Bottom Half
-    add_card(s1, 0.8, 4.05, 11.733, 3.0, C_NAVY_CARD, RGBColor(51, 65, 85))
-    t_mat = s1.shapes.add_textbox(Inches(1.0), Inches(4.2), Inches(11.333), Inches(2.7))
-    tf_mat = t_mat.text_frame
-    tf_mat.word_wrap = True
-    tf_mat.margin_left = tf_mat.margin_top = tf_mat.margin_right = tf_mat.margin_bottom = Inches(0)
-
-    p = tf_mat.paragraphs[0]
-    p.text = "RINGKASAN STATUS EKSEKUSI 8 BUTIR REVISI OPERASIONAL:"
-    p.font.name = "Arial"
-    p.font.size = Pt(10)
-    p.font.bold = True
-    p.font.color.rgb = C_AMBER
-    p.space_after = Pt(6)
-
-    revisi_rows = [
-        ("Poin 1 & 2: Kontrol Livecam & Layout Peta", "Livecam default OFF hemat kuota 4G; Layout kanvas satelit Google Earth lebar penuh 100% di posisi paling atas."),
-        ("Poin 3 & 4: Jadwal Shift & Batas Kecepatan", "Integrasi tabel msshift (Shift 1 & 2), sinkronisasi kontak ACC GPS riil, konfigurasi SITE_SPEED_LIMITS (40 s.d. 60 km/j)."),
-        ("Poin 5 & 6: Intercom Audio & Siklus Ritasi", "Tombol On/Off Mic kabin driver, otomasi 5 tahap ritasi via konfirmasi sensor hidrolik PTO, algoritma Ray-Casting spasial."),
-        ("Poin 7 & 8: Digitasi Zona & Deploy Server", "HUD Tarik Zona Google Earth hitung Luas Ha & Keliling meter instan, tuntas beroperasi di server 10.10.0.54 Nginx proxy.")
-    ]
-    for title, desc in revisi_rows:
-        p = tf_mat.add_paragraph()
-        p.text = f"• {title} -> {desc}"
-        p.font.name = "Arial"
-        p.font.size = Pt(9.5)
-        p.font.color.rgb = RGBColor(226, 232, 240)
         p.space_after = Pt(4)
 
-    p = tf_mat.add_paragraph()
-    p.text = "Verifikasi: Tim Magang HPU x UNS (Cahya Dwi Saputra) | Database: PostgreSQL 16 'hpuxuns' | Tanggal: November 2026"
-    p.font.name = "Arial"
-    p.font.size = Pt(8.5)
-    p.font.italic = True
-    p.font.color.rgb = RGBColor(148, 163, 184)
-
-    # ==========================================================
-    # SLIDE 2: REVISI 1 & 2 (LIVECAM ON/OFF & MAP HIGHLIGHT FULL-WIDTH)
-    # ==========================================================
-    s2 = prs.slides.add_slide(blank_layout)
-    add_top_bar(s2, "Revisi 1 & 2: Optimalisasi Kontrol Livecam & Peta Utama Lebar Penuh", "CCTV & DISPATCH MAPPING", 2)
-
-    # Kolom Kiri: Poin 1 (Livecam On/Off)
-    add_card(s2, 0.6, 1.45, 5.9, 5.6, C_WHITE, C_BORDER)
-    t_c1 = s2.shapes.add_textbox(Inches(0.85), Inches(1.65), Inches(5.4), Inches(5.2))
-    tf_c1 = t_c1.text_frame
-    tf_c1.word_wrap = True
-    tf_c1.margin_left = tf_c1.margin_top = tf_c1.margin_right = tf_c1.margin_bottom = Inches(0)
-
-    p = tf_c1.paragraphs[0]
-    p.text = "POIN 1: KONTROL SELEKTIF ON/OFF LIVECAM"
-    p.font.name = "Arial"
-    p.font.size = Pt(12)
-    p.font.bold = True
-    p.font.color.rgb = C_BLUE_MAIN
-    p.space_after = Pt(6)
-
-    bullets_p1 = [
-        ("Latar Belakang Operasional:", "Koneksi 4G seluler di area tambang memiliki keterbatasan bandwidth. Memutar belasan video CCTV secara otomatis dan bersamaan menyebabkan pemborosan kuota dan kemacetan gateway transmisi data."),
-        ("Solusi State Default OFF:", "Variabel `isLivecamActive` diset default `false`. Iframe video FLV dan koneksi WebSocket CMSV6 tidak aktif sebelum dispatcher menekan tombol pengaktifan."),
-        ("Tombol Kontrol Ergonomis:", "Disediakan tombol toggle 'Nyalakan Livecam' hijau dengan indikator status jelas: 'LIVECAM STANDBY (OFF)'. Dispatcher bebas memilih unit yang perlu diinspeksi."),
-        ("Penanganan Unit Standby:", "Jika mesin unit mati di pit, sistem menampilkan notifikasi ramah 'Engine Standby di Pit' tanpa memicu crash atau loop error pada library flv.js."),
-        ("Hasil Terukur:", "Mereduksi konsumsi kuota data kartu SIM MDVR armada hingga 80% pada operasional pemantauan normal.")
-    ]
-    for h, b in bullets_p1:
-        p = tf_c1.add_paragraph()
-        p.text = f"• {h} {b}"
+        p = tf_c.add_paragraph()
+        p.text = desc
         p.font.name = "Arial"
-        p.font.size = Pt(9.5)
-        p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(5)
+        p.font.size = Pt(10)
+        p.font.color.rgb = RGBColor(148, 163, 184)
 
-    # Kolom Kanan: Poin 2 (Map Full-Width & Satelit)
-    add_card(s2, 6.833, 1.45, 5.9, 5.6, C_WHITE, C_BORDER)
-    t_c2 = s2.shapes.add_textbox(Inches(7.083), Inches(1.65), Inches(5.4), Inches(5.2))
-    tf_c2 = t_c2.text_frame
-    tf_c2.word_wrap = True
-    tf_c2.margin_left = tf_c2.margin_top = tf_c2.margin_right = tf_c2.margin_bottom = Inches(0)
+    # Bottom Milestone Card
+    add_card_shape(s1, 0.8, 4.45, 11.733, 2.55, C_NAVY_CARD, RGBColor(71, 85, 105), 1.5)
+    t_sum = s1.shapes.add_textbox(Inches(1.05), Inches(4.6), Inches(11.233), Inches(2.25))
+    tf_s = t_sum.text_frame
+    tf_s.word_wrap = True
+    tf_s.margin_left = tf_s.margin_top = tf_s.margin_right = tf_s.margin_bottom = Inches(0)
 
-    p = tf_c2.paragraphs[0]
-    p.text = "POIN 2: HIGHLIGHT PETA UTAMA LEBAR PENUH (CORE DISPATCH)"
+    p = tf_s.paragraphs[0]
+    p.text = "CAKUPAN REALISASI 8 BUTIR REVISI OPERASIONAL TAMBANG:"
     p.font.name = "Arial"
-    p.font.size = Pt(12)
+    p.font.size = Pt(12.5)
     p.font.bold = True
     p.font.color.rgb = C_AMBER
-    p.space_after = Pt(6)
+    p.space_after = Pt(7)
 
-    bullets_p2 = [
-        ("Reposisi Tata Letak Utama:", "Kanvas peta satelit dijadikan pusat kendali dispatcher (Core Dispatch View), ditarik membentang 100% horizontal di bagian atas layar dengan tinggi dasar 400px (expandable ke 580px)."),
-        ("Modul CCTV di Bawah Peta:", "Pemutar video dipindahkan ke baris bawahnya sehingga pandangan operator fokus pada pergerakan rute armada dan perimeter geofence."),
-        ("Citra Satelit Google Earth:", "Mengintegrasikan tile satelit Google Earth Hybrid resolusi tinggi, menampilkan visual kontur pit, jalan hauling berdebu, kolam pengendapan limbah WMP, dan stockpile."),
-        ("Navigasi Auto-Pan Cerdas:", "Kamera peta otomatis meluncur ke lokasi armada terpilih: unit BDA langsung terbang ke Barito (Kalteng/Kalsel), unit HPA langsung mengunci ke Berau (Kaltim)."),
-        ("Toolbar Pengalih Site:", "Tombol navigasi cepat satu klik: [Semua Site], [HPA (Berau)], dan [BDA (Barito)] untuk efisiensi navigasi dispatcher.")
+    milestones = [
+        ("Poin 1 & 2 (Visual & Navigasi):", "Kontrol Livecam selektif hemat kuota 4G (Default OFF) dan layout peta satelit Google Earth lebar penuh 100% Core Dispatch."),
+        ("Poin 3 & 4 (Jadwal & Batasan):", "Integrasi jadwal shift (Shift 1 & 2), evaluasi starter mesin murni dari kontak ACC GPS, serta speed limits site (40 - 60 km/j)."),
+        ("Poin 5 & 6 (Safety & Siklus Ritasi):", "Intercom audio dua arah kabin pengemudi, validasi sah ritasi via sensor hidrolik PTO, dan algoritma Ray-Casting spasial."),
+        ("Poin 7 & 8 (Digitasi & Kesiapan Rilis):", "HUD Tarik Zona Google Earth hitung Luas Ha & Keliling meter instan, tuntas beroperasi live di server development 10.10.0.54.")
     ]
-    for h, b in bullets_p2:
-        p = tf_c2.add_paragraph()
-        p.text = f"• {h} {b}"
+    for tag, d in milestones:
+        p = tf_s.add_paragraph()
+        p.text = f"{tag} {d}"
         p.font.name = "Arial"
-        p.font.size = Pt(9.5)
+        p.font.size = Pt(11.5)
+        p.font.color.rgb = RGBColor(226, 232, 240)
+        p.space_after = Pt(6)
+
+    # ==========================================================
+    # SLIDE 2: REVISI 1 & 2 (LIVECAM ON/OFF & MAP FULL-WIDTH)
+    # ==========================================================
+    s2 = prs.slides.add_slide(blank_layout)
+    add_slide_header(s2, "Revisi 1 & 2: Kontrol Selektif Livecam & Peta Utama Lebar Penuh", "CCTV & DISPATCH MAPPING", 2)
+
+    # Left Card: Revisi 1
+    add_card_shape(s2, 0.6, 1.45, 5.9, 5.65, C_WHITE, C_BORDER, 2)
+    acc1 = s2.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.6), Inches(1.45), Inches(5.9), Inches(0.55))
+    acc1.fill.solid()
+    acc1.fill.fore_color.rgb = C_BLUE_MAIN
+    acc1.line.fill.background()
+    p = acc1.text_frame.paragraphs[0]
+    p.text = "REVISI 1: KONTROL SELEKTIF ON/OFF LIVECAM"
+    p.font.name = "Arial"
+    p.font.size = Pt(13)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc1.text_frame.margin_left = Inches(0.25)
+    acc1.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t1 = s2.shapes.add_textbox(Inches(0.85), Inches(2.15), Inches(5.4), Inches(2.95))
+    tf1 = t1.text_frame
+    tf1.word_wrap = True
+    tf1.margin_left = tf1.margin_top = tf1.margin_right = tf1.margin_bottom = Inches(0)
+
+    r1_points = [
+        ("Kebutuhan Operasional:", "Koneksi 4G seluler di cekungan tambang terbatas. Streaming serentak puluhan armada memboroskan kuota data seluler."),
+        ("Solusi Default OFF:", "Variabel livecam diset default `OFF`. Stream video FLV & WebSocket CMSV6 tidak aktif sebelum tombol diklik dispatcher."),
+        ("Tombol Saklar Hijau:", "Disediakan tombol 'Nyalakan Livecam' dengan indikator 'LIVECAM STANDBY (OFF)' untuk inspeksi unit selektif."),
+        ("Proteksi Mesin Standby:", "Jika mesin unit mati di pit, player menampilkan kartu 'Engine Standby di Pit' tanpa memicu error crash berulang."),
+        ("Optimalisasi Gateway:", "Mencegah spam re-login otomatis dan mengamankan stream video saat koneksi sinyal tambang berfluktuasi.")
+    ]
+    for idx, (head, body) in enumerate(r1_points):
+        p = tf1.paragraphs[0] if idx == 0 else tf1.add_paragraph()
+        p.text = f"{head} {body}"
+        p.font.name = "Arial"
+        p.font.size = Pt(12)
         p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(5)
+        p.space_after = Pt(7)
+
+    # Highlight Feature Box at the bottom of Card 1 (top 5.25 to 6.85)
+    box1 = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.85), Inches(5.25), Inches(5.4), Inches(1.6))
+    box1.fill.solid()
+    box1.fill.fore_color.rgb = C_GREEN_LIGHT
+    box1.line.color.rgb = C_GREEN_OK
+    box1.line.width = Pt(1.5)
+    tf_b1 = box1.text_frame
+    tf_b1.margin_left = tf_b1.margin_right = Inches(0.2)
+    tf_b1.margin_top = Inches(0.15)
+    p = tf_b1.paragraphs[0]
+    p.text = "HASIL TERUKUR & EFISIENSI BANDWIDTH"
+    p.font.name = "Arial"
+    p.font.size = Pt(12.5)
+    p.font.bold = True
+    p.font.color.rgb = C_GREEN_OK
+    p.space_after = Pt(5)
+
+    p = tf_b1.add_paragraph()
+    p.text = "• Hemat Kuota 80%: Trafik data kartu SIM MDVR hanya aktif saat unit dibuka oleh operator."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
+    p.space_after = Pt(4)
+
+    p = tf_b1.add_paragraph()
+    p.text = "• Zero Crash Error: Penanganan lifecycle player aman, tanpa kegagalan rendering FLV."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
+
+    # Right Card: Revisi 2
+    add_card_shape(s2, 6.833, 1.45, 5.9, 5.65, C_WHITE, C_BORDER, 2)
+    acc2 = s2.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.833), Inches(1.45), Inches(5.9), Inches(0.55))
+    acc2.fill.solid()
+    acc2.fill.fore_color.rgb = C_AMBER
+    acc2.line.fill.background()
+    p = acc2.text_frame.paragraphs[0]
+    p.text = "REVISI 2: PETA UTAMA LEBAR PENUH (CORE DISPATCH)"
+    p.font.name = "Arial"
+    p.font.size = Pt(13)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc2.text_frame.margin_left = Inches(0.25)
+    acc2.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t2 = s2.shapes.add_textbox(Inches(7.083), Inches(2.15), Inches(5.4), Inches(2.95))
+    tf2 = t2.text_frame
+    tf2.word_wrap = True
+    tf2.margin_left = tf2.margin_top = tf2.margin_right = tf2.margin_bottom = Inches(0)
+
+    r2_points = [
+        ("Layout Lebar Penuh 100%:", "Peta satelit dijadikan pusat kendali utama (Core Dispatch View), membentang 100% horizontal di urutan paling atas."),
+        ("Modul CCTV di Bawah Peta:", "Pemutar video diletakkan di bawah peta agar perhatian dispatcher terfokus pada pergerakan rute hauling dan batas zona."),
+        ("Citra Satelit Google Earth:", "Tile satelit resolusi tinggi menampilkan galian pit, jalan hauling, stockpile batubara, dan kolam pengendapan lumpur (WMP)."),
+        ("Navigasi Auto-Pan Cerdas:", "Kamera peta otomatis meluncur ke lokasi armada: armada BDA langsung ke Barito, armada HPA langsung ke Berau."),
+        ("Visualisasi Rute Tambang:", "Menampilkan polyline rute hauling kontinu Site HPA (21 & 28.3 KM) dan Site BDA (45.2 KM) dengan penanda STA.")
+    ]
+    for idx, (head, body) in enumerate(r2_points):
+        p = tf2.paragraphs[0] if idx == 0 else tf2.add_paragraph()
+        p.text = f"{head} {body}"
+        p.font.name = "Arial"
+        p.font.size = Pt(12)
+        p.font.color.rgb = C_TEXT_SLATE
+        p.space_after = Pt(7)
+
+    # Highlight Feature Box at the bottom of Card 2 (top 5.25 to 6.85)
+    box2 = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.083), Inches(5.25), Inches(5.4), Inches(1.6))
+    box2.fill.solid()
+    box2.fill.fore_color.rgb = C_BLUE_LIGHT
+    box2.line.color.rgb = C_BLUE_MAIN
+    box2.line.width = Pt(1.5)
+    tf_b2 = box2.text_frame
+    tf_b2.margin_left = tf_b2.margin_right = Inches(0.2)
+    tf_b2.margin_top = Inches(0.15)
+    p = tf_b2.paragraphs[0]
+    p.text = "NAVIGASI CEPAT & INTERAKTIVITAS PETA"
+    p.font.name = "Arial"
+    p.font.size = Pt(12.5)
+    p.font.bold = True
+    p.font.color.rgb = C_BLUE_MAIN
+    p.space_after = Pt(5)
+
+    p = tf_b2.add_paragraph()
+    p.text = "• Toolbar Multi-Site: Tombol cepat satu klik [Semua Site], [HPA Berau], dan [BDA Barito]."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
+    p.space_after = Pt(4)
+
+    p = tf_b2.add_paragraph()
+    p.text = "• Kanvas Adaptif: Tinggi default 400px dapat diperlebar ke 580px untuk pemantauan rute luas."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
 
     # ==========================================================
     # SLIDE 3: REVISI 3, 4 & 5 (SHIFT, SPEED LIMITS & INTERCOM)
     # ==========================================================
     s3 = prs.slides.add_slide(blank_layout)
-    add_top_bar(s3, "Revisi 3, 4 & 5: Manajemen Shift, Batas Kecepatan Site & Intercom Kabin", "OPERATIONAL SAFETY & DISPATCH", 3)
+    add_slide_header(s3, "Revisi 3, 4 & 5: Manajemen Shift, Batas Kecepatan Site & Intercom Kabin", "OPERATIONAL SAFETY & DISPATCH", 3)
 
-    # 3 Kolom
     col_w = 3.8
     gap = 0.366
 
-    # Kolom 1: Poin 3 (Shift)
-    add_card(s3, 0.6, 1.45, col_w, 5.6)
-    t = s3.shapes.add_textbox(Inches(0.8), Inches(1.65), Inches(3.4), Inches(5.2))
+    # Kolom 1: Poin 3
+    x1 = 0.6
+    add_card_shape(s3, x1, 1.45, col_w, 5.65, C_WHITE, C_BORDER, 2)
+    acc = s3.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x1), Inches(1.45), Inches(col_w), Inches(0.55))
+    acc.fill.solid()
+    acc.fill.fore_color.rgb = C_BLUE_MAIN
+    acc.line.fill.background()
+    p = acc.text_frame.paragraphs[0]
+    p.text = "REVISI 3: JADWAL SHIFT & RUNNING"
+    p.font.name = "Arial"
+    p.font.size = Pt(11.5)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc.text_frame.margin_left = Inches(0.15)
+    acc.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t = s3.shapes.add_textbox(Inches(x1 + 0.18), Inches(2.15), Inches(col_w - 0.36), Inches(2.95))
     tf = t.text_frame
     tf.word_wrap = True
     tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = Inches(0)
     
-    p = tf.paragraphs[0]
-    p.text = "POIN 3: JADWAL SHIFT & WAKTU RUNNING"
-    p.font.name = "Arial"
-    p.font.size = Pt(11)
-    p.font.bold = True
-    p.font.color.rgb = C_BLUE_MAIN
-    p.space_after = Pt(6)
-
-    p3_content = [
-        ("Master Shift Tambang (msshift):", "Terhubung dengan tabel database PostgreSQL `msshift` (`ShiftModel`):"),
-        ("Shift 1 (Siang):", "06:00 - 18:00 WITA\nIstirahat: 12:00 - 13:00 WITA (Jumat: 11:30 - 13:00 WITA)"),
-        ("Shift 2 (Malam):", "18:00 - 06:00 WITA\nIstirahat: 00:00 - 01:00 WITA"),
-        ("Sterilisasi Data Dummy:", "Menghapus perhitungan durasi kerja tiruan berbasis jam laptop lokal pengguna."),
-        ("Sensor Kontak Riil:", "Kondisi 'ON (Running)' vs 'Standby (Idle)' dan durasi perjalanan kini murni dievaluasi dari sinyal ACC telemetri GPS armada.")
+    p3_items = [
+        ("Master Shift Tambang:", "Terhubung dengan tabel database PostgreSQL `msshift` (`ShiftModel`)."),
+        ("Shift 1 (Siang):", "Pukul 06:00 - 18:00 WITA (Istirahat 12:00 - 13:00 / Jumat 11:30 - 13:00)."),
+        ("Shift 2 (Malam):", "Pukul 18:00 - 06:00 WITA (Istirahat 00:00 - 01:00 WITA)."),
+        ("Pembersihan Dummy:", "Menghapus perhitungan durasi kerja tiruan berbasis jam laptop lokal pengguna."),
+        ("Sensor Kontak Riil:", "Status starter mesin ON/Idle dievaluasi murni dari sinyal ACC telemetri GPS.")
     ]
-    for h, b in p3_content:
-        p = tf.add_paragraph()
+    for idx, (h, b) in enumerate(p3_items):
+        p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
         p.text = f"{h} {b}"
         p.font.name = "Arial"
-        p.font.size = Pt(9)
+        p.font.size = Pt(11.5)
         p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(5)
+        p.space_after = Pt(6)
 
-    # Kolom 2: Poin 4 (Speed Limits)
-    add_card(s3, 0.6 + col_w + gap, 1.45, col_w, 5.6)
-    t = s3.shapes.add_textbox(Inches(0.8 + col_w + gap), Inches(1.65), Inches(3.4), Inches(5.2))
-    tf = t.text_frame
-    tf.word_wrap = True
-    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = Inches(0)
-    
-    p = tf.paragraphs[0]
-    p.text = "POIN 4: PENGKATEGORIAN MAX SPEED"
-    p.font.name = "Arial"
-    p.font.size = Pt(11)
-    p.font.bold = True
-    p.font.color.rgb = C_ORANGE_MINE
-    p.space_after = Pt(6)
-
-    p4_content = [
-        ("Konfigurasi SITE_SPEED_LIMITS:", "Batas kecepatan maksimal dipetakan per konsesi sesuai kondisi jalan tambang:"),
-        ("Site HPA (Berau):", "Hauling Road: 60 km/j\nPit Front: 40 km/j\nTurunan Curam: 25 km/j"),
-        ("Site BDA (Barito):", "Hauling Road: 50 km/j\nPit Front: 35 km/j\nPort KM 0: 20 km/j (koridor 45.2 km)"),
-        ("Site KDA & KJA:", "Hauling: 40 km/j\nPit Front: 30 km/j"),
-        ("Zona Bahaya (Hazard):", "Otomatis mengunci batas 20 - 25 km/j saat armada melintasi area Handak, WMP, atau jembatan timbang.")
-    ]
-    for h, b in p4_content:
-        p = tf.add_paragraph()
-        p.text = f"{h} {b}"
-        p.font.name = "Arial"
-        p.font.size = Pt(9)
-        p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(5)
-
-    # Kolom 3: Poin 5 (Intercom Mic)
-    add_card(s3, 0.6 + (col_w + gap)*2, 1.45, col_w, 5.6)
-    t = s3.shapes.add_textbox(Inches(0.8 + (col_w + gap)*2), Inches(1.65), Inches(3.4), Inches(5.2))
-    tf = t.text_frame
-    tf.word_wrap = True
-    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = Inches(0)
-    
-    p = tf.paragraphs[0]
-    p.text = "POIN 5: INTERCOM AUDIO DUA ARAH"
-    p.font.name = "Arial"
-    p.font.size = Pt(11)
-    p.font.bold = True
-    p.font.color.rgb = C_GREEN_OK
-    p.space_after = Pt(6)
-
-    p5_content = [
-        ("Tujuan Keselamatan Kerja:", "Memfasilitasi panggilan suara dua arah seketika antara operator dispatch dan pengemudi di kabin unit."),
-        ("Intervensi Darurat Real-Time:", "Dispatcher dapat langsung berbicara saat AI DMS mendeteksi sopir mengantuk (Micro-sleep) atau bermain ponsel."),
-        ("Kontrol Tombol Mikrofon:", "Tombol MIC ON / MIC OFF dilengkapi visual status audio wave di panel kamera."),
-        ("Privasi & Keamanan Suara:", "Default mic dalam posisi OFF (Mute) untuk melindungi percakapan pribadi kabin."),
-        ("Protokol Audio MDVR:", "Terhubung langsung dengan kanal audio stream hardware CMSV6 secara full-duplex.")
-    ]
-    for h, b in p5_content:
-        p = tf.add_paragraph()
-        p.text = f"{h} {b}"
-        p.font.name = "Arial"
-        p.font.size = Pt(9)
-        p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(5)
-
-    # ==========================================================
-    # SLIDE 4: REVISI 6 & 7 (RITASI PTO & DIGITASI ZONA GOOGLE EARTH)
-    # ==========================================================
-    s4 = prs.slides.add_slide(blank_layout)
-    add_top_bar(s4, "Revisi 6 & 7: Otomasi Ritasi PTO & Presisi Spasial Tarik Zona Satelit", "GEOFENCING & CYCLE LOGIC", 4)
-
-    # Kolom Kiri: Poin 6 (Ritasi & Ray-Casting)
-    add_card(s4, 0.6, 1.45, 5.9, 5.6)
-    t_r6 = s4.shapes.add_textbox(Inches(0.85), Inches(1.65), Inches(5.4), Inches(5.2))
-    tf_r6 = t_r6.text_frame
-    tf_r6.word_wrap = True
-    tf_r6.margin_left = tf_r6.margin_top = tf_r6.margin_right = tf_r6.margin_bottom = Inches(0)
-
-    p = tf_r6.paragraphs[0]
-    p.text = "POIN 6: SIKLUS RITASI PTO & ALGORITMA RAY-CASTING"
-    p.font.name = "Arial"
-    p.font.size = Pt(12)
-    p.font.bold = True
-    p.font.color.rgb = C_BLUE_MAIN
-    p.space_after = Pt(6)
-
-    bullets_p6 = [
-        ("Siklus 5 Tahap Standar HPU:", "1. Loading di Pit -> 2. Travel Isi -> 3. Dumping di Disposal (Verifikasi Hidrolik PTO ON) -> 4. Travel Kosong -> 5. Kembali Antre."),
-        ("Validasi Mutlak Sensor PTO:", "Ritasi baru dianggap SAH jika sensor hidrolik mencatat vessel dump truck terangkat saat armada berada di dalam geofence dumping."),
-        ("Algoritma Ray-Casting Spasial:", "Evaluasi batas tambang tidak lagi menggunakan lingkaran radius sederhana. Sistem menjalankan kalkulasi Point-in-Polygon Ray-Casting pada `MonitorDashcamTelemetry.php` dan frontend untuk mengevaluasi posisi truk di poligon fisik aktual."),
-        ("Database 1.445 Geofences:", "Menampung 48 poligon fisik operasional tambang dan 1.397 titik patok kilometer STA checkpoint di tabel PostgreSQL `geofences`."),
-        ("Penyimpanan Log Siklus:", "Tercatat otomatis di tabel `ritasi_logs` lengkap dengan durasi siklus menit, estimasi jarak KM, dan volume produksi BCM.")
-    ]
-    for h, b in bullets_p6:
-        p = tf_r6.add_paragraph()
-        p.text = f"• {h} {b}"
-        p.font.name = "Arial"
-        p.font.size = Pt(9.5)
-        p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(5)
-
-    # Kolom Kanan: Poin 7 (Digitasi Zona Google Earth)
-    add_card(s4, 6.833, 1.45, 5.9, 5.6)
-    t_r7 = s4.shapes.add_textbox(Inches(7.083), Inches(1.65), Inches(5.4), Inches(5.2))
-    tf_r7 = t_r7.text_frame
-    tf_r7.word_wrap = True
-    tf_r7.margin_left = tf_r7.margin_top = tf_r7.margin_right = tf_r7.margin_bottom = Inches(0)
-
-    p = tf_r7.paragraphs[0]
-    p.text = "POIN 7: DIGITASI PERIMETER ZONA MANUAL SATELIT"
-    p.font.name = "Arial"
-    p.font.size = Pt(12)
-    p.font.bold = True
-    p.font.color.rgb = C_GREEN_OK
-    p.space_after = Pt(6)
-
-    bullets_p7 = [
-        ("Precision Industrial GIS HUD:", "Floating toolbar ringkas slate-900/95 di atas peta satelit Google Earth dengan segmented control geometri (Poligon, Jalur, dan Radius)."),
-        ("Kalkulasi Geodesi WGS84 Real-Time:", "Menampilkan kalkulasi instan saat titik ditarik:\n  - Poligon: Luas Hektar (Ha) dan keliling perimeter meter (m).\n  - Jalur: Panjang koridor rute dalam meter (m).\n  - Radius: Jangkauan buffer radial meter (m)."),
-        ("Eliminasi Halusinasi Data:", "Membersihkan input radius anomali 293 km; kini radius dibatasi proporsional (max 5.000m) dan hanya aktif jika geometri lingkaran dipilih."),
-        ("Formulir Operasional Bersih:", "Menghapus bocoran prompt teks presentasi, menghapus tombol prototipe 'Isi Sampel Koordinat', dan textarea JSON mentah digantikan ringkasan verteks."),
-        ("Palet Warna K3 Tambang:", "Hijau PIT (Loading), Ungu Disposal (Dumping), Hitam ROM Stockpile, Biru Fasilitas/Office, Oranye Jalur Jalan, Merah Hazard.")
-    ]
-    for h, b in bullets_p7:
-        p = tf_r7.add_paragraph()
-        p.text = f"• {h} {b}"
-        p.font.name = "Arial"
-        p.font.size = Pt(9.5)
-        p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(5)
-
-    # ==========================================================
-    # SLIDE 5: REVISI 8 & MATRIKS MULTI-SITE (DEPLOYMENT & KOMPARASI)
-    # ==========================================================
-    s5 = prs.slides.add_slide(blank_layout)
-    add_top_bar(s5, "Revisi 8 & Matriks Multi-Site: Deployment Server HPU (10.10.0.54) & Komparasi", "DEPLOYMENT & MULTI-SITE CONCESSION", 5)
-
-    # Bagian Atas: Poin 8 Deployment Server 10.10.0.54
-    add_card(s5, 0.6, 1.45, 12.133, 2.5)
-    t_d8 = s5.shapes.add_textbox(Inches(0.85), Inches(1.6), Inches(11.6), Inches(2.2))
-    tf_d8 = t_d8.text_frame
-    tf_d8.word_wrap = True
-    tf_d8.margin_left = tf_d8.margin_top = tf_d8.margin_right = tf_d8.margin_bottom = Inches(0)
-
-    p = tf_d8.paragraphs[0]
-    p.text = "POIN 8: HASIL IMPLEMENTASI DEPLOYMENT DI SERVER DEVELOPMENT HPU (10.10.0.54)"
+    # Box Footer Kolom 1
+    bf1 = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x1 + 0.18), Inches(5.25), Inches(col_w - 0.36), Inches(1.6))
+    bf1.fill.solid()
+    bf1.fill.fore_color.rgb = C_BLUE_LIGHT
+    bf1.line.color.rgb = C_BLUE_MAIN
+    tf_bf1 = bf1.text_frame
+    tf_bf1.margin_left = tf_bf1.margin_right = Inches(0.15)
+    tf_bf1.margin_top = Inches(0.15)
+    p = tf_bf1.paragraphs[0]
+    p.text = "SINKRONISASI AKTUAL"
     p.font.name = "Arial"
     p.font.size = Pt(11.5)
     p.font.bold = True
     p.font.color.rgb = C_BLUE_MAIN
     p.space_after = Pt(4)
+    p = tf_bf1.add_paragraph()
+    p.text = "• Starter Mesin: ACC ON terdeteksi langsung saat kunci kontak armada diputar di tambang."
+    p.font.name = "Arial"
+    p.font.size = Pt(10.5)
+    p.font.color.rgb = C_TEXT_DARK
+    p.space_after = Pt(3)
+    p = tf_bf1.add_paragraph()
+    p.text = "• Nol Manipulasi: Durasi kerja shift akurat sesuai jam kerja tambang Kalimantan."
+    p.font.name = "Arial"
+    p.font.size = Pt(10.5)
+    p.font.color.rgb = C_TEXT_DARK
+
+    # Kolom 2: Poin 4
+    x2 = x1 + col_w + gap
+    add_card_shape(s3, x2, 1.45, col_w, 5.65, C_WHITE, C_BORDER, 2)
+    acc = s3.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x2), Inches(1.45), Inches(col_w), Inches(0.55))
+    acc.fill.solid()
+    acc.fill.fore_color.rgb = C_ORANGE_MINE
+    acc.line.fill.background()
+    p = acc.text_frame.paragraphs[0]
+    p.text = "REVISI 4: BATAS KECEPATAN SITE"
+    p.font.name = "Arial"
+    p.font.size = Pt(11.5)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc.text_frame.margin_left = Inches(0.15)
+    acc.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t = s3.shapes.add_textbox(Inches(x2 + 0.18), Inches(2.15), Inches(col_w - 0.36), Inches(2.95))
+    tf = t.text_frame
+    tf.word_wrap = True
+    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = Inches(0)
+
+    p4_items = [
+        ("Konfigurasi SITE_SPEED_LIMITS:", "Batas kecepatan maksimal dipetakan sesuai profil medan jalan:"),
+        ("Site HPA (Berau):", "Jalan Hauling: 60 km/j • Pit Front: 40 km/j • Turunan Curam: 25 km/j."),
+        ("Site BDA (Barito):", "Jalan Hauling: 50 km/j • Pit Front: 35 km/j • Port KM 0: 20 km/j."),
+        ("Site KDA & KJA:", "Kecepatan Hauling: 40 km/j • Area Pit: 30 km/j."),
+        ("Zona Bahaya (Hazard):", "Mengunci otomatis batas 20 - 25 km/j saat armada melintasi area Handak dan WMP.")
+    ]
+    for idx, (h, b) in enumerate(p4_items):
+        p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+        p.text = f"{h} {b}"
+        p.font.name = "Arial"
+        p.font.size = Pt(11.5)
+        p.font.color.rgb = C_TEXT_SLATE
+        p.space_after = Pt(6)
+
+    # Box Footer Kolom 2
+    bf2 = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x2 + 0.18), Inches(5.25), Inches(col_w - 0.36), Inches(1.6))
+    bf2.fill.solid()
+    bf2.fill.fore_color.rgb = C_AMBER_LIGHT
+    bf2.line.color.rgb = C_AMBER
+    tf_bf2 = bf2.text_frame
+    tf_bf2.margin_left = tf_bf2.margin_right = Inches(0.15)
+    tf_bf2.margin_top = Inches(0.15)
+    p = tf_bf2.paragraphs[0]
+    p.text = "SAFETY OVERSPEED LIMITS"
+    p.font.name = "Arial"
+    p.font.size = Pt(11.5)
+    p.font.bold = True
+    p.font.color.rgb = C_AMBER
+    p.space_after = Pt(4)
+    p = tf_bf2.add_paragraph()
+    p.text = "• Alarm Real-Time: Deteksi overspeeding dinamis langsung memicu notifikasi peringatan."
+    p.font.name = "Arial"
+    p.font.size = Pt(10.5)
+    p.font.color.rgb = C_TEXT_DARK
+    p.space_after = Pt(3)
+    p = tf_bf2.add_paragraph()
+    p.text = "• Zonasi Adaptif: Batas kecepatan menyesuaikan saat truk berpindah dari pit ke jalan hauling."
+    p.font.name = "Arial"
+    p.font.size = Pt(10.5)
+    p.font.color.rgb = C_TEXT_DARK
+
+    # Kolom 3: Poin 5
+    x3 = x2 + col_w + gap
+    add_card_shape(s3, x3, 1.45, col_w, 5.65, C_WHITE, C_BORDER, 2)
+    acc = s3.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x3), Inches(1.45), Inches(col_w), Inches(0.55))
+    acc.fill.solid()
+    acc.fill.fore_color.rgb = C_GREEN_OK
+    acc.line.fill.background()
+    p = acc.text_frame.paragraphs[0]
+    p.text = "REVISI 5: INTERCOM AUDIO DUA ARAH"
+    p.font.name = "Arial"
+    p.font.size = Pt(11.5)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc.text_frame.margin_left = Inches(0.15)
+    acc.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t = s3.shapes.add_textbox(Inches(x3 + 0.18), Inches(2.15), Inches(col_w - 0.36), Inches(2.95))
+    tf = t.text_frame
+    tf.word_wrap = True
+    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = Inches(0)
+
+    p5_items = [
+        ("Tujuan Keselamatan Kerja:", "Saluran komunikasi suara instan operator ruang kontrol ke driver di kabin armada."),
+        ("Intervensi Darurat Real-Time:", "Dispatcher langsung berbicara saat kamera AI DMS mendeteksi driver mengantuk."),
+        ("Kontrol Tombol Mikrofon:", "Tombol toggle MIC ON / MIC OFF dilengkapi animasi audio wave interaktif di panel video."),
+        ("Privasi Kabin Terjaga:", "Default mikrofon diset Mute (OFF) untuk menjaga kenyamanan pengemudi saat bekerja."),
+        ("Protokol Hardware MDVR:", "Terhubung langsung dengan protokol audio stream hardware CMSV6 full-duplex.")
+    ]
+    for idx, (h, b) in enumerate(p5_items):
+        p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+        p.text = f"{h} {b}"
+        p.font.name = "Arial"
+        p.font.size = Pt(11.5)
+        p.font.color.rgb = C_TEXT_SLATE
+        p.space_after = Pt(6)
+
+    # Box Footer Kolom 3
+    bf3 = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x3 + 0.18), Inches(5.25), Inches(col_w - 0.36), Inches(1.6))
+    bf3.fill.solid()
+    bf3.fill.fore_color.rgb = C_GREEN_LIGHT
+    bf3.line.color.rgb = C_GREEN_OK
+    tf_bf3 = bf3.text_frame
+    tf_bf3.margin_left = tf_bf3.margin_right = Inches(0.15)
+    tf_bf3.margin_top = Inches(0.15)
+    p = tf_bf3.paragraphs[0]
+    p.text = "INTERVENSI KESELAMATAN KABIN"
+    p.font.name = "Arial"
+    p.font.size = Pt(11.5)
+    p.font.bold = True
+    p.font.color.rgb = C_GREEN_OK
+    p.space_after = Pt(4)
+    p = tf_bf3.add_paragraph()
+    p.text = "• Respon Micro-Sleep: Intervensi suara seketika mencegah insiden tabrakan di jalur hauling."
+    p.font.name = "Arial"
+    p.font.size = Pt(10.5)
+    p.font.color.rgb = C_TEXT_DARK
+    p.space_after = Pt(3)
+    p = tf_bf3.add_paragraph()
+    p.text = "• Dua Arah: Driver dapat membalas instruksi dispatcher tanpa melepas kemudi."
+    p.font.name = "Arial"
+    p.font.size = Pt(10.5)
+    p.font.color.rgb = C_TEXT_DARK
+
+    # ==========================================================
+    # SLIDE 4: REVISI 6 & 7 (RITASI PTO & DIGITASI ZONA GOOGLE EARTH)
+    # ==========================================================
+    s4 = prs.slides.add_slide(blank_layout)
+    add_slide_header(s4, "Revisi 6 & 7: Otomasi Ritasi PTO & Presisi Spasial Tarik Zona Satelit", "GEOFENCING & CYCLE LOGIC", 4)
+
+    # Left Card: Revisi 6
+    add_card_shape(s4, 0.6, 1.45, 5.9, 5.65, C_WHITE, C_BORDER, 2)
+    acc1 = s4.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.6), Inches(1.45), Inches(5.9), Inches(0.55))
+    acc1.fill.solid()
+    acc1.fill.fore_color.rgb = C_BLUE_MAIN
+    acc1.line.fill.background()
+    p = acc1.text_frame.paragraphs[0]
+    p.text = "REVISI 6: SIKLUS RITASI PTO & ALGORITMA RAY-CASTING"
+    p.font.name = "Arial"
+    p.font.size = Pt(12)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc1.text_frame.margin_left = Inches(0.25)
+    acc1.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t1 = s4.shapes.add_textbox(Inches(0.85), Inches(2.15), Inches(5.4), Inches(2.95))
+    tf1 = t1.text_frame
+    tf1.word_wrap = True
+    tf1.margin_left = tf1.margin_top = tf1.margin_right = tf1.margin_bottom = Inches(0)
+
+    r6_points = [
+        ("Siklus 5 Tahap Standar HPU:", "1. Loading di Pit -> 2. Travel Isi -> 3. Dumping di Disposal (Verifikasi PTO ON) -> 4. Travel Kosong -> 5. Kembali Antre."),
+        ("Validasi Mutlak Sensor PTO:", "Ritasi SAH tercatat hanya jika sensor hidrolik mendeteksi vessel dump truck terangkat saat armada berada di dalam geofence dumping."),
+        ("Algoritma Ray-Casting Spasial:", "Evaluasi batas fisik bukaan tambang aktual menggunakan kalkulasi Point-in-Polygon Ray-Casting pada `MonitorDashcamTelemetry.php` dan frontend."),
+        ("Database 1.445 Geofences:", "Menampung 48 poligon fisik operasional tambang dan 1.397 titik patok kilometer STA checkpoint di tabel PostgreSQL `geofences`."),
+        ("Integritas Produksi:", "Mencegah klaim ritasi palsu dan memastikan keakuratan rekonsiliasi volume batubara / overburden (OB).")
+    ]
+    for idx, (head, body) in enumerate(r6_points):
+        p = tf1.paragraphs[0] if idx == 0 else tf1.add_paragraph()
+        p.text = f"{head} {body}"
+        p.font.name = "Arial"
+        p.font.size = Pt(12)
+        p.font.color.rgb = C_TEXT_SLATE
+        p.space_after = Pt(7)
+
+    # Box Footer Card 1
+    box4_1 = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.85), Inches(5.25), Inches(5.4), Inches(1.6))
+    box4_1.fill.solid()
+    box4_1.fill.fore_color.rgb = C_BLUE_LIGHT
+    box4_1.line.color.rgb = C_BLUE_MAIN
+    tf_b4_1 = box4_1.text_frame
+    tf_b4_1.margin_left = tf_b4_1.margin_right = Inches(0.2)
+    tf_b4_1.margin_top = Inches(0.15)
+    p = tf_b4_1.paragraphs[0]
+    p.text = "LOG RITASI OTOMATIS & AKURASI SPASIAL"
+    p.font.name = "Arial"
+    p.font.size = Pt(12.5)
+    p.font.bold = True
+    p.font.color.rgb = C_BLUE_MAIN
+    p.space_after = Pt(5)
+
+    p = tf_b4_1.add_paragraph()
+    p.text = "• Tabel ritasi_logs: Durasi trip (menit), jarak tempuh KM, dan akumulasi estimasi BCM tercatat otomatis."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
+    p.space_after = Pt(4)
+
+    p = tf_b4_1.add_paragraph()
+    p.text = "• Ray-Casting Real-Time: Deteksi presisi batas fisik pit tanpa lag transmisi GPS."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
+
+    # Right Card: Revisi 7
+    add_card_shape(s4, 6.833, 1.45, 5.9, 5.65, C_WHITE, C_BORDER, 2)
+    acc2 = s4.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.833), Inches(1.45), Inches(5.9), Inches(0.55))
+    acc2.fill.solid()
+    acc2.fill.fore_color.rgb = C_GREEN_OK
+    acc2.line.fill.background()
+    p = acc2.text_frame.paragraphs[0]
+    p.text = "REVISI 7: DIGITASI PERIMETER ZONA MANUAL SATELIT"
+    p.font.name = "Arial"
+    p.font.size = Pt(12)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc2.text_frame.margin_left = Inches(0.25)
+    acc2.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t2 = s4.shapes.add_textbox(Inches(7.083), Inches(2.15), Inches(5.4), Inches(2.95))
+    tf2 = t2.text_frame
+    tf2.word_wrap = True
+    tf2.margin_left = tf2.margin_top = tf2.margin_right = tf2.margin_bottom = Inches(0)
+
+    r7_points = [
+        ("Precision Industrial GIS HUD:", "Toolbar mengambang di atas peta satelit Google Earth dengan segmented control: Poligon, Jalur, dan Radius."),
+        ("Kalkulasi Geodesi WGS84 Real-Time:", "Menampilkan kalkulasi instan saat titik ditarik:\n  • Poligon: Estimasi Luas Hektar (Ha) dan Keliling meter (m).\n  • Jalur: Panjang koridor rute dalam meter (m).\n  • Radius: Jangkauan buffer radial meter (m)."),
+        ("Eliminasi Halusinasi Data:", "Membersihkan input radius anomali 293 km; kini radius dibatasi proporsional (max 5.000m) dan hanya aktif untuk lingkaran."),
+        ("Formulir Operasional Bersih:", "Bebas dari teks bocoran prompt presentasi, tombol sampel uji coba dihapus, dan textarea koordinat digantikan ringkasan verteks.")
+    ]
+    for idx, (head, body) in enumerate(r7_points):
+        p = tf2.paragraphs[0] if idx == 0 else tf2.add_paragraph()
+        p.text = f"{head} {body}"
+        p.font.name = "Arial"
+        p.font.size = Pt(12)
+        p.font.color.rgb = C_TEXT_SLATE
+        p.space_after = Pt(7)
+
+    # Box Footer Card 2
+    box4_2 = s4.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.083), Inches(5.25), Inches(5.4), Inches(1.6))
+    box4_2.fill.solid()
+    box4_2.fill.fore_color.rgb = C_GREEN_LIGHT
+    box4_2.line.color.rgb = C_GREEN_OK
+    tf_b4_2 = box4_2.text_frame
+    tf_b4_2.margin_left = tf_b4_2.margin_right = Inches(0.2)
+    tf_b4_2.margin_top = Inches(0.15)
+    p = tf_b4_2.paragraphs[0]
+    p.text = "STANDARISASI K3 & GIS TAMBANG"
+    p.font.name = "Arial"
+    p.font.size = Pt(12.5)
+    p.font.bold = True
+    p.font.color.rgb = C_GREEN_OK
+    p.space_after = Pt(5)
+
+    p = tf_b4_2.add_paragraph()
+    p.text = "• Palet K3 Resmi: Hijau Pit (Loading), Ungu Disposal (Dumping), Hitam ROM, Biru Fasilitas, Merah Hazard."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
+    p.space_after = Pt(4)
+
+    p = tf_b4_2.add_paragraph()
+    p.text = "• Penyimpanan Dinamis: Poligon tersimpan langsung ke PostgreSQL dan diekspor ke GeoJSON FeatureCollection."
+    p.font.name = "Arial"
+    p.font.size = Pt(11)
+    p.font.color.rgb = C_TEXT_DARK
+
+    # ==========================================================
+    # SLIDE 5: REVISI 8 & MATRIKS MULTI-SITE (DEPLOYMENT & KOMPARASI)
+    # ==========================================================
+    s5 = prs.slides.add_slide(blank_layout)
+    add_slide_header(s5, "Revisi 8: Deployment Server HPU (10.10.0.54) & Matriks Multi-Site", "DEPLOYMENT & MULTI-SITE CONCESSION", 5)
+
+    # Top Section: Poin 8 Server Deployment
+    add_card_shape(s5, 0.6, 1.45, 12.133, 2.55, C_WHITE, C_BORDER, 2)
+    acc = s5.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.6), Inches(1.45), Inches(12.133), Inches(0.48))
+    acc.fill.solid()
+    acc.fill.fore_color.rgb = C_BLUE_MAIN
+    acc.line.fill.background()
+    p = acc.text_frame.paragraphs[0]
+    p.text = "POIN 8: HASIL DEPLOYMENT & INTEGRASI SERVER DEVELOPMENT HPU (10.10.0.54)"
+    p.font.name = "Arial"
+    p.font.size = Pt(12)
+    p.font.bold = True
+    p.font.color.rgb = C_WHITE
+    acc.text_frame.margin_left = Inches(0.2)
+    acc.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+    t_dep = s5.shapes.add_textbox(Inches(0.85), Inches(2.05), Inches(11.6), Inches(1.85))
+    tf_dep = t_dep.text_frame
+    tf_dep.word_wrap = True
+    tf_dep.margin_left = tf_dep.margin_top = tf_dep.margin_right = tf_dep.margin_bottom = Inches(0)
 
     dep_bullets = [
-        "Lingkungan Server: Ubuntu 24.04 LTS, Docker Container `laravel-app` & `laravel-nginx`, PostgreSQL 16 database `hpuxuns` port 5432.",
-        "Prosedur Keamanan (Backup First): Telah dicadangkan file `src_backup_*.tar.gz` (1.2 MB) dan dump database `hpuxuns_backup_*.sql` (121 KB).",
-        "Migrasi & Seeding Basis Data: Eksekusi `php artisan migrate --force` (8 tabel baru) dan `GeofenceSeeder` (1.445 geofence aktif: 530 HPA & 915 BDA).",
-        "Reverse-Proxy Streaming Nginx: Mengaktifkan blok proxy `/cmsv6-media/` pada Nginx server ke gateway video `10.10.0.33:6604` sehingga aliran FLV H.264 berjalan cepat lewat LAN server (latensi ~1 ms).",
-        "Verifikasi Live: Dashboard operasional aktif dan dapat diakses tim HPU pada URL: http://10.10.0.54/dashboard/dashcam."
+        ("Lingkungan Server:", "Ubuntu 24.04 LTS, Docker Container `laravel-app` & `laravel-nginx`, PostgreSQL 16 database `hpuxuns` port 5432."),
+        ("Prosedur Keamanan (Backup First):", "Telah dicadangkan codebase `src_backup_*.tar.gz` (1.2 MB) dan dump database `hpuxuns_backup_*.sql` (121 KB)."),
+        ("Migrasi & Seeding Basis Data:", "Eksekusi `php artisan migrate --force` (8 tabel baru) dan `GeofenceSeeder` (1.445 geofence aktif: 530 HPA & 915 BDA)."),
+        ("Reverse-Proxy Nginx Stream:", "Blok proxy `/cmsv6-media/` pada Nginx server ke gateway video `10.10.0.33:6604` mempercepat stream FLV via LAN (latensi ~1 ms)."),
+        ("Akses Langsung Sistem:", "Sistem aktif dan beroperasi live di URL: http://10.10.0.54/dashboard/dashcam (User: `admin_test` / Pass: `admin`).")
     ]
-    for b in dep_bullets:
-        p = tf_d8.add_paragraph()
-        p.text = "• " + b
+    for idx, (h, b) in enumerate(dep_bullets):
+        p = tf_dep.paragraphs[0] if idx == 0 else tf_dep.add_paragraph()
+        p.text = f"• {h} {b}"
         p.font.name = "Arial"
-        p.font.size = Pt(9)
-        p.font.color.rgb = C_TEXT_SLATE
-        p.space_after = Pt(2.5)
+        p.font.size = Pt(11)
+        p.font.color.rgb = C_TEXT_DARK if idx == len(dep_bullets)-1 else C_TEXT_SLATE
+        if idx == len(dep_bullets)-1:
+            p.font.bold = True
+        p.space_after = Pt(3)
 
-    # Bagian Bawah: Tabel Matriks Perbandingan Multi-Site (HPA vs BDA)
+    # Bottom Section: Tabel Komparasi Multi-Site (HPA vs BDA)
     table_shape = s5.shapes.add_table(5, 3, Inches(0.6), Inches(4.15), Inches(12.133), Inches(2.9))
     table = table_shape.table
 
@@ -491,7 +746,7 @@ def create_dense_deck():
         p = cell.text_frame.paragraphs[0]
         p.text = h_text
         p.font.name = "Arial"
-        p.font.size = Pt(10)
+        p.font.size = Pt(12)
         p.font.bold = True
         p.font.color.rgb = C_WHITE
         p.alignment = PP_ALIGN.CENTER
@@ -504,19 +759,19 @@ def create_dense_deck():
             p = cell.text_frame.paragraphs[0]
             p.text = cell_value
             p.font.name = "Arial"
-            p.font.size = Pt(9)
+            p.font.size = Pt(11.5)
             p.font.color.rgb = C_TEXT_DARK if col_idx == 0 else C_TEXT_SLATE
             if col_idx == 0:
                 p.font.bold = True
             else:
                 p.alignment = PP_ALIGN.CENTER
 
-    # Save to disk
+    # Save presentation
     out_path = r"D:\Semester 5\hpu\documents\Laporan_Progress_Revisi_Dashcam_HPU.pptx"
     prs.save(out_path)
     print(f"Presentation saved successfully: {out_path} ({os.path.getsize(out_path)/1024:.1f} KB)")
 
-    # Sync to Obsidian Vault
+    # Sync to Obsidian
     obsidian_dir = r"C:\Users\muham\OneDrive\Documents\Obsidian Vault\01 Projects\HPU Dashcam & Fleet Management"
     if os.path.exists(obsidian_dir):
         obsidian_out = os.path.join(obsidian_dir, "Laporan_Progress_Revisi_Dashcam_HPU.pptx")
@@ -524,4 +779,4 @@ def create_dense_deck():
         print(f"Synced to Obsidian: {obsidian_out}")
 
 if __name__ == "__main__":
-    create_dense_deck()
+    build_presentation()
