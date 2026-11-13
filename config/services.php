@@ -36,10 +36,10 @@ return [
     ],
 
     'cmsv6' => [
-        'base_url'  => env('CMSV6_BASE_URL', 'http://10.10.0.53:8080'),
+        'base_url'  => env('CMSV6_BASE_URL', 'http://10.10.0.33:8088'),
         'account'   => env('CMSV6_ACCOUNT', 'admin'),
         'password'  => env('CMSV6_PASSWORD', 'Password.1'),
-        'device_id' => env('CMSV6_DEVICE_ID', '240078916116'),
+        'device_id' => env('CMSV6_DEVICE_ID', '240078740672'),
     ],
 
 ];

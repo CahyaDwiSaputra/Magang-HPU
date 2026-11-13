@@ -244,11 +244,13 @@ export const HPU_FLEET: FleetVehicle[] = [
 function camUrl(deviceId: string, channel: number, jsession: string | null, baseUrl: string = "http://10.10.0.33:8088", engine: 'cmsv6' | 'flv' = 'flv') {
     if (!jsession) return null;
     const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const isServerHost = typeof window !== 'undefined' && window.location.hostname === '10.10.0.54';
     if (engine === 'cmsv6' && !isHttps) {
-        return `http://10.10.0.33:8088/808gps/open/player/videoH5.html?lang=en&devIdno=${deviceId}&jsession=${jsession || ''}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
+        const webBase = isServerHost ? '/cmsv6-web' : baseUrl.replace(/\/$/, '');
+        return `${webBase}/808gps/open/player/videoH5.html?lang=en&devIdno=${deviceId}&jsession=${jsession || ''}&index=${channel + 1}&playerType=h5&hideVolumeBtn=1`;
     }
     const mediaHost = '10.10.0.33:6604';
-    const proxyFlag = isHttps ? '&proxy=1' : '';
+    const proxyFlag = isHttps ? '&proxy=1' : (isServerHost ? '&proxy=nginx' : '');
     return `/player.html?dev=${deviceId}&ch=${channel}&jsession=${jsession || ''}&host=${mediaHost}${proxyFlag}`;
 }
 
@@ -1617,8 +1619,8 @@ export default function Page() {
                     let inGeofence = false;
                     let currentFoundGeofence: { id: number; name: string; type: string; distance: number } | null = null;
 
-                    const effectiveLat = hasGPS ? finalLat : (telemetry.lat ?? -7.6582);
-                    const effectiveLng = hasGPS ? finalLng : (telemetry.lng ?? 111.1895);
+                    const effectiveLat = hasGPS ? finalLat : (telemetry.lat ?? 2.045);
+                    const effectiveLng = hasGPS ? finalLng : (telemetry.lng ?? 117.2);
 
                     if (geofences.length > 0) {
                         for (let g of geofences) {
@@ -2148,7 +2150,7 @@ export default function Page() {
                                             GPS & GEOFENCE TAMBANG — LIVE TRACKING
                                         </span>
                                         <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                            Lat: {telemetry.lat?.toFixed(5) ?? '-7.65820'}, Lng: {telemetry.lng?.toFixed(5) ?? '111.18950'}
+                                            {telemetry.lat != null && telemetry.lng != null ? `Lat: ${telemetry.lat.toFixed(5)}, Lng: ${telemetry.lng.toFixed(5)}` : 'Menunggu GPS...'}
                                         </span>
                                         <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
                                             activeGeofence 
@@ -3131,7 +3133,7 @@ export default function Page() {
                                                             </span>
                                                         </div>
                                                         <div className="absolute bottom-1.5 left-2 right-2 z-10 pointer-events-none flex items-center justify-between text-[10px] text-white/80 font-mono bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded">
-                                                            <span>Lat: {telemetry.lat?.toFixed(5) ?? '-7.65820'}, Lng: {telemetry.lng?.toFixed(5) ?? '111.18950'} • Speed: {telemetry.speed} km/j</span>
+                                                            <span>{telemetry.lat != null && telemetry.lng != null ? `Lat: ${telemetry.lat.toFixed(5)}, Lng: ${telemetry.lng.toFixed(5)}` : 'GPS Standby'} • Speed: {telemetry.speed} km/j</span>
                                                             <span className="text-emerald-400 font-bold flex items-center gap-1">
                                                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> LIVE
                                                             </span>

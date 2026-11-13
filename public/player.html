@@ -179,19 +179,35 @@
                 ]);
             } else {
                 const host     = params.get('host') || '10.10.0.33:6604';
-                const useProxy = params.get('proxy') === '1' || window.location.protocol === 'https:';
-                const streamUrl = useProxy
+                const proxyMode = params.get('proxy') || '';
+                const useLaravelProxy = proxyMode === '1' || window.location.protocol === 'https:';
+                const useNginxProxy = proxyMode === 'nginx' && window.location.protocol === 'http:';
+                const streamUrl = useLaravelProxy
                     ? `/api/cmsv6/stream?dev=${devIdno}&ch=${channel}&jsession=${jsession || ''}&stream=1`
-                    : `http://${host}/3/3?AVType=1&jsession=${jsession || ''}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`;
+                    : (useNginxProxy
+                        ? `/cmsv6-media/3/3?AVType=1&jsession=${jsession || ''}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`
+                        : `http://${host}/3/3?AVType=1&jsession=${jsession || ''}&DevIDNO=${devIdno}&Channel=${channel}&Stream=1`);
                 let started = false;
+                let player = null;
+
+                function cleanupPlayer() {
+                    if (!player) return;
+                    const p = player;
+                    player = null;
+                    try { p.pause(); } catch {}
+                    try { p.unload(); } catch {}
+                    try { p.detachMediaElement(); } catch {}
+                    try { p.destroy(); } catch {}
+                }
 
                 const standbyTimeout = setTimeout(() => {
                     if (!started) {
+                        cleanupPlayer();
                         setStatus('Unit Standby / Engine OFF di Pit', 'amber');
                         showOverlay(
                             `Unit ${devIdno} dalam Status Standby / Engine OFF`,
                             `Perangkat terdaftar di CMSV6, namun mesin unit saat ini mati atau sinyal 4G di area pit sedang offline. Menunggu siaran langsung dimulai.`,
-                            `<span class="badge badge-amber">⏳ Engine Standby di Pit</span>`,
+                            `<span class="badge badge-amber">Engine Standby di Pit</span>`,
                             [
                                 {
                                     label: 'Coba Hubungkan Ulang',
@@ -201,9 +217,9 @@
                             ]
                         );
                     }
-                }, 5000);
+                }, 15000);
 
-                const player = flvjs.createPlayer({
+                player = flvjs.createPlayer({
                     type: 'flv',
                     url: streamUrl,
                     isLive: true,
@@ -226,23 +242,53 @@
                         clearTimeout(standbyTimeout);
                         hideOverlay();
                         videoEl.style.display = 'block';
-                        setStatus(`✓ Live CAM ${displayChannel} (Realtime)`, 'green');
+                        setStatus(`Live CAM ${displayChannel} (Realtime)`, 'green');
                     }
                 }
 
+                // Begitu metadata atau segmen video diterima, batalkan timeout standby agar stream tidak diputus paksa
+                player.on(flvjs.Events.MEDIA_INFO, (mediaInfo) => {
+                    clearTimeout(standbyTimeout);
+                    setStatus(`Sinkronisasi CAM ${displayChannel}...`, 'amber');
+                });
+
+                videoEl.addEventListener('loadedmetadata', onStreamReady);
                 videoEl.addEventListener('loadeddata', onStreamReady);
+                videoEl.addEventListener('canplay', onStreamReady);
                 videoEl.addEventListener('playing', onStreamReady);
                 videoEl.addEventListener('timeupdate', () => {
                     if (videoEl.currentTime > 0) onStreamReady();
                 });
 
                 player.play().then(onStreamReady).catch(err => {
-                    console.warn('[FLV] Autoplay:', err);
+                    // Ignore DOMException AbortError on autoplay transition
+                    if (err && err.name !== 'AbortError') {
+                        console.warn('[FLV] Autoplay notice:', err);
+                    }
                 });
 
-                player.on(flvjs.Events.ERROR, () => {
-                    // Handled by timeout prompt
+                player.on(flvjs.Events.ERROR, (errType, errDetail) => {
+                    console.warn('[FLV] Stream error:', errType, errDetail);
+                    cleanupPlayer();
+                    if (!started) {
+                        clearTimeout(standbyTimeout);
+                        setStatus('Aliran Video Terputus / Unit Standby', 'amber');
+                        showOverlay(
+                            `Stream Kamera ${devIdno} Belum Tersedia`,
+                            `Server CMSV6 tidak mengirim aliran video saat ini (mesin unit mati atau jaringan 4G pit terputus).`,
+                            `<span class="badge badge-amber">Menunggu Stream</span>`,
+                            [
+                                {
+                                    label: 'Hubungkan Ulang',
+                                    primary: true,
+                                    onClick: () => window.location.reload()
+                                }
+                            ]
+                        );
+                    }
                 });
+
+                window.addEventListener('beforeunload', cleanupPlayer);
             }
         }
     </script>

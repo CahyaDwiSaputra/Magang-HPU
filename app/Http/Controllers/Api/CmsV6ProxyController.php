@@ -64,7 +64,8 @@ class CmsV6ProxyController extends Controller
         $params['jsession'] = $jsession;
         $data = $this->httpGet($endpoint, $params);
 
-        if (($data['result'] ?? -1) !== 0) {
+        // Hanya relogin jika server merespons valid dengan kode session expired, bukan saat network timeout
+        if (empty($data['_proxy_error']) && ($data['result'] ?? -1) !== 0) {
             // Session mungkin expired — hapus cache & coba sekali lagi
             Cache::forget('cmsv6_jsession');
             $jsession = $this->doLogin();
