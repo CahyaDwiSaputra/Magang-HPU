@@ -110,7 +110,7 @@ const MINING_COLOR_PALETTE = [
     { name: 'Disposal Timbunan (Biru)', hex: '#2563EB' },
     { name: 'Workshop & Parkir (Hijau K3)', hex: '#16A34A' },
     { name: 'Jalan Hauling (Oranye)', hex: '#EA580C' },
-    { name: 'Hazard Handak / WMP (Merah)', hex: '#DC2626' },
+    { name: 'Infrastruktur & Khusus (Ungu)', hex: '#8B5CF6' },
     { name: 'Kolam WMP (Cyan)', hex: '#0891B2' },
 ];
 
@@ -139,7 +139,7 @@ export default function GeofencePage() {
 
     // ── STATE FILTER & SELEKSI (POIN 4) ──
     const [selectedSiteFilter, setSelectedSiteFilter] = useState<'ALL' | 'HPA' | 'BDA'>('ALL');
-    const [zoneFilterTab, setZoneFilterTab] = useState<'all' | 'loading' | 'dumping' | 'facility' | 'hazard' | 'road'>('all');
+    const [zoneFilterTab, setZoneFilterTab] = useState<'all' | 'loading' | 'dumping' | 'facility' | 'infrastructure' | 'road'>('all');
     const [zoneSearchQuery, setZoneSearchQuery] = useState<string>('');
     const [focusedGeofenceId, setFocusedGeofenceId] = useState<number | null>(null);
     const [showZonesDrawer, setShowZonesDrawer] = useState<boolean>(false);
@@ -341,14 +341,14 @@ export default function GeofencePage() {
         });
     }, [geofences, selectedSiteFilter]);
 
-    const hazardGeofences = useMemo(() => {
+    const infrastructureGeofences = useMemo(() => {
         return geofences.filter(gf => {
-            const isHazard =
+            const isSpecial =
                 gf.type === 'custom' ||
                 gf.name.toLowerCase().includes('handak') ||
                 gf.name.toLowerCase().includes('curam') ||
                 gf.name.toLowerCase().includes('wmp');
-            if (!isHazard) return false;
+            if (!isSpecial) return false;
             if (selectedSiteFilter !== 'ALL' && (gf.site || 'HPA').toUpperCase() !== selectedSiteFilter) return false;
             return true;
         });
@@ -375,7 +375,7 @@ export default function GeofencePage() {
             list = list.filter(g => g.type === 'dumping');
         } else if (zoneFilterTab === 'facility') {
             list = list.filter(g => g.type === 'parking');
-        } else if (zoneFilterTab === 'hazard') {
+        } else if (zoneFilterTab === 'infrastructure') {
             list = list.filter(
                 g =>
                     g.type === 'custom' ||
@@ -997,14 +997,14 @@ export default function GeofencePage() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setZoneFilterTab('hazard')}
+                                onClick={() => setZoneFilterTab('infrastructure')}
                                 className={`px-2.5 py-1 rounded transition cursor-pointer ${
-                                    zoneFilterTab === 'hazard'
-                                        ? 'bg-rose-600 text-white shadow-xs'
-                                        : 'text-rose-700 hover:text-rose-900'
+                                    zoneFilterTab === 'infrastructure'
+                                        ? 'bg-blue-600 text-white shadow-xs'
+                                        : 'text-slate-600 hover:text-slate-900'
                                 }`}
                             >
-                                Hazard ({hazardGeofences.length})
+                                Infrastruktur ({infrastructureGeofences.length})
                             </button>
                         </div>
 
@@ -1353,7 +1353,7 @@ export default function GeofencePage() {
                                             if (zoneFilterTab === 'loading' && featType !== 'loading') return { fill: 'transparent', stroke: 'transparent', strokeWidth: 0 };
                                             if (zoneFilterTab === 'dumping' && featType !== 'dumping') return { fill: 'transparent', stroke: 'transparent', strokeWidth: 0 };
                                             if (zoneFilterTab === 'facility' && featType !== 'parking') return { fill: 'transparent', stroke: 'transparent', strokeWidth: 0 };
-                                            if (zoneFilterTab === 'hazard' && featType !== 'custom') return { fill: 'transparent', stroke: 'transparent', strokeWidth: 0 };
+                                            if (zoneFilterTab === 'infrastructure' && featType !== 'custom') return { fill: 'transparent', stroke: 'transparent', strokeWidth: 0 };
                                         }
 
                                         const color = feature.properties?.color || '#2563EB';
@@ -1392,7 +1392,7 @@ export default function GeofencePage() {
                                         if (zoneFilterTab === 'loading' && gf.type !== 'loading') return null;
                                         if (zoneFilterTab === 'dumping' && gf.type !== 'dumping') return null;
                                         if (zoneFilterTab === 'facility' && gf.type !== 'parking') return null;
-                                        if (zoneFilterTab === 'hazard' && gf.type !== 'custom') return null;
+                                        if (zoneFilterTab === 'infrastructure' && gf.type !== 'custom') return null;
                                     }
 
                                     const lat = Number(gf.latitude);
@@ -1877,7 +1877,7 @@ export default function GeofencePage() {
                                         <option value="dumping">Dumping Area (Disposal / Port Jetty)</option>
                                         <option value="parking">Fasilitas / Workshop / Office</option>
                                         <option value="road">Jalan Hauling / Checkpoint STA</option>
-                                        <option value="custom">Zona Khusus / Hazard (Handak/WMP)</option>
+                                        <option value="custom">Infrastruktur & Zona Khusus (WMP/Pos/Tower)</option>
                                     </select>
                                 </div>
                             </div>
