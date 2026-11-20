@@ -151,7 +151,7 @@ export default function GeofencePage() {
     const [showStaMarkers, setShowStaMarkers] = useState<boolean>(false);
     const [hiddenZoneIds, setHiddenZoneIds] = useState<Set<number>>(new Set());
 
-    // ── STATE MODE TARIK ZONA (PRECISION INDUSTRIAL GIS HUD) ──
+    // ── STATE MODE TARIK ZONA ──
     const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
     const [drawShape, setDrawShape] = useState<'polygon' | 'line' | 'circle'>('polygon');
     const [drawnPoints, setDrawnPoints] = useState<[number, number][]>([]);
@@ -594,7 +594,7 @@ export default function GeofencePage() {
     const handleCancelDrawing = () => {
         setIsDrawingMode(false);
         setDrawnPoints([]);
-        setGeofenceNotice('Mode Tarik Zona GIS dibatalkan.');
+        setGeofenceNotice('Mode Tarik Zona dibatalkan.');
         setTimeout(() => setGeofenceNotice(null), 3000);
     };
 
@@ -853,7 +853,7 @@ export default function GeofencePage() {
                                 </h1>
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    GIS Enterprise
+                                    Enterprise
                                 </span>
                             </div>
                             <p className="text-xs text-gray-500">
@@ -1080,7 +1080,7 @@ export default function GeofencePage() {
                                 </button>
                             </div>
 
-                            {/* Tombol Mode Tarik Zona Manual GIS */}
+                            {/* Tombol Mode Tarik Zona Manual */}
                             <button
                                 type="button"
                                 onClick={() => {
@@ -1103,7 +1103,7 @@ export default function GeofencePage() {
                                 title="Tarik perimeter geofence interaktif pada peta citra satelit"
                             >
                                 <LandPlot className="w-3.5 h-3.5" />
-                                <span>{isDrawingMode ? 'Keluar Tarik' : 'Tarik Zona GIS'}</span>
+                                <span>{isDrawingMode ? 'Keluar Tarik' : 'Tarik Zona'}</span>
                             </button>
 
                             {/* Maximize Toggle */}
@@ -1370,7 +1370,7 @@ export default function GeofencePage() {
                                 />
                             )}
 
-                            {/* 3. ACTIVE DRAWING GEOJSON (SAAT DIGITASI GIS) */}
+                            {/* 3. ACTIVE DRAWING GEOJSON (SAAT DIGITASI) */}
                             {activeDrawingGeoJson && (
                                 <GeoJson
                                     data={activeDrawingGeoJson}
@@ -1805,12 +1805,12 @@ export default function GeofencePage() {
 
                         {/* Form Modal */}
                         <form onSubmit={handleSaveGeofence} className="p-5 space-y-4 text-xs">
-                            {/* Summary Banner jika dari Mode Tarik GIS */}
+                            {/* Summary Banner jika dari Mode Tarik */}
                             {formGeofence.coordinates_json && (
                                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 space-y-1 font-mono text-[11px]">
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold uppercase tracking-wider text-blue-700">
-                                            Hasil Digitasi GIS: {formGeofence.geometry_type.toUpperCase()}
+                                            Hasil Digitasi: {formGeofence.geometry_type.toUpperCase()}
                                         </span>
                                         <span className="text-blue-600">
                                             [{formGeofence.latitude}, {formGeofence.longitude}]
