@@ -210,6 +210,7 @@ Route::controller(DashcamController::class)->prefix("/dashcam")->withoutMiddlewa
     Route::post("/drone-photos", "uploadDronePhoto");
     Route::post("/geofences", "createGeofence");
     Route::delete("/geofences/{id}", "deleteGeofence");
+    Route::match(["put", "post"], "/geofences/{id}", "updateGeofence");
     Route::get("/ritasi-today", "getRitasiToday");
     Route::post("/ritasi/record", "recordRitasi");
     Route::post("/ritasi/reset", "resetRitasi");

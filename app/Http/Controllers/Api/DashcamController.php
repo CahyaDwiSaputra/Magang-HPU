@@ -801,6 +801,84 @@ class DashcamController extends Controller
     }
 
     /**
+     * Update Geofence yang ada
+     */
+    public function updateGeofence(Request $request, $id): JsonResponse
+    {
+        $geofence = \App\Models\Geofence::find($id);
+        if (!$geofence) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Geofence tidak ditemukan.',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name'          => ['required', 'string', 'min:2'],
+            'site'          => ['nullable', 'string', 'max:50'],
+            'type'          => ['required', 'string', 'in:loading,dumping,parking,road,custom'],
+            'latitude'      => ['required', 'numeric'],
+            'longitude'     => ['required', 'numeric'],
+            'radius'        => ['required', 'numeric', 'min:1', 'max:50000'],
+            'color'         => ['nullable', 'string', 'max:20'],
+            'address'       => ['nullable', 'string', 'max:255'],
+            'material'      => ['nullable', 'string', 'max:30'],
+            'geometry_type' => ['nullable', 'string', 'in:circle,polygon,line'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $coordsJson = $request->input('coordinates_json');
+        if (is_array($coordsJson)) {
+            $coordsJson = json_encode($coordsJson);
+        } elseif (empty($coordsJson)) {
+            $lat = (float) $request->input('latitude');
+            $lng = (float) $request->input('longitude');
+            $coordsJson = json_encode([[$lat, $lng]]);
+        }
+
+        $color = $request->input('color', $geofence->color);
+        if (!$color) {
+            $type = $request->input('type');
+            $material = strtoupper((string) $request->input('material', 'OB'));
+            if ($type === 'loading') {
+                $color = ($material === 'COAL') ? '#1E293B' : '#6B7280';
+            } elseif ($type === 'dumping') {
+                $color = ($material === 'COAL') ? '#0F172A' : '#8B5CF6';
+            } elseif ($type === 'parking') {
+                $color = '#10B981';
+            } else {
+                $color = '#3B82F6';
+            }
+        }
+
+        $geofence->update([
+            'name'             => trim((string) $request->input('name')),
+            'site'             => strtoupper(trim((string) $request->input('site', $geofence->site ?: 'HPA'))),
+            'type'             => $request->input('type'),
+            'latitude'         => (float) $request->input('latitude'),
+            'longitude'        => (float) $request->input('longitude'),
+            'radius'           => (int) $request->input('radius'),
+            'color'            => $color,
+            'address'          => $request->input('address', $geofence->address),
+            'material'         => strtoupper((string) $request->input('material', $geofence->material ?: 'OB')),
+            'geometry_type'    => $request->input('geometry_type', $geofence->geometry_type ?: 'circle'),
+            'coordinates_json' => $coordsJson,
+        ]);
+
+        return response()->json([
+            'status'  => 'ok',
+            'message' => 'Geofence berhasil diperbarui.',
+            'data'    => $geofence,
+        ]);
+    }
+
+    /**
      * Rekam 1 ritasi lengkap (Loading -> Travel Isi -> Dumping PTO -> Travel Kosong)
      */
     public function recordRitasi(Request $request): JsonResponse

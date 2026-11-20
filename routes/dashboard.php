@@ -11,6 +11,11 @@ Route::controller(DashboardController::class)->prefix("/dashcam")->group(functio
     Route::get("/telemetry", "getTelemetry");
 });
 
+//GEOFENCE
+Route::controller(DashboardController::class)->prefix("/geofence")->group(function(){
+    Route::get("/", "geofence");
+});
+
 //USER
 Route::controller(DashboardController::class)->prefix("/users")->group(function(){
     Route::get("/", "users");

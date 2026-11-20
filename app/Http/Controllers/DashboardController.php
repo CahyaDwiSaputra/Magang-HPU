@@ -28,6 +28,14 @@ class DashboardController extends Controller
         ]);
     }
 
+    //GEOFENCE
+    public function geofence(Request $request)
+    {
+
+        return Inertia::render('dashboard/geofence/index', [
+        ]);
+    }
+
     public function getTelemetry(Request $request)
     {
         $serverUrl = 'http://10.10.0.53:8080';

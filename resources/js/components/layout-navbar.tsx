@@ -56,6 +56,12 @@ const menu_items=[
         href:"/dashboard/dashcam"
     },
     {
+        id: 'geofence',
+        label: 'GEOFENCE',
+        icon: LandPlot,
+        href:"/dashboard/geofence"
+    },
+    {
         id: 'users',
         label: 'USERS',
         icon: User2,
