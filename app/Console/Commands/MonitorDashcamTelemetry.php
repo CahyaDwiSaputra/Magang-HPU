@@ -195,46 +195,50 @@ class MonitorDashcamTelemetry extends Command
                                 $currentStage = 'TRAVEL_ISI';
                                 $this->info("[".now()->format('H:i:s')."] 🚛 TRAVEL ISI: Unit keluar Pit membawa muatan [{$activeLoadType}] menuju Disposal.");
                             }
-                            // 3. Dumping di Disposal: Berada di geofence Dumping, dumping material (Poin 10: tanpa sensor PTO, gunakan timestamp jam siklus)
+                            // 3. Menuju & Tiba di Lokasi Dumping: Unit berada di geofence Dumping
                             elseif ($inOperationalGeofence && $inOperationalGeofence->type === 'dumping') {
-                                if ($currentGeofenceId !== $inOperationalGeofence->id) {
+                                if ($currentStage !== 'DUMPING') {
                                     $currentStage = 'DUMPING';
-
-                                    // Hitung estimasi durasi dan jarak
-                                    $cycleDurationSec = max(60, now()->diffInSeconds($cycleStartAt));
-                                    $cycleMinutes     = round($cycleDurationSec / 60, 1);
-                                    $timeWita         = now()->format('H:i:s');
-
-                                    // Rekam 1 ritasi lengkap ke database!
-                                    $newRitasi = \App\Models\RitasiLog::create([
-                                        'device_id'           => $deviceId,
-                                        'unit_code'           => config('services.cmsv6.unit_code', 'DT-' . substr($deviceId, -5)),
-                                        'load_type'           => $activeLoadType,
-                                        'geofence_id'         => $inOperationalGeofence->id,
-                                        'pit_geofence_id'     => $lastPitId,
-                                        'dumping_geofence_id' => $inOperationalGeofence->id,
-                                        'loading_time'        => 180,
-                                        'travel_load_time'    => 480,
-                                        'dumping_time'        => 90,
-                                        'travel_empty_time'   => 420,
-                                        'cycle_time_minutes'  => $cycleMinutes > 0 ? $cycleMinutes : 19.5,
-                                        'distance_km'         => 2.4,
-                                        'pto_confirmed'       => true,
-                                        'status'              => 'completed',
-                                        'entered_at'          => now(),
-                                    ]);
-
-                                    $totalRitasi = \App\Models\RitasiLog::where('device_id', $deviceId)
-                                        ->whereDate('entered_at', \Carbon\Carbon::today())
-                                        ->count();
-
-                                    $this->info("[{$timeWita}] 🎯 RITASI #{$totalRitasi} TERCATAT! Unit menyelesaikan dumping [{$activeLoadType}] di {$inOperationalGeofence->name} pada jam {$timeWita} WITA (Durasi: {$cycleMinutes} mnt).");
+                                    $lastDumpingId = $inOperationalGeofence->id;
+                                    $lastDumpingName = $inOperationalGeofence->name;
+                                    $this->info("[".now()->format('H:i:s')."] 📍 DUMPING: Unit tiba di {$inOperationalGeofence->name}. Memulai proses penumpahan material [{$activeLoadType}].");
                                 }
                             }
-                            // 4. Travel Kosong: Keluar dari Disposal menuju kembali ke Pit
+                            // 4. Keluar dari Lokasi Dumping: SIKLUS RESMI DIHITUNG 1 RIT PENUH! (Poin 13)
                             elseif (!$inOperationalGeofence && $currentStage === 'DUMPING' && $isMoving) {
                                 $currentStage = 'TRAVEL_KOSONG';
-                                $this->info("[".now()->format('H:i:s')."] 💨 TRAVEL KOSONG: Unit keluar Disposal kembali menuju Pit.");
+
+                                // Hitung durasi siklus dan timestamp
+                                $cycleDurationSec = max(60, now()->diffInSeconds($cycleStartAt));
+                                $cycleMinutes     = round($cycleDurationSec / 60, 1);
+                                $timeWita         = now()->format('H:i:s');
+                                $dumpingId        = $lastDumpingId ?? 3;
+                                $dumpingName      = $lastDumpingName ?? 'Disposal Timbunan';
+
+                                // Rekam 1 ritasi lengkap ke database!
+                                $newRitasi = \App\Models\RitasiLog::create([
+                                    'device_id'           => $deviceId,
+                                    'unit_code'           => config('services.cmsv6.unit_code', 'DT-' . substr($deviceId, -5)),
+                                    'load_type'           => $activeLoadType,
+                                    'geofence_id'         => $dumpingId,
+                                    'pit_geofence_id'     => $lastPitId,
+                                    'dumping_geofence_id' => $dumpingId,
+                                    'loading_time'        => 180,
+                                    'travel_load_time'    => 480,
+                                    'dumping_time'        => 90,
+                                    'travel_empty_time'   => 420,
+                                    'cycle_time_minutes'  => $cycleMinutes > 0 ? $cycleMinutes : 19.5,
+                                    'distance_km'         => 2.4,
+                                    'pto_confirmed'       => true,
+                                    'status'              => 'completed',
+                                    'entered_at'          => now(),
+                                ]);
+
+                                $totalRitasi = \App\Models\RitasiLog::where('device_id', $deviceId)
+                                    ->whereDate('entered_at', \Carbon\Carbon::today())
+                                    ->count();
+
+                                $this->info("[{$timeWita}] 🎯 RITASI #{$totalRitasi} TERCATAT (+1 RIT)! Unit DT/HD keluar dari lokasi dumping ({$dumpingName}) menuju siklus kembali ke Pit. (Durasi: {$cycleMinutes} mnt)");
                             }
 
                             $currentGeofenceId = $inGeofenceId;

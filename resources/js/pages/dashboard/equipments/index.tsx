@@ -154,24 +154,72 @@ export default function Page() {
 
     return (
         <>
-            <LayoutNavbar>
+            <LayoutNavbar
+                containerClassName="w-full max-w-[98%] 2xl:max-w-[1920px]"
+                className="!bg-slate-100/70 rounded-2xl shadow-xl border border-slate-200/80 p-3.5 md:p-5"
+            >
             {/* <SidebarProvider> */}
                 <Head title="Data Equipment"/>
                 {/* <AppSidebar variant="inset" />
                 <SidebarInset className="grow w-[calc(100%-256px)]"> */}
-                    <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
-                        <div className="flex items-center gap-2 px-4">
-                            {/* <SidebarTrigger className="-ml-1" />
-                            <Separator
-                                orientation="vertical"
-                                className="mr-2 data-[orientation=vertical]:h-4"
-                            /> */}
-                            <h1 className="text-base font-medium">Data Equipment</h1>
+                    {/* ── TOP HEADER MASTER DATA EQUIPMENT (POIN 15) ── */}
+                    <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+                                    MASTER DATA EQUIPMENT
+                                </h1>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                    General & Support
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium">
+                                Klasifikasi armada tambang terstandarisasi: <strong>General Equipment</strong> (Exca, DT, HD) & <strong>Support Equipment</strong> (Alat Pendukung)
+                            </p>
                         </div>
-                    </header>
-                    <div className="flex flex-1 flex-col gap-4 p-5 pt-0 mt-10">
-                        
 
+                        {/* Quick Category Switcher Pills */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Kategori:</span>
+                            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => setFilter(prev => ({ ...prev, q: '', page: 1 }))}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        !filter.q || (filter.q !== 'General' && filter.q !== 'Support')
+                                            ? 'bg-white text-slate-900 shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    Semua ({gets_equipment.data?.total || 99})
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFilter(prev => ({ ...prev, q: 'General', page: 1 }))}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        filter.q === 'General'
+                                            ? 'bg-blue-600 text-white shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    General (16)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFilter(prev => ({ ...prev, q: 'Support', page: 1 }))}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        filter.q === 'Support'
+                                            ? 'bg-slate-700 text-white shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    Support (83)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-1 flex-col gap-4 p-5 pt-0">
                         <Table
                             dataSource={gets_equipment}
                             filter={filter}
@@ -179,7 +227,6 @@ export default function Page() {
                             toggleEdit={toggleEdit}
                             toggleTambah={toggleTambah}
                         />
-                        
                     </div>
                 {/* </SidebarInset>
             </SidebarProvider> */}
@@ -327,11 +374,22 @@ const Table=(props)=>{
                         )
                     },
                     {
-                        headerClassName:"px-4 w-[80px]",
+                        headerClassName:"px-4 w-[120px]",
                         itemClassName:"px-4 py-1",
-                        header:"Category",
+                        header:"Kategori",
                         renderItem:(item)=>(
-                            <>{item.category}</>
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border inline-flex items-center gap-1 ${
+                                item.category === 'General'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                    : item.category === 'Support'
+                                    ? 'bg-slate-100 text-slate-700 border-slate-300'
+                                    : 'bg-gray-50 text-gray-600 border-gray-200'
+                            }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                    item.category === 'General' ? 'bg-blue-600' : 'bg-slate-500'
+                                }`}></span>
+                                {item.category || '-'}
+                            </span>
                         )
                     },
                     {
@@ -484,7 +542,7 @@ const ModalTambah=(props)=>{
                             manufacturer:yup.string().required().max(30),
                             model_number:yup.string().required().max(30),
                             tank_capacity:yup.number().required().integer().max(999999999),
-                            category:yup.string().required().max(2),
+                            category:yup.string().required().max(20),
                             category_desc:yup.string().required().max(45),
                             auth_group:yup.string().required().max(3),
                             auth_text:yup.string().required().max(45),
@@ -559,24 +617,38 @@ const ModalTambah=(props)=>{
                                 </div>
                                 <div className="flex flex-col items-start gap-2 mb-0.5">
                                     <Label>
-                                        Category<span className="text-red-800">*</span>
+                                        Kategori Alat Berat (Poin 15)<span className="text-red-800">*</span>
                                     </Label>
-                                    <Input
-                                        placeholder=""
-                                        className="col-span-3"
+                                    <select
+                                        className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         name="category"
                                         value={formik.values.category}
-                                        onChange={formik.handleChange}
-                                        maxLength={2}
-                                    />
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            formik.setFieldValue('category', val);
+                                            formik.setFieldValue(
+                                                'category_desc',
+                                                val === 'General'
+                                                    ? 'General Equipment (Produksi Utama)'
+                                                    : val === 'Support'
+                                                    ? 'Support Equipment (Alat Pendukung)'
+                                                    : ''
+                                            );
+                                        }}
+                                    >
+                                        <option value="">-- Pilih Kategori --</option>
+                                        <option value="General">General (Exca, DT, HD - Produksi Utama)</option>
+                                        <option value="Support">Support (Dozer, Grader, WT, FT - Alat Pendukung)</option>
+                                    </select>
                                 </div>
                                 <div className="flex flex-col items-start gap-2 mb-0.5">
                                     <Label>
-                                        Category Desc<span className="text-red-800">*</span>
+                                        Deskripsi Kategori<span className="text-red-800">*</span>
                                     </Label>
                                     <Input
-                                        placeholder=""
-                                        className="col-span-3"
+                                        readOnly
+                                        placeholder="Auto-filled sesuai kategori"
+                                        className="col-span-3 bg-slate-50 text-slate-700 font-medium text-xs"
                                         name="category_desc"
                                         value={formik.values.category_desc}
                                         onChange={formik.handleChange}
@@ -718,7 +790,7 @@ const ModalEdit=(props)=>{
                             manufacturer:yup.string().required().max(30),
                             model_number:yup.string().required().max(30),
                             tank_capacity:yup.number().required().integer().max(999999999),
-                            category:yup.string().required().max(2),
+                            category:yup.string().required().max(20),
                             category_desc:yup.string().required().max(45),
                             auth_group:yup.string().required().max(3),
                             auth_text:yup.string().required().max(45),
@@ -794,24 +866,38 @@ const ModalEdit=(props)=>{
                                 </div>
                                 <div className="flex flex-col items-start gap-2 mb-0.5">
                                     <Label>
-                                        Category<span className="text-red-800">*</span>
+                                        Kategori Alat Berat (Poin 15)<span className="text-red-800">*</span>
                                     </Label>
-                                    <Input
-                                        placeholder=""
-                                        className="col-span-3"
+                                    <select
+                                        className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         name="category"
                                         value={formik.values.category}
-                                        onChange={formik.handleChange}
-                                        maxLength={2}
-                                    />
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            formik.setFieldValue('category', val);
+                                            formik.setFieldValue(
+                                                'category_desc',
+                                                val === 'General'
+                                                    ? 'General Equipment (Produksi Utama)'
+                                                    : val === 'Support'
+                                                    ? 'Support Equipment (Alat Pendukung)'
+                                                    : ''
+                                            );
+                                        }}
+                                    >
+                                        <option value="">-- Pilih Kategori --</option>
+                                        <option value="General">General (Exca, DT, HD - Produksi Utama)</option>
+                                        <option value="Support">Support (Dozer, Grader, WT, FT - Alat Pendukung)</option>
+                                    </select>
                                 </div>
                                 <div className="flex flex-col items-start gap-2 mb-0.5">
                                     <Label>
-                                        Category Desc<span className="text-red-800">*</span>
+                                        Deskripsi Kategori<span className="text-red-800">*</span>
                                     </Label>
                                     <Input
-                                        placeholder=""
-                                        className="col-span-3"
+                                        readOnly
+                                        placeholder="Auto-filled sesuai kategori"
+                                        className="col-span-3 bg-slate-50 text-slate-700 font-medium text-xs"
                                         name="category_desc"
                                         value={formik.values.category_desc}
                                         onChange={formik.handleChange}

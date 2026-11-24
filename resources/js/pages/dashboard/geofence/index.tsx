@@ -147,6 +147,30 @@ export default function GeofencePage() {
     // ── STATE VISIBILITAS LAYER (POIN 5) ──
     const [showHaulingRoutes, setShowHaulingRoutes] = useState<boolean>(true);
     const [showPolygons, setShowPolygons] = useState<boolean>(true);
+
+    // ── STATE RIWAYAT OVERSPEED PADA GEOFENCE (POIN 12) ──
+    interface OverspeedLogItem {
+        id: string;
+        unit_code: string;
+        driver_name: string;
+        site: string;
+        geofence_id: number;
+        geofence_name: string;
+        geofence_type: string;
+        speed: number;
+        speed_limit: number;
+        excess_speed: number;
+        duration_seconds: number;
+        duration_formatted: string;
+        time: string;
+        time_formatted: string;
+        status: string;
+        latitude: number;
+        longitude: number;
+    }
+    const [overspeedLogs, setOverspeedLogs] = useState<OverspeedLogItem[]>([]);
+    const [showOverspeedModal, setShowOverspeedModal] = useState<boolean>(false);
+    const [overspeedSearchQuery, setOverspeedSearchQuery] = useState<string>('');
     const [showLabels, setShowLabels] = useState<boolean>(true);
     const [showStaMarkers, setShowStaMarkers] = useState<boolean>(false);
     const [hiddenZoneIds, setHiddenZoneIds] = useState<Set<number>>(new Set());
@@ -228,6 +252,19 @@ export default function GeofencePage() {
         }
     };
 
+    // Fetch Riwayat Pelanggaran Overspeed pada Geofence (Poin 12)
+    const fetchOverspeedLogs = async () => {
+        try {
+            const res = await fetch(`/api/dashcam/geofences/overspeed-history?site=${selectedSiteFilter}`);
+            const data = await res.json();
+            if (data.status === 'ok' && Array.isArray(data.data)) {
+                setOverspeedLogs(data.data);
+            }
+        } catch (e) {
+            console.error('Error fetching overspeed history:', e);
+        }
+    };
+
     const fetchFleetTelemetry = async () => {
         try {
             const [ritasiRes, statusRes] = await Promise.allSettled([
@@ -278,7 +315,8 @@ export default function GeofencePage() {
         fetchHaulingRoutes();
         fetchOperationalPolygons();
         fetchFleetTelemetry();
-    }, []);
+        fetchOverspeedLogs();
+    }, [selectedSiteFilter]);
 
     // ── TILE PROVIDER PETA ──
     const mapTileProvider = (x: number, y: number, z: number) => {
@@ -902,6 +940,17 @@ export default function GeofencePage() {
                                 </button>
                             </div>
                         </div>
+
+                        {/* Riwayat Overspeed pada Geofence (Poin 12) */}
+                        <button
+                            type="button"
+                            onClick={() => setShowOverspeedModal(true)}
+                            className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            title="Riwayat Pelanggaran Batas Kecepatan Spasial Geofence"
+                        >
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Riwayat Overspeed ({overspeedLogs.length})</span>
+                        </button>
 
                         {/* Tombol Buka Drawer Manajemen Zona (Poin 3, 4, 5) */}
                         <button
@@ -1537,6 +1586,12 @@ export default function GeofencePage() {
                                         <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-mono uppercase">
                                             {focusedGeofence.type}
                                         </span>
+                                        {overspeedLogs.some(o => o.geofence_id === focusedGeofence.id) && (
+                                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
+                                                <AlertTriangle className="w-2.5 h-2.5 text-rose-600" />
+                                                {overspeedLogs.filter(o => o.geofence_id === focusedGeofence.id).length} Overspeed Tercatat
+                                            </span>
+                                        )}
                                     </div>
                                     <p className="text-[10px] text-gray-500 font-mono truncate">
                                         Radius: {focusedGeofence.radius}m • [{Number(focusedGeofence.latitude).toFixed(5)},{' '}
@@ -1634,6 +1689,177 @@ export default function GeofencePage() {
                     </div>
                 </div>
             </div>
+
+            {/* ── SLIDE-OVER DRAWER: RIWAYAT PELANGGARAN OVERSPEED PADA GEOFENCE (POIN 12) ── */}
+            {showOverspeedModal && (
+                <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
+                    <div className="w-full max-w-lg bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col animate-slide-left text-slate-900">
+                        {/* Drawer Header */}
+                        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-rose-50/70">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 bg-rose-600 text-white rounded-xl shadow-xs">
+                                    <AlertTriangle className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-sm text-slate-900">
+                                        Riwayat Overspeed Spasial Geofence
+                                    </h3>
+                                    <p className="text-[11px] text-slate-500 font-medium">
+                                        Catatan lokasi zona & durasi pelanggaran batas kecepatan konsesi
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowOverspeedModal(false)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Search & Site Filter */}
+                        <div className="p-3 border-b border-slate-100 space-y-2 bg-slate-50/50">
+                            <div className="relative">
+                                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                    type="text"
+                                    value={overspeedSearchQuery}
+                                    onChange={e => setOverspeedSearchQuery(e.target.value)}
+                                    placeholder="Cari unit nopol, zona, atau driver..."
+                                    className="w-full bg-white border border-slate-200 text-xs text-slate-900 rounded-lg pl-8 pr-8 py-2 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                                />
+                                {overspeedSearchQuery && (
+                                    <button
+                                        onClick={() => setOverspeedSearchQuery('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-0.5">
+                                <span className="text-slate-500 font-medium">
+                                    Total Kejadian:{' '}
+                                    <strong className="text-rose-700">
+                                        {overspeedLogs.filter(item => {
+                                            if (!overspeedSearchQuery) return true;
+                                            const q = overspeedSearchQuery.toLowerCase();
+                                            return (
+                                                item.unit_code.toLowerCase().includes(q) ||
+                                                item.geofence_name.toLowerCase().includes(q) ||
+                                                item.driver_name.toLowerCase().includes(q)
+                                            );
+                                        }).length}
+                                    </strong>
+                                </span>
+                                <span className="text-[11px] font-bold text-slate-500">
+                                    Site: {selectedSiteFilter}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Overspeed Records List */}
+                        <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y-0">
+                            {overspeedLogs
+                                .filter(item => {
+                                    if (!overspeedSearchQuery) return true;
+                                    const q = overspeedSearchQuery.toLowerCase();
+                                    return (
+                                        item.unit_code.toLowerCase().includes(q) ||
+                                        item.geofence_name.toLowerCase().includes(q) ||
+                                        item.driver_name.toLowerCase().includes(q)
+                                    );
+                                })
+                                .map(log => (
+                                    <div
+                                        key={log.id}
+                                        className="bg-white border border-slate-200/90 hover:border-rose-300 rounded-xl p-3 shadow-xs hover:shadow-md transition-all space-y-2"
+                                    >
+                                        {/* Row 1: Unit & Timestamp */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className="font-extrabold text-xs text-slate-900">
+                                                        {log.unit_code}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
+                                                        {log.driver_name}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700">
+                                                        Site {log.site}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                                    ID: {log.id} • {log.time_formatted}
+                                                </p>
+                                            </div>
+
+                                            {/* Speed Badge */}
+                                            <div className="text-right shrink-0">
+                                                <div className="text-sm font-black text-rose-600">
+                                                    {log.speed} <span className="text-[10px] font-normal text-slate-500">km/j</span>
+                                                </div>
+                                                <div className="text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                                                    +{log.excess_speed} km/j di atas batas ({log.speed_limit})
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 2: Location & Duration (POIN 12 INTI: LOKASI DI MANA & BERAPA LAMA) */}
+                                        <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/70 text-xs grid grid-cols-2 gap-2">
+                                            <div>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase block">
+                                                    Lokasi Zona Geofence:
+                                                </span>
+                                                <span className="font-bold text-slate-800 text-[11px] truncate block flex items-center gap-1 mt-0.5">
+                                                    <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
+                                                    <span className="truncate">{log.geofence_name}</span>
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase block">
+                                                    Durasi Pelanggaran:
+                                                </span>
+                                                <span className="font-bold text-purple-700 text-[11px] flex items-center gap-1 mt-0.5 font-mono">
+                                                    <Route className="w-3 h-3 text-purple-600 shrink-0" />
+                                                    <span>{log.duration_formatted}</span>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 3: Action Buttons */}
+                                        <div className="flex items-center justify-between pt-1 text-xs">
+                                            <span className="text-[10px] font-semibold text-emerald-700 flex items-center gap-1">
+                                                <Check className="w-3 h-3" />
+                                                {log.status}
+                                            </span>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setMapCenter([log.latitude, log.longitude]);
+                                                    setMapZoom(16);
+                                                    setFocusedGeofenceId(log.geofence_id);
+                                                    setShowOverspeedModal(false);
+                                                    setGeofenceNotice(
+                                                        `📍 Memusatkan peta ke lokasi pelanggaran: ${log.geofence_name} (${log.unit_code})`
+                                                    );
+                                                }}
+                                                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-xs"
+                                                title="Fokuskan peta ke lokasi zona geofence ini"
+                                            >
+                                                <Crosshair className="w-3 h-3" />
+                                                <span>Fokus ke Peta</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── SLIDE-OVER DRAWER BERSIH PUTIH: MANAJEMEN ZONA & VISIBILITAS (POIN 3, 4, 5) ── */}
             {showZonesDrawer && (

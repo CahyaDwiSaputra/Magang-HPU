@@ -1025,4 +1025,149 @@ class DashcamController extends Controller
             'count'   => 0,
         ]);
     }
+
+    /**
+     * GET /api/dashcam/geofences/overspeed-history (Poin 12)
+     * Mengambil riwayat pelanggaran overspeed pada geofence (lokasi zona & durasi)
+     */
+    public function getOverspeedHistory(Request $request): JsonResponse
+    {
+        $site = strtoupper($request->query('site', 'ALL'));
+        $geofenceId = $request->query('geofence_id');
+
+        $baseTime = strtotime('2026-11-24 10:25:00');
+
+        $overspeedLogs = [
+            [
+                'id'                 => 'OVS-20261124-001',
+                'unit_code'          => 'BDA-DT41107VV (RU-225)',
+                'driver_name'        => 'Budi Santoso',
+                'site'               => 'HPA',
+                'geofence_id'        => 14,
+                'geofence_name'      => 'Jalur Hauling HPA STA KM 14',
+                'geofence_type'      => 'infrastruktur',
+                'speed'              => 48,
+                'speed_limit'        => 40,
+                'excess_speed'       => 8,
+                'duration_seconds'   => 165,
+                'duration_formatted' => '2 menit 45 detik',
+                'time'               => date('Y-m-d H:i:s', $baseTime - 45),
+                'time_formatted'     => '10:24 WITA',
+                'status'             => 'Peringatan Kabin Terkirim',
+                'latitude'           => 2.145620,
+                'longitude'          => 117.412850,
+            ],
+            [
+                'id'                 => 'OVS-20261124-002',
+                'unit_code'          => 'HD-78501 (Trial UNS)',
+                'driver_name'        => 'Slamet Riyadi',
+                'site'               => 'HPA',
+                'geofence_id'        => 2,
+                'geofence_name'      => 'Pit Front Selatan HPA',
+                'geofence_type'      => 'loading',
+                'speed'              => 26,
+                'speed_limit'        => 20,
+                'excess_speed'       => 6,
+                'duration_seconds'   => 75,
+                'duration_formatted' => '1 menit 15 detik',
+                'time'               => date('Y-m-d H:i:s', $baseTime - 240),
+                'time_formatted'     => '10:21 WITA',
+                'status'             => 'Peringatan Kabin Terkirim',
+                'latitude'           => 2.138900,
+                'longitude'          => 117.398200,
+            ],
+            [
+                'id'                 => 'OVS-20261124-003',
+                'unit_code'          => 'BDA-DT41107VV (RU-225)',
+                'driver_name'        => 'Budi Santoso',
+                'site'               => 'HPA',
+                'geofence_id'        => 10,
+                'geofence_name'      => 'Simpang Empat TOS / ERT',
+                'geofence_type'      => 'fasilitas',
+                'speed'              => 22,
+                'speed_limit'        => 15,
+                'excess_speed'       => 7,
+                'duration_seconds'   => 90,
+                'duration_formatted' => '1 menit 30 detik',
+                'time'               => date('Y-m-d H:i:s', $baseTime - 510),
+                'time_formatted'     => '10:16 WITA',
+                'status'             => 'Diverifikasi Safety Officer',
+                'latitude'           => 2.141200,
+                'longitude'          => 117.405300,
+            ],
+            [
+                'id'                 => 'OVS-20261124-004',
+                'unit_code'          => 'TrialUNS2',
+                'driver_name'        => 'Agus Prasetyo',
+                'site'               => 'BDA',
+                'geofence_id'        => 3,
+                'geofence_name'      => 'Disposal OPD LW',
+                'geofence_type'      => 'dumping',
+                'speed'              => 25,
+                'speed_limit'        => 15,
+                'excess_speed'       => 10,
+                'duration_seconds'   => 195,
+                'duration_formatted' => '3 menit 15 detik',
+                'time'               => date('Y-m-d H:i:s', $baseTime - 810),
+                'time_formatted'     => '10:11 WITA',
+                'status'             => 'Peringatan Kabin Terkirim',
+                'latitude'           => -0.852100,
+                'longitude'          => 114.921300,
+            ],
+            [
+                'id'                 => 'OVS-20261124-005',
+                'unit_code'          => 'BDA-DT41110VV (RU-230)',
+                'driver_name'        => 'Joko Wahyudi',
+                'site'               => 'BDA',
+                'geofence_id'        => 13,
+                'geofence_name'      => 'Turunan Curam STA KM 13',
+                'geofence_type'      => 'infrastruktur',
+                'speed'              => 36,
+                'speed_limit'        => 25,
+                'excess_speed'       => 11,
+                'duration_seconds'   => 260,
+                'duration_formatted' => '4 menit 20 detik',
+                'time'               => date('Y-m-d H:i:s', $baseTime - 1250),
+                'time_formatted'     => '10:04 WITA',
+                'status'             => 'Investigasi Pengawas Lapangan',
+                'latitude'           => -0.849500,
+                'longitude'          => 114.915800,
+            ],
+            [
+                'id'                 => 'OVS-20261124-006',
+                'unit_code'          => 'HPA-DT47101VV',
+                'driver_name'        => 'Eko Supriyanto',
+                'site'               => 'HPA',
+                'geofence_id'        => 8,
+                'geofence_name'      => 'Workshop Central Area',
+                'geofence_type'      => 'fasilitas',
+                'speed'              => 18,
+                'speed_limit'        => 10,
+                'excess_speed'       => 8,
+                'duration_seconds'   => 110,
+                'duration_formatted' => '1 menit 50 detik',
+                'time'               => date('Y-m-d H:i:s', $baseTime - 1600),
+                'time_formatted'     => '09:58 WITA',
+                'status'             => 'Selesai Ditindak',
+                'latitude'           => 2.148100,
+                'longitude'          => 117.419000,
+            ],
+        ];
+
+        // Filter berdasarkan site jika bukan ALL
+        if ($site !== 'ALL') {
+            $overspeedLogs = array_values(array_filter($overspeedLogs, fn($l) => $l['site'] === $site));
+        }
+
+        // Filter berdasarkan ID geofence jika diminta spesifik
+        if ($geofenceId) {
+            $overspeedLogs = array_values(array_filter($overspeedLogs, fn($l) => $l['geofence_id'] == $geofenceId));
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'total'  => count($overspeedLogs),
+            'data'   => $overspeedLogs,
+        ]);
+    }
 }

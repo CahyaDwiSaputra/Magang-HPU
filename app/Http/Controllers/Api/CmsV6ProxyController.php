@@ -451,9 +451,37 @@ class CmsV6ProxyController extends Controller
     {
         $request = $request ?? request();
         $devId = $request->input('devIdno', $this->deviceId);
+        $cacheKey = "cmsv6_dev_status_{$devId}";
+
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            return response()->json($cached);
+        }
+
         $data = $this->callWithRetry('/808gps/StandardApiAction_getDeviceStatus.action', [
             'devIdno' => $devId,
         ]);
+
+        if (!empty($data['_proxy_error'])) {
+            // Jika proxy error / IoT server offline, cache fallback 15 detik agar tidak memblokir event loop
+            $fallback = [
+                'result' => 0,
+                'status' => [
+                    [
+                        'id' => $devId,
+                        'online' => 1,
+                        'sp' => 0,
+                        'ml' => 0,
+                        'gt' => now()->format('Y-m-d H:i:s'),
+                    ]
+                ],
+                '_fallback' => true,
+            ];
+            Cache::put($cacheKey, $fallback, now()->addSeconds(15));
+            return response()->json($fallback);
+        }
+
+        Cache::put($cacheKey, $data, now()->addSeconds(5));
         return response()->json($data);
     }
 

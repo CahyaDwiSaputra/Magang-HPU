@@ -532,6 +532,8 @@ export default function Page() {
     const [alarmScope, setAlarmScope] = useState<'vehicle' | 'fleet'>('vehicle');
     const [haulingStage, setHaulingStage] = useState<HaulingStage>('LOADING');
     const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>('OB');
+    // Poin 14: State Toggle Material Muatan Khusus Excavator (Coal vs OB)
+    const [excaMaterial, setExcaMaterial] = useState<MaterialType>('OB');
     const [currentTrip, setCurrentTrip] = useState<{
         startTime: string;
         nowTime: string;
@@ -1652,17 +1654,30 @@ export default function Page() {
 
                     if (currentFoundGeofence) {
                         setActiveGeofence(currentFoundGeofence);
-                        if (currentFoundGeofence.type === 'dumping' && lastGeofenceId !== currentFoundGeofence.id) {
-                            void recordRitasi({
-                                dumpingGeofenceId: currentFoundGeofence.id,
-                                dumpingName: currentFoundGeofence.name,
-                                loadType: selectedMaterial,
-                                });
+                        // Poin 13: Masuk ke Pit Loading (Dekat Exca)
+                        if (currentFoundGeofence.type === 'loading') {
+                            setHaulingStage('LOADING');
+                        } 
+                        // Poin 13: Masuk ke Disposal (Menuju Dumping)
+                        else if (currentFoundGeofence.type === 'dumping') {
+                            setHaulingStage('DUMPING');
                         }
                         setLastGeofenceId(currentFoundGeofence.id);
                     } else {
+                        // Poin 13: Keluar dari zona geofence
+                        if (haulingStage === 'LOADING') {
+                            // Keluar dari pit membawa muatan menuju dumping
+                            setHaulingStage('TRAVEL_ISI');
+                        } else if (haulingStage === 'DUMPING') {
+                            // KELUAR DARI LOKASI DUMPING = HITUNG 1 RIT LENGKAP! (Poin 13)
+                            setHaulingStage('TRAVEL_KOSONG');
+                            void recordRitasi({
+                                dumpingGeofenceId: lastGeofenceId || 3,
+                                dumpingName: 'Disposal Timbunan',
+                                loadType: selectedMaterial,
+                            });
+                        }
                         setActiveGeofence(null);
-                        setLastGeofenceId(null);
                     }
 
                     const rawSpeed = Math.round((s.sp || 0) / 10);
@@ -2591,40 +2606,76 @@ export default function Page() {
                                                     </span>
                                                 </div>
 
-                                                {/* Stepper Progress */}
+                                                {/* Stepper Progress & Algoritma Ritasi (Poin 13: Dekat Exca -> Menuju Dumping -> Keluar Dumping = +1 Rit) */}
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs font-bold">
-                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
-                                                        haulingStage === 'LOADING' 
-                                                            ? 'bg-blue-50 border-blue-300 text-blue-800 shadow-xs' 
-                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
-                                                    }`}>
-                                                        <Layers className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                                        <span className="truncate">1. Loading</span>
-                                                    </div>
-                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
-                                                        haulingStage === 'TRAVEL_ISI' 
-                                                            ? 'bg-blue-50 border-blue-300 text-blue-800 shadow-xs' 
-                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
-                                                    }`}>
-                                                        <Truck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                                        <span className="truncate">2. Travel Isi</span>
-                                                    </div>
-                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
-                                                        haulingStage === 'DUMPING' 
-                                                            ? 'bg-amber-50 border-amber-300 text-amber-800 shadow-xs' 
-                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
-                                                    }`}>
-                                                        <ArrowRightCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                                        <span className="truncate">3. Dumping</span>
-                                                    </div>
-                                                    <div className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
-                                                        haulingStage === 'TRAVEL_KOSONG' 
-                                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-xs' 
-                                                            : 'bg-slate-50 border-slate-200/80 text-gray-500'
-                                                    }`}>
-                                                        <RotateCcw className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                                        <span className="truncate">4. Trv Kosong</span>
-                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setHaulingStage('LOADING');
+                                                            setGeofenceNotice('⛏️ Tahap 1: Unit DT/HD mendekati Excavator di Pit front loading.');
+                                                        }}
+                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
+                                                            haulingStage === 'LOADING' 
+                                                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
+                                                        }`}
+                                                        title="Unit DT/HD mendekati Excavator di Pit"
+                                                    >
+                                                        <Layers className="w-3.5 h-3.5 shrink-0" />
+                                                        <span className="truncate">1. Dekat Exca (Pit)</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setHaulingStage('TRAVEL_ISI');
+                                                            setGeofenceNotice('🚛 Tahap 2: Unit DT/HD membawa muatan menuju lokasi dumping.');
+                                                        }}
+                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
+                                                            haulingStage === 'TRAVEL_ISI' 
+                                                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
+                                                        }`}
+                                                        title="Menuju lokasi dumping (Travel Isi)"
+                                                    >
+                                                        <Truck className="w-3.5 h-3.5 shrink-0" />
+                                                        <span className="truncate">2. Menuju Dumping</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setHaulingStage('DUMPING');
+                                                            setGeofenceNotice('📍 Tahap 3: Unit DT/HD berada di lokasi dumping pembuangan material.');
+                                                        }}
+                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
+                                                            haulingStage === 'DUMPING' 
+                                                                ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
+                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
+                                                        }`}
+                                                        title="Tiba di lokasi dumping"
+                                                    >
+                                                        <ArrowRightCircle className="w-3.5 h-3.5 shrink-0" />
+                                                        <span className="truncate">3. Di Lokasi Dumping</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setHaulingStage('TRAVEL_KOSONG');
+                                                            void recordRitasi({
+                                                                dumpingGeofenceId: lastGeofenceId || 3,
+                                                                dumpingName: activeGeofence?.name || 'Disposal OPD LW',
+                                                                loadType: selectedMaterial,
+                                                            });
+                                                        }}
+                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
+                                                            haulingStage === 'TRAVEL_KOSONG' 
+                                                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
+                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
+                                                        }`}
+                                                        title="Keluar dari lokasi dumping = Dihitung 1 Rit (Poin 13)"
+                                                    >
+                                                        <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                                                        <span className="truncate">4. Keluar Dump (+1 Rit!)</span>
+                                                    </button>
                                                 </div>
 
                                                 {/* Trip Info & Big RIT Box */}
@@ -2705,37 +2756,117 @@ export default function Page() {
                                             </div>
                                         </div>
                                     ) : (
-                                        /* Card 6 (Excavator): OPERASIONAL EXCAVATOR */
+                                        /* Card 6 (Excavator): OPERASIONAL EXCAVATOR & TOGGLE MATERIAL (POIN 14) */
                                         <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
-                                            <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
-                                                <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                                    <LandPlot className="w-3.5 h-3.5 text-amber-600" />
-                                                    UNIT EXCAVATOR & FRONT LOADING
-                                                </span>
-                                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
-                                                    currentVehicle.status === 'ONLINE' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-600 bg-slate-50 border-slate-200'
-                                                }`}>
-                                                    <span className={`w-2 h-2 rounded-full ${currentVehicle.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                                                    {currentVehicle.status === 'ONLINE' ? 'EXCA ONLINE' : 'EXCA STANDBY'}
-                                                </span>
-                                            </div>
-                                            <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 flex flex-col gap-2">
-                                                <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-400 font-semibold uppercase text-[10px]">Identitas Unit</span>
-                                                    <span className="text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-gray-700">{currentVehicle.site}</span>
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
+                                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                        <LandPlot className="w-3.5 h-3.5 text-amber-600" />
+                                                        UNIT EXCAVATOR & FRONT LOADING
+                                                    </span>
+                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                                                        currentVehicle.status === 'ONLINE' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-600 bg-slate-50 border-slate-200'
+                                                    }`}>
+                                                        <span className={`w-2 h-2 rounded-full ${currentVehicle.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                        {currentVehicle.status === 'ONLINE' ? 'EXCA ONLINE' : 'EXCA STANDBY'}
+                                                    </span>
                                                 </div>
-                                                <div className="flex items-baseline gap-2">
-                                                    <h4 className="text-xl font-bold text-amber-600">{currentVehicle.plateNo}</h4>
-                                                    <span className="text-xs text-gray-400 font-mono">ID: {currentVehicle.deviceNo}</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
-                                                    <div className="bg-white p-2 rounded border border-slate-200">
-                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Operator Kabin</p>
-                                                        <p className="font-bold text-gray-800 truncate">{driver?.name || 'Kabin Standby'}</p>
+                                                <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 flex flex-col gap-2">
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-gray-400 font-semibold uppercase text-[10px]">Identitas Unit</span>
+                                                        <span className="text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-gray-700">{currentVehicle.site}</span>
                                                     </div>
-                                                    <div className="bg-white p-2 rounded border border-slate-200">
-                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Zona Operasional</p>
-                                                        <p className="font-bold text-gray-800 truncate">{activeGeofence ? activeGeofence.name : 'Area Tambang'}</p>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <h4 className="text-xl font-bold text-amber-600">{currentVehicle.plateNo}</h4>
+                                                        <span className="text-xs text-gray-400 font-mono">ID: {currentVehicle.deviceNo}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
+                                                        <div className="bg-white p-2 rounded border border-slate-200">
+                                                            <p className="text-gray-400 font-medium uppercase text-[10px]">Operator Kabin</p>
+                                                            <p className="font-bold text-gray-800 truncate">{driver?.name || 'Kabin Standby'}</p>
+                                                        </div>
+                                                        <div className="bg-white p-2 rounded border border-slate-200">
+                                                            <p className="text-gray-400 font-medium uppercase text-[10px]">Zona Operasional</p>
+                                                            <p className="font-bold text-gray-800 truncate">{activeGeofence ? activeGeofence.name : 'Area Pit Front'}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* POIN 14: TOGGLE MATERIAL MUATAN EXCAVATOR (COAL VS OB) */}
+                                                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col gap-2 mt-2.5">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                                                            <Layers className="w-3.5 h-3.5 text-blue-600" />
+                                                            Toggle Material Exca (Poin 14):
+                                                        </span>
+                                                        <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full border ${
+                                                            excaMaterial === 'COAL'
+                                                                ? 'bg-slate-900 text-amber-400 border-black'
+                                                                : 'bg-amber-100 text-amber-900 border-amber-300'
+                                                        }`}>
+                                                            {excaMaterial === 'COAL' ? 'COAL (Batubara)' : 'OB (Overburden)'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Primary Toggle Buttons: OB vs COAL */}
+                                                    <div className="grid grid-cols-2 gap-2 pt-0.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setExcaMaterial('OB');
+                                                                setSelectedMaterial('OB');
+                                                                setGeofenceNotice('🚜 Material Excavator diatur ke: OB (Overburden)');
+                                                                setTimeout(() => setGeofenceNotice(null), 4000);
+                                                            }}
+                                                            className={`py-2 px-3 rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
+                                                                excaMaterial === 'OB'
+                                                                    ? 'bg-slate-700 text-white border-slate-800 shadow-md ring-2 ring-blue-500'
+                                                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                                                            }`}
+                                                        >
+                                                            <span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                                                            <span>OB (Overburden)</span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setExcaMaterial('COAL');
+                                                                setSelectedMaterial('COAL');
+                                                                setGeofenceNotice('🚜 Material Excavator diatur ke: COAL (Batubara)');
+                                                                setTimeout(() => setGeofenceNotice(null), 4000);
+                                                            }}
+                                                            className={`py-2 px-3 rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
+                                                                excaMaterial === 'COAL'
+                                                                    ? 'bg-slate-950 text-white border-black shadow-md ring-2 ring-blue-500'
+                                                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                                                            }`}
+                                                        >
+                                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                                                            <span>COAL (Batubara)</span>
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Secondary Minerals per Slide 28 */}
+                                                    <div className="flex items-center gap-1.5 pt-1 overflow-x-auto text-[10px]">
+                                                        <span className="text-slate-400 font-medium">Lainnya:</span>
+                                                        {(['MUD', 'TOP SOIL', 'LIMONIT', 'SAPROLIT'] as const).map(mat => (
+                                                            <button
+                                                                key={mat}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setExcaMaterial(mat);
+                                                                    setSelectedMaterial(mat);
+                                                                    setGeofenceNotice(`🚜 Material Excavator diatur ke: ${mat}`);
+                                                                    setTimeout(() => setGeofenceNotice(null), 3000);
+                                                                }}
+                                                                className={`px-2 py-0.5 rounded-md font-semibold transition cursor-pointer ${
+                                                                    excaMaterial === mat ? 'bg-blue-600 text-white font-bold' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                                                                }`}
+                                                            >
+                                                                {mat}
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
