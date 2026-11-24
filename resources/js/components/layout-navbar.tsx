@@ -18,6 +18,7 @@ import {
     Microchip,
     Circle,
     ChartPie,
+    Navigation,
     MapPin as MapPinIcon,
     UserCog,
     Bell,
@@ -45,8 +46,8 @@ import { useInitials } from '@/hooks/use-initials';
 const menu_items=[
     {
         id: 'dashboard',
-        label: 'DASHBOARD',
-        icon: ChartPie,
+        label: 'GPS TRACKING',
+        icon: Navigation,
         href:"/dashboard"
     },
     {

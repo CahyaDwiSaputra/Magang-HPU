@@ -399,7 +399,7 @@ export default function Page() {
         company?: string;
     };
     const [alarms, setAlarms] = useState<AlarmItem[]>([]);
-    const [alarmTab, setAlarmTab] = useState<'all' | 'gsensor' | 'fd' | 'dms'>('all');
+    const [alarmTab, setAlarmTab] = useState<'all' | 'dms' | 'adas' | 'overspeed'>('all');
     const [bannerDismissed, setBannerDismissed] = useState(false);
     const [driverList, setDriverList] = useState<{ id: string; name: string; position?: string; dept?: number; site?: string }[]>([]);
     const [searchDriver, setSearchDriver] = useState<string>('');
@@ -1791,12 +1791,19 @@ export default function Page() {
     // Filter alarms khusus untuk armada yang sedang aktif dilihat
     const currentVehicleAlarms = alarms.filter(a => doesAlarmMatchVehicle(a, currentVehicle));
 
-    // Filter alarms berdasarkan tab untuk armada saat ini
+    // Filter alarms berdasarkan tab untuk armada saat ini (Poin 11: DMS, ADAS & Overspeed)
     const filteredAlarms = currentVehicleAlarms.filter(a => {
         if (alarmTab === 'all') return true;
-        if (alarmTab === 'gsensor') return a.category?.toLowerCase().includes('gsensor') || a.desc.toLowerCase().includes('rollover');
-        if (alarmTab === 'fd') return a.category?.toLowerCase().includes('fierce') || a.desc.toLowerCase().includes('collision');
-        if (alarmTab === 'dms') return a.category?.toLowerCase().includes('dms') || a.category?.toLowerCase().includes('fatigue') || a.desc.toLowerCase().includes('kantuk') || a.desc.toLowerCase().includes('distract') || a.desc.toLowerCase().includes('phone') || a.desc.toLowerCase().includes('smoke');
+        const txt = ((a.category || '') + ' ' + (a.desc || '')).toLowerCase();
+        if (alarmTab === 'dms') {
+            return txt.includes('dms') || txt.includes('fatigue') || txt.includes('kantuk') || txt.includes('distract') || txt.includes('phone') || txt.includes('smoke') || txt.includes('sleep') || txt.includes('yawn');
+        }
+        if (alarmTab === 'adas') {
+            return txt.includes('adas') || txt.includes('collision') || txt.includes('lane') || txt.includes('distance') || txt.includes('fcw') || txt.includes('ldw') || txt.includes('tailgating') || txt.includes('gsensor') || txt.includes('fierce') || txt.includes('rollover');
+        }
+        if (alarmTab === 'overspeed') {
+            return txt.includes('speed') || txt.includes('kecepatan') || txt.includes('overspeed');
+        }
         return true;
     });
 
@@ -1855,11 +1862,74 @@ export default function Page() {
         <>
             <LayoutNavbar 
                 containerClassName="w-full max-w-[98%] 2xl:max-w-[1920px]" 
-                className="bg-slate-100/80 rounded-2xl shadow-xl border border-slate-200/80 p-3.5 md:p-5"
+                className="!bg-slate-100/70 rounded-2xl shadow-xl border border-slate-200/80 p-3.5 md:p-5"
             >
                 <Head title="Dashcam Monitoring" />
 
                 <div className="space-y-4">
+                    {/* ── TOP HEADER (BERSIH, PUTIH & SELARAS SISTEM SMART FLEET) ── */}
+                    <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
+                                <Video className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+                                        DASHCAM & CABIN SURVEILLANCE
+                                    </h1>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Dual-Channel Live
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 font-medium">
+                                    Monitoring livecam CCTV kabin & jalan, deteksi keselamatan AI DMS/ADAS, dan profil operator armada
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Quick Site Switcher Pills (SAMA PERSIS DENGAN GPS TRACKING & GEOFENCE) */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Konsesi:</span>
+                            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedSiteFilter('ALL')}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        selectedSiteFilter === 'ALL'
+                                            ? 'bg-white text-slate-900 shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    ALL HPU ({fleet.length})
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedSiteFilter('HPA')}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        selectedSiteFilter === 'HPA'
+                                            ? 'bg-blue-600 text-white shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    Site HPA (Berau)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedSiteFilter('BDA')}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        selectedSiteFilter === 'BDA'
+                                            ? 'bg-amber-600 text-white shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    Site BDA (Barito)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Floating Emergency Alarm Banner (HANYA tampil jika armada yang sedang dilihat ada kondisi warning) */}
                     {activeVehicleWarning && !bannerDismissed && (
                         <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-3.5 rounded-xl shadow-xs flex items-center justify-between gap-4 animate-in fade-in duration-300">
@@ -1908,7 +1978,7 @@ export default function Page() {
                        ══════════════════════════════════════════════════════════════ */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
                         {/* ── KOLOM KIRI (lg:col-span-3): SIDEBAR UNIT ARMADA (CARD SEPARATORS) ── */}
-                        <div className="lg:col-span-3 flex flex-col gap-4">
+                        <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4">
                             {/* Card 1: Armada Fleet Selector */}
                             <div className="bg-white border border-slate-200/90 rounded-xl p-4 flex flex-col gap-3 shadow-xs">
                                 {/* Header Card */}
@@ -2138,7 +2208,7 @@ export default function Page() {
                         </div>
 
                         {/* ── KOLOM KANAN (lg:col-span-9): LIVECAM SURVEILLANCE & MODULAR METRICS (CARDS) ── */}
-                        <div className="lg:col-span-9 space-y-4 min-w-0">
+                        <div className="lg:col-span-8 xl:col-span-9 space-y-4 min-w-0">
                             {/* Card 5: Integrated Video Surveillance & Command Center Card */}
                             <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 sm:p-4 shadow-xs">
                                 {/* Command Bar Inside Surveillance Card */}
@@ -2346,7 +2416,7 @@ export default function Page() {
                                 </div>
 
                                 {/* REVISI 1: Video Player Frame - Ditampilkan saat Livecam AKTIF (ON) */}
-                                {isLivecamActive && (
+                                {isLivecamActive ? (
                                     <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-lg">
                                     {/* Video Player Top Bar (CCTV OSD Header) */}
                                     <div className="bg-slate-900/95 border-b border-slate-800/80 px-3.5 py-2 flex items-center justify-between text-xs text-slate-300">
@@ -2474,6 +2544,33 @@ export default function Page() {
                                         )}
                                     </div>
                                 </div>
+                                ) : (
+                                    <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800/90 shadow-inner relative flex flex-col items-center justify-center min-h-[300px] sm:min-h-[360px] p-6 text-center">
+                                        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none"></div>
+                                        <div className="relative z-10 max-w-md mx-auto space-y-3">
+                                            <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 text-amber-500 flex items-center justify-center mx-auto shadow-md">
+                                                <Video className="w-7 h-7" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-bold text-white tracking-wide uppercase">
+                                                    Livecam Standby • Kamera Siap Ditampilkan
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                                    Siaran langsung kamera depan (CAM 1) & kabin operator (CAM 2) unit <strong className="text-white">{currentVehicle.plateNo}</strong> berada dalam mode standby untuk menghemat kuota seluler 4G tambang.
+                                                </p>
+                                            </div>
+                                            <div className="pt-1 flex flex-wrap items-center justify-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsLivecamActive(true)}
+                                                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 shadow-md transition flex items-center gap-2 cursor-pointer"
+                                                >
+                                                    <Video className="w-4 h-4" />
+                                                    <span>Nyalakan Livecam Sekarang (Dual HD)</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
 
@@ -2540,8 +2637,8 @@ export default function Page() {
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Sensor PTO:</span>
-                                                            <span className={`font-bold ${ptoActive ? 'text-rose-600' : 'text-slate-700'}`}>{ptoActive ? 'PTO AKTIF (Dumping)' : 'PTO OFF (Normal)'}</span>
+                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Jam Siklus:</span>
+                                                            <span className="font-bold text-slate-800 font-mono">{new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-2 h-2 rounded-full bg-purple-500"></span>
@@ -2663,14 +2760,9 @@ export default function Page() {
                                                         <Gauge className="w-3.5 h-3.5 text-blue-600" />
                                                         TELEMETRI & SENSOR HARDWARE
                                                     </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowRitasiHistoryModal(true)}
-                                                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
-                                                    >
-                                                        <FileText className="w-3 h-3" />
-                                                        Riwayat Ritasi ({ritasiLogs.length})
-                                                    </button>
+                                                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <Activity className="w-3 h-3" /> Live Telemetri
+                                                    </span>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center mb-3">
@@ -2725,19 +2817,13 @@ export default function Page() {
                                                          currentVehicle.is_registered ? 'STANDBY (OFF)' : 'VIRTUAL (OFF)'}
                                                     </p>
                                                 </div>
-                                                <div className={`p-2.5 rounded-lg border text-center flex flex-col items-center justify-center transition ${
-                                                    ptoActive ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-slate-50 border-slate-200/80 text-gray-700'
-                                                }`}>
-                                                    <p className="text-[10px] font-bold uppercase text-gray-400">Sensor Hidrolik PTO</p>
+                                                <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase">Jam Kerja / Waktu</p>
                                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                                        <span className="font-bold text-xs">{ptoActive ? 'ON (DUMPING)' : 'OFF (NORMAL)'}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setPtoActive(!ptoActive)}
-                                                            className="text-[10px] font-semibold text-blue-600 hover:underline cursor-pointer"
-                                                        >
-                                                            {ptoActive ? '(Turunkan)' : '(Uji)'}
-                                                        </button>
+                                                        <Clock className="w-3.5 h-3.5 text-blue-600" />
+                                                        <span className="font-bold text-xs text-slate-800">
+                                                            {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
@@ -2823,9 +2909,9 @@ export default function Page() {
                                     <div className="flex items-center gap-1 overflow-x-auto text-xs">
                                         {[
                                             { id: 'all', label: `Semua (${currentVehicleAlarms.length})` },
-                                            { id: 'gsensor', label: 'G-Sensor' },
-                                            { id: 'fd', label: 'Fierce Driving' },
-                                            { id: 'dms', label: 'DMS' },
+                                            { id: 'dms', label: 'DMS (Driver Safety)' },
+                                            { id: 'adas', label: 'ADAS (Road Hazard)' },
+                                            { id: 'overspeed', label: 'Overspeed (Kecepatan)' },
                                         ].map(tab => (
                                             <button
                                                 key={tab.id}

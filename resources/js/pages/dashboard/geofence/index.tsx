@@ -835,44 +835,72 @@ export default function GeofencePage() {
     return (
         <Layout
             containerClassName="w-full max-w-[98%] 2xl:max-w-[1920px]"
-            className="!bg-white rounded-2xl shadow-xl border border-slate-200/90 p-3.5 md:p-5"
+            className="!bg-slate-100/70 rounded-2xl shadow-xl border border-slate-200/80 p-3.5 md:p-5"
         >
             <Head title="Geofence & Pemetaan Spasial Tambang - PT Harmoni Panca Utama" />
 
             <div className="space-y-4">
-                {/* ── TOP HEADER (BERSIH, PUTIH & SELARAS DENGAN DASHCAM) ── */}
-                <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                {/* ── TOP HEADER (BERSIH, PUTIH & SELARAS SISTEM SMART FLEET) ── */}
+                <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
                             <LandPlot className="w-5 h-5" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h1 className="text-sm sm:text-base font-bold text-gray-900 tracking-tight">
+                                <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                                     GEOFENCE & SPATIAL DISPATCH
                                 </h1>
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Enterprise
+                                    Enterprise Spasial
                                 </span>
                             </div>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500 font-medium">
                                 Monitoring perimeter konsesi, front loading, disposal timbunan, & rute hauling 94.5 KM PT Harmoni Panca Utama
                             </p>
                         </div>
                     </div>
 
-                    {/* Quick Metric Badges & Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <div className="bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-lg text-center">
-                            <span className="text-[9px] text-gray-400 font-bold uppercase block">Fasilitas Tambang</span>
-                            <span className="font-bold text-blue-700 text-xs">
-                                {operationalGeofences.length} Lokasi
-                            </span>
-                        </div>
-                        <div className="bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-lg text-center">
-                            <span className="text-[9px] text-gray-400 font-bold uppercase block">Koridor Hauling</span>
-                            <span className="font-bold text-amber-700 text-xs">94.5 KM</span>
+                    {/* Quick Site Switcher Pills & Action Buttons */}
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Konsesi:</span>
+                            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => handleSiteSwitch('ALL')}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        selectedSiteFilter === 'ALL'
+                                            ? 'bg-white text-slate-900 shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    ALL HPU
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleSiteSwitch('HPA')}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        selectedSiteFilter === 'HPA'
+                                            ? 'bg-blue-600 text-white shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    Site HPA (Berau)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleSiteSwitch('BDA')}
+                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                        selectedSiteFilter === 'BDA'
+                                            ? 'bg-amber-600 text-white shadow-xs'
+                                            : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    Site BDA (Barito)
+                                </button>
+                            </div>
                         </div>
 
                         {/* Tombol Buka Drawer Manajemen Zona (Poin 3, 4, 5) */}
