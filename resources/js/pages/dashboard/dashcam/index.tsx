@@ -524,7 +524,6 @@ export default function Page() {
     const [activeGeofence, setActiveGeofence] = useState<{ id: number; name: string; type: string; distance: number } | null>(null);
     const [lastGeofenceId, setLastGeofenceId] = useState<number | null>(null);
     const [showGeofenceModal, setShowGeofenceModal] = useState(false);
-    const [showRitasiHistoryModal, setShowRitasiHistoryModal] = useState(false);
     const [cameraViewMode, setCameraViewMode] = useState<'dual' | 'cam1' | 'cam2' | 'stacked'>('dual');
 
     // State Fitur Ritasi & Sensor PTO (Slide 16, 19, 25)
@@ -2661,14 +2660,7 @@ export default function Page() {
                                                         <p className="text-2xl font-black text-blue-700 leading-none">
                                                             {ritasiToday} <span className="text-xs font-bold text-gray-500">RIT</span>
                                                         </p>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setShowRitasiHistoryModal(true)}
-                                                            className="w-full mt-1.5 py-1 px-2 rounded-md text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition flex items-center justify-center gap-1 cursor-pointer"
-                                                        >
-                                                            <FileText className="w-3 h-3 text-blue-600" />
-                                                            Riwayat Ritasi
-                                                        </button>
+                                                        <span className="text-[10px] text-slate-400 font-medium mt-1">Shift Berjalan</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -3168,112 +3160,6 @@ export default function Page() {
                     </div>
                 </div>
                 </div>
-
-                {/* ── MODAL: RIWAYAT SIKLUS RITASI & PRODUKSI BCM ── */}
-                {showRitasiHistoryModal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[85vh]">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                        <FileText className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-bold text-gray-900">Riwayat Siklus Ritasi & Produksi BCM</h3>
-                                        <p className="text-xs text-gray-400">Pencatatan siklus hauling dari PIT ke Dumping Area dengan verifikasi sensor PTO</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setShowRitasiHistoryModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 cursor-pointer">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            {/* Summary Metrics */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-center">
-                                    <p className="text-[11px] font-bold text-blue-600 uppercase">Total Ritasi</p>
-                                    <p className="text-xl font-bold text-blue-900">{ritasiToday} <span className="text-xs font-normal">RIT</span></p>
-                                </div>
-                                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
-                                    <p className="text-[11px] font-bold text-emerald-600 uppercase">Produksi BCM</p>
-                                    <p className="text-xl font-bold text-emerald-900">{totalBcmToday} <span className="text-xs font-normal">BCM</span></p>
-                                </div>
-                                <div className="p-3 bg-purple-50 rounded-xl border border-purple-100 text-center">
-                                    <p className="text-[11px] font-bold text-purple-600 uppercase">Rata-rata Cycle Time</p>
-                                    <p className="text-xl font-bold text-purple-900">{avgCycleTimeToday || 22} <span className="text-xs font-normal">Menit</span></p>
-                                </div>
-                                <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-center">
-                                    <p className="text-[11px] font-bold text-amber-600 uppercase">Total Jarak Tempuh</p>
-                                    <p className="text-xl font-bold text-amber-900">{totalDistanceKm.toFixed(1)} <span className="text-xs font-normal">KM</span></p>
-                                </div>
-                            </div>
-
-                            {/* Table of Ritasi Logs */}
-                            <div className="flex-1 overflow-y-auto border border-gray-200 rounded-xl">
-                                {ritasiLogs.length > 0 ? (
-                                    <table className="w-full text-left text-xs border-collapse">
-                                        <thead className="bg-gray-50 text-gray-600 font-bold sticky top-0 border-b border-gray-200">
-                                            <tr>
-                                                <th className="p-2.5">Trip #</th>
-                                                <th className="p-2.5">Unit</th>
-                                                <th className="p-2.5">Material</th>
-                                                <th className="p-2.5">Loading PIT</th>
-                                                <th className="p-2.5">Dumping Disposal</th>
-                                                <th className="p-2.5 text-center">Cycle Time</th>
-                                                <th className="p-2.5 text-center">Jarak</th>
-                                                <th className="p-2.5 text-center">Sensor PTO</th>
-                                                <th className="p-2.5 text-right">Waktu</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {ritasiLogs.map(l => {
-                                                const mat = l.load_type || 'OB';
-                                                return (
-                                                    <tr key={l.id} className="hover:bg-gray-50/80 transition">
-                                                        <td className="p-2.5 font-bold text-gray-700">#{l.id}</td>
-                                                        <td className="p-2.5 font-mono font-semibold text-gray-900">{l.unit_code || 'HD-78501'}</td>
-                                                        <td className="p-2.5">
-                                                            <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-gray-100 text-gray-700">
-                                                                {mat}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-2.5 text-gray-700">{l.pit_name || 'Pit Front A'}</td>
-                                                        <td className="p-2.5 text-gray-700 font-medium">{l.dumping_name || l.geofence_name}</td>
-                                                        <td className="p-2.5 text-center font-mono text-blue-700 font-bold">{l.cycle_time_minutes ?? 21.5} m</td>
-                                                        <td className="p-2.5 text-center font-mono text-gray-600">{l.distance_km ?? 2.4} km</td>
-                                                        <td className="p-2.5 text-center">
-                                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                <CheckCircle className="w-3 h-3 text-emerald-600" /> Terverifikasi
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-2.5 text-right font-mono text-gray-500">{l.entered_at || '-'}</td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                ) : (
-                                    <div className="py-12 text-center text-gray-400">
-                                        <p className="text-sm font-semibold text-gray-600">Belum ada riwayat ritasi tercatat hari ini.</p>
-                                        <p className="text-xs text-gray-400 mt-1">Jalankan simulasi siklus hauling untuk merekam ritasi.</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100 text-xs">
-                                <span className="text-gray-400">
-                                    Rumus Produktivitas Hauler: Q = q × (3600 / Cycle Time) × FK
-                                </span>
-                                <button
-                                    onClick={() => setShowRitasiHistoryModal(false)}
-                                    className="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-xl font-bold cursor-pointer transition"
-                                >
-                                    Tutup
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* ── MODAL: RIWAYAT SCAN WAJAH & PENUGASAN DRIVER ── */}
                 {showHistory && (
