@@ -195,7 +195,7 @@ class MonitorDashcamTelemetry extends Command
                                 $currentStage = 'TRAVEL_ISI';
                                 $this->info("[".now()->format('H:i:s')."] 🚛 TRAVEL ISI: Unit keluar Pit membawa muatan [{$activeLoadType}] menuju Disposal.");
                             }
-                            // 3. Dumping di Disposal: Berada di geofence Dumping, PTO ON & dumping material
+                            // 3. Dumping di Disposal: Berada di geofence Dumping, dumping material (Poin 10: tanpa sensor PTO, gunakan timestamp jam siklus)
                             elseif ($inOperationalGeofence && $inOperationalGeofence->type === 'dumping') {
                                 if ($currentGeofenceId !== $inOperationalGeofence->id) {
                                     $currentStage = 'DUMPING';
@@ -203,6 +203,7 @@ class MonitorDashcamTelemetry extends Command
                                     // Hitung estimasi durasi dan jarak
                                     $cycleDurationSec = max(60, now()->diffInSeconds($cycleStartAt));
                                     $cycleMinutes     = round($cycleDurationSec / 60, 1);
+                                    $timeWita         = now()->format('H:i:s');
 
                                     // Rekam 1 ritasi lengkap ke database!
                                     $newRitasi = \App\Models\RitasiLog::create([
@@ -227,7 +228,7 @@ class MonitorDashcamTelemetry extends Command
                                         ->whereDate('entered_at', \Carbon\Carbon::today())
                                         ->count();
 
-                                    $this->info("[".now()->format('H:i:s')."] 🎯 RITASI #{$totalRitasi} TERCATAT! Unit dumping [{$activeLoadType}] di {$inOperationalGeofence->name} dengan konfirmasi PTO On.");
+                                    $this->info("[{$timeWita}] 🎯 RITASI #{$totalRitasi} TERCATAT! Unit menyelesaikan dumping [{$activeLoadType}] di {$inOperationalGeofence->name} pada jam {$timeWita} WITA (Durasi: {$cycleMinutes} mnt).");
                                 }
                             }
                             // 4. Travel Kosong: Keluar dari Disposal menuju kembali ke Pit

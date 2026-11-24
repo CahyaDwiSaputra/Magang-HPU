@@ -471,10 +471,17 @@ class CmsV6ProxyController extends Controller
             Cache::put('cmsv6_active_alarms', $alarms, now()->addDays(7));
         }
 
-        // Cek apakah ada telemetri real-time yang memicu alarm dinamis (misal overspeed)
+        // Cek apakah ada permintaan live_speed untuk memicu alarm dinamis (hanya jika live_speed=1)
         $devId = $request->input('devIdno', $this->deviceId);
-        $statusRes = $this->deviceStatus($request);
-        $statusData = $statusRes->getData(true);
+        $statusData = null;
+        if ($request->boolean('live_speed', false)) {
+            try {
+                $statusRes = $this->deviceStatus($request);
+                $statusData = $statusRes->getData(true);
+            } catch (\Throwable $e) {
+                $statusData = null;
+            }
+        }
 
         $vehiclePlate = 'BDA-DT41107VV (RU-225)';
         if ($devId === '240078916116') {
@@ -642,40 +649,87 @@ class CmsV6ProxyController extends Controller
     }
 
     /**
-     * Data awal 18 alarm persis dari server CMSv6 Alarm Center
+     * Data awal 18 alarm terstandarisasi keselamatan tambang (Poin 11: DMS, ADAS, Overspeed)
      */
     private function getInitialCmsv6Alarms(): array
     {
         $list = [];
-        $baseTime = strtotime('2026-09-24 22:10:00');
+        $baseTime = strtotime('2026-11-24 10:30:00');
 
-        // 1x Collision Rollover Alarm (GSensor Alarm)
-        $list[] = [
-            'guid'          => 'ALM-RO-001',
-            'desc'          => 'Collision Rollover Alarm',
-            'category'      => 'GSensor Alarm',
-            'type'          => 201,
-            'severity'      => 'critical',
-            'handle_status' => 'Untreated',
-            'current_state' => 'Alarm End',
-            'time'          => date('Y-m-d H:i:s', $baseTime),
-            'vehicle'       => 'TrialUNS2',
-            'company'       => 'Hpu',
+        // 1. KATEGORI DMS (Driver Monitoring System - Keamanan & Perilaku Pengemudi di Kabin)
+        $dmsAlarms = [
+            ['ALM-DMS-001', 'Peringatan Kantuk Berat / Micro-Sleep', 'DMS Fatigue', 301, 'critical', 'Untreated', 'Alarming', 0, 'Kabin Operator (CAM 2)', 'BDA-DT41107VV (RU-225)'],
+            ['ALM-DMS-002', 'Pengemudi Menggunakan Handphone', 'DMS Phone', 302, 'high', 'Untreated', 'Alarm End', 180, 'Kabin Operator (CAM 2)', 'BDA-DT41107VV (RU-225)'],
+            ['ALM-DMS-003', 'Merokok di Dalam Kabin Unit', 'DMS Smoking', 303, 'high', 'Untreated', 'Alarm End', 420, 'Kabin Operator (CAM 2)', 'HD-78501 (Trial UNS)'],
+            ['ALM-DMS-004', 'Distraksi Pengemudi / Pandangan Tidak Fokus', 'DMS Distraction', 304, 'medium', 'Untreated', 'Alarm End', 750, 'Kabin Operator (CAM 2)', 'TrialUNS2'],
+            ['ALM-DMS-005', 'Kamera Kabin Tertutup / Terhalang', 'DMS Camera Blocked', 305, 'critical', 'Untreated', 'Alarm End', 1100, 'Kabin Operator (CAM 2)', 'BDA-DT41110VV (RU-230)'],
+            ['ALM-DMS-006', 'Kelelahan Ekstrem / Sering Menguap', 'DMS Yawn', 306, 'medium', 'Untreated', 'Alarm End', 1500, 'Kabin Operator (CAM 2)', 'TrialUNS2'],
         ];
 
-        // 17x Collision Alarm (Fierce Driving)
-        for ($i = 1; $i <= 17; $i++) {
-            $offsetSeconds = $i * 55;
+        foreach ($dmsAlarms as $dms) {
             $list[] = [
-                'guid'          => sprintf('ALM-FD-%03d', $i),
-                'desc'          => 'Collision Alarm',
-                'category'      => 'Fierce Driving(FD)',
-                'type'          => 202,
-                'severity'      => 'high',
-                'handle_status' => 'Untreated',
-                'current_state' => 'Alarm End',
-                'time'          => date('Y-m-d H:i:s', $baseTime - $offsetSeconds),
-                'vehicle'       => 'TrialUNS2',
+                'guid'          => $dms[0],
+                'desc'          => $dms[1],
+                'category'      => $dms[2],
+                'type'          => $dms[3],
+                'severity'      => $dms[4],
+                'handle_status' => $dms[5],
+                'current_state' => $dms[6],
+                'time'          => date('Y-m-d H:i:s', $baseTime - $dms[7]),
+                'location'      => $dms[8],
+                'vehicle'       => $dms[9],
+                'company'       => 'Hpu',
+            ];
+        }
+
+        // 2. KATEGORI ADAS (Advanced Driver Assistance System - Bahaya Lalu Lintas Jalan & Tabrakan)
+        $adasAlarms = [
+            ['ALM-ADAS-001', 'Forward Collision Warning (FCW - Jarak Kritis)', 'ADAS Collision', 201, 'critical', 'Untreated', 'Alarm End', 90, 'Jalur Hauling KM 14', 'BDA-DT41107VV (RU-225)'],
+            ['ALM-ADAS-002', 'Lane Departure Warning (LDW - Keluar Lajur)', 'ADAS Lane', 202, 'high', 'Untreated', 'Alarm End', 310, 'Jalur Hauling KM 15.5', 'HD-78501 (Trial UNS)'],
+            ['ALM-ADAS-003', 'Tailgating / Jarak Iring Terlalu Dekat (< 30m)', 'ADAS Headway', 203, 'medium', 'Untreated', 'Alarm End', 600, 'Turunan KM 13', 'BDA-DT41107VV (RU-225)'],
+            ['ALM-ADAS-004', 'Collision Rollover Alarm (Kemiringan Kritis)', 'ADAS Rollover (GSensor)', 204, 'critical', 'Untreated', 'Alarm End', 920, 'Front Disposal OPD-LW', 'TrialUNS2'],
+            ['ALM-ADAS-005', 'Pengereman Mendadak Ekstrem (Harsh Braking)', 'ADAS Fierce Driving', 205, 'high', 'Untreated', 'Alarm End', 1350, 'Crossing TOS HPA', 'BDA-DT41110VV (RU-230)'],
+            ['ALM-ADAS-006', 'Blind Spot Hazard / Unit Mendekati Sisi Kanan', 'ADAS BlindSpot', 206, 'medium', 'Untreated', 'Alarm End', 1700, 'Jalur Hauling KM 16', 'TrialUNS2'],
+        ];
+
+        foreach ($adasAlarms as $adas) {
+            $list[] = [
+                'guid'          => $adas[0],
+                'desc'          => $adas[1],
+                'category'      => $adas[2],
+                'type'          => $adas[3],
+                'severity'      => $adas[4],
+                'handle_status' => $adas[5],
+                'current_state' => $adas[6],
+                'time'          => date('Y-m-d H:i:s', $baseTime - $adas[7]),
+                'location'      => $adas[8],
+                'vehicle'       => $adas[9],
+                'company'       => 'Hpu',
+            ];
+        }
+
+        // 3. KATEGORI OVERSPEED (Pelanggaran Batas Kecepatan Spasial Geofence)
+        $speedAlarms = [
+            ['ALM-SPD-001', 'Overspeed Jalur Hauling (48 km/j > batas 40 km/j)', 'Overspeed Hauling', 101, 'critical', 'Untreated', 'Alarm End', 45, 'Jalur Hauling HPA KM 14', 'BDA-DT41107VV (RU-225)'],
+            ['ALM-SPD-002', 'Overspeed Area Front Loading (26 km/j > batas 20 km/j)', 'Overspeed Pit', 102, 'high', 'Untreated', 'Alarm End', 240, 'Pit Front Selatan HPA', 'HD-78501 (Trial UNS)'],
+            ['ALM-SPD-003', 'Overspeed Persimpangan / Crossing (22 km/j > batas 15 km/j)', 'Overspeed Crossing', 103, 'high', 'Untreated', 'Alarm End', 510, 'Simpang Empat TOS / ERT', 'BDA-DT41107VV (RU-225)'],
+            ['ALM-SPD-004', 'Overspeed Disposal Area (25 km/j > batas 15 km/j)', 'Overspeed Disposal', 104, 'medium', 'Untreated', 'Alarm End', 810, 'Disposal OPD LW', 'TrialUNS2'],
+            ['ALM-SPD-005', 'Overspeed Turunan Curam KM 13 (36 km/j > batas 25 km/j)', 'Overspeed Hauling', 105, 'critical', 'Untreated', 'Alarm End', 1250, 'Turunan STA KM 13', 'BDA-DT41110VV (RU-230)'],
+            ['ALM-SPD-006', 'Overspeed Area Workshop / Parkir (18 km/j > batas 10 km/j)', 'Overspeed Fasilitas', 106, 'medium', 'Untreated', 'Alarm End', 1600, 'Workshop HPU Central', 'TrialUNS2'],
+        ];
+
+        foreach ($speedAlarms as $spd) {
+            $list[] = [
+                'guid'          => $spd[0],
+                'desc'          => $spd[1],
+                'category'      => $spd[2],
+                'type'          => $spd[3],
+                'severity'      => $spd[4],
+                'handle_status' => $spd[5],
+                'current_state' => $spd[6],
+                'time'          => date('Y-m-d H:i:s', $baseTime - $spd[7]),
+                'location'      => $spd[8],
+                'vehicle'       => $spd[9],
                 'company'       => 'Hpu',
             ];
         }
