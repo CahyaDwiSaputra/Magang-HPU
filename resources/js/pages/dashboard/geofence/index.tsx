@@ -922,51 +922,24 @@ export default function GeofencePage() {
                         </div>
                     </div>
 
-                    {/* Quick Site Switcher Pills & Action Buttons */}
+                    {/* Quick Site Switcher Dropdown & Action Buttons */}
                     <div className="flex flex-wrap items-center gap-2.5">
-                        {/* Poin 3: Daftar Site Ditampilkan Secara Vertikal (Ke Bawah), Jangan Horizontal */}
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                Daftar Site Konsesi (Vertikal):
+                        {/* Site Dropdown Selector */}
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 shadow-xs">
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                                Site:
                             </span>
-                            <div className="flex flex-col gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-bold min-w-[160px]">
-                                <button
-                                    type="button"
-                                    onClick={() => handleSiteSwitch('ALL')}
-                                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer text-left flex items-center justify-between ${
-                                        selectedSiteFilter === 'ALL'
-                                            ? 'bg-white text-slate-900 shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                                    }`}
-                                >
-                                    <span>ALL HPU</span>
-                                    <span className="text-[10px] text-slate-400 font-mono">Semua</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleSiteSwitch('HPA')}
-                                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer text-left flex items-center justify-between ${
-                                        selectedSiteFilter === 'HPA'
-                                            ? 'bg-blue-600 text-white shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                                    }`}
-                                >
-                                    <span>Site HPA</span>
-                                    <span className={`text-[10px] ${selectedSiteFilter === 'HPA' ? 'text-blue-100' : 'text-slate-400'} font-mono`}>Berau</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleSiteSwitch('BDA')}
-                                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer text-left flex items-center justify-between ${
-                                        selectedSiteFilter === 'BDA'
-                                            ? 'bg-amber-600 text-white shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                                    }`}
-                                >
-                                    <span>Site BDA</span>
-                                    <span className={`text-[10px] ${selectedSiteFilter === 'BDA' ? 'text-amber-100' : 'text-slate-400'} font-mono`}>Barito</span>
-                                </button>
-                            </div>
+                            <select
+                                value={selectedSiteFilter}
+                                onChange={(e) => handleSiteSwitch(e.target.value as any)}
+                                className="bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs min-w-[170px]"
+                                title="Pilih Site Konsesi Tambang"
+                            >
+                                <option value="ALL">Semua Site (ALL HPU)</option>
+                                <option value="HPA">Site HPA (Berau)</option>
+                                <option value="BDA">Site BDA (Barito)</option>
+                            </select>
                         </div>
 
                         {/* Riwayat Overspeed pada Geofence (Poin 12) */}
@@ -1031,7 +1004,7 @@ export default function GeofencePage() {
                 >
                     {/* Command Bar / Toolbar di atas Peta */}
                     <div className="p-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-white">
-                        {/* Left: Site Switcher Vertikal (Poin 3) */}
+                        {/* Left: Site Selector Dropdown */}
                         <div className="flex items-center gap-2">
                             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                                 <Building2 className="w-3.5 h-3.5 text-blue-600" />
