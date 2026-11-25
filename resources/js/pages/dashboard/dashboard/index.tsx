@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import LayoutNavbar from '@/components/layout-navbar';
 import { Map, Marker, Overlay, GeoJson } from 'pigeon-maps';
 import {
+    Building2,
     Navigation,
     Search,
     Truck,
@@ -375,43 +376,34 @@ export default function GpsTrackingPage() {
                         </div>
                     </div>
 
-                    {/* Quick Site Switcher Pills */}
+                    {/* Quick Site Switcher Dropdown (Poin Revisi Pembimbing: >12 Site) */}
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Konsesi:</span>
-                        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-bold">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedSite('ALL')}
-                                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                                    selectedSite === 'ALL'
-                                        ? 'bg-white text-slate-900 shadow-xs'
-                                        : 'text-slate-600 hover:text-slate-900'
-                                }`}
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 shadow-xs">
+                            <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">
+                                Konsesi / Site:
+                            </span>
+                            <select
+                                value={selectedSite}
+                                onChange={(e) => setSelectedSite(e.target.value)}
+                                className="bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs min-w-[210px]"
+                                title="Pilih Site Konsesi Tambang PT HPU (>12 Site)"
                             >
-                                ALL HPU ({FLEET_DATA.length})
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedSite('HPA')}
-                                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                                    selectedSite === 'HPA'
-                                        ? 'bg-blue-600 text-white shadow-xs'
-                                        : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                Site HPA (Berau)
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedSite('BDA')}
-                                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                                    selectedSite === 'BDA'
-                                        ? 'bg-amber-600 text-white shadow-xs'
-                                        : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                Site BDA (Barito)
-                            </button>
+                                <option value="ALL">Semua Site (ALL HPU - 14 Konsesi)</option>
+                                <option value="HPA">Site HPA (Berau, Kaltim)</option>
+                                <option value="BDA">Site BDA (Barito, Kalteng)</option>
+                                <option value="KJA">Site KJA (Kutai Janur Asri)</option>
+                                <option value="KDA">Site KDA (Kalimantan Damai Abadi)</option>
+                                <option value="DTA">Site DTA (Dayak Terang Abadi)</option>
+                                <option value="HPMU">Site HPMU (Harmoni Panca Mineral)</option>
+                                <option value="GAS">Site GAS (Gunung Asri Sejahtera)</option>
+                                <option value="OBI">Site OBI (Pulau Obi Halmahera)</option>
+                                <option value="BMB">Site BMB (Binuang Mitra Bersama)</option>
+                                <option value="AGM">Site AGM (Antang Gunung Meratus)</option>
+                                <option value="BEP">Site BEP (Bumi Enggang Perkasa)</option>
+                                <option value="BIB">Site BIB (Borneo Indobara)</option>
+                                <option value="TCMM">Site TCMM (Trubaindo Coal Mining)</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -552,7 +544,146 @@ export default function GpsTrackingPage() {
 
                     {/* ── RIGHT COLUMN: MAP, OPERATOR DETAIL, CURRENT TRIP & TELEMETRI ── */}
                     <div className="lg:col-span-8 xl:col-span-9 space-y-4">
-                        {/* Row 1: Operator Detail & Current Trip (Slide 19 Layout) */}
+                        {/* Row 1: Interactive Hauling Tracking Map - Peta Diperbesar (Permintaan Pembimbing) */}
+                        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-4 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-blue-600" />
+                                    <span className="text-xs font-bold text-slate-800 tracking-wider uppercase">
+                                        PETA MONITORING KORIDOR HAULING & ARMADA (LIVE TRACKING)
+                                    </span>
+                                    <span className="text-[11px] font-mono text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">
+                                        [{mapCenter[0].toFixed(6)}, {mapCenter[1].toFixed(6)}]
+                                    </span>
+                                </div>
+
+                                {/* Map Controls */}
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold">
+                                        <button
+                                            type="button"
+                                            onClick={() => setMapLayer('satellite')}
+                                            className={`px-2.5 py-1 rounded transition-all cursor-pointer ${
+                                                mapLayer === 'satellite' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                                            }`}
+                                        >
+                                            Satelit Google Earth
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMapLayer('street')}
+                                            className={`px-2.5 py-1 rounded transition-all cursor-pointer ${
+                                                mapLayer === 'street' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                                            }`}
+                                        >
+                                            Peta Jalan
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                                        <button
+                                            type="button"
+                                            onClick={() => setMapZoom(z => Math.min(z + 1, 18))}
+                                            className="p-1 text-slate-700 hover:bg-white rounded transition-colors"
+                                            title="Zoom In"
+                                        >
+                                            <ZoomIn className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMapZoom(z => Math.max(z - 1, 8))}
+                                            className="p-1 text-slate-700 hover:bg-white rounded transition-colors"
+                                            title="Zoom Out"
+                                        >
+                                            <ZoomOut className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMapCenter([selectedUnit.telemetry.latitude, selectedUnit.telemetry.longitude])}
+                                            className="p-1 text-blue-600 hover:bg-white rounded transition-colors"
+                                            title="Pusatkan ke Armada Terpilih"
+                                        >
+                                            <Crosshair className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Canvas Map Container */}
+                            <div className="w-full h-[520px] rounded-xl overflow-hidden border border-slate-200 relative bg-slate-900">
+                                <Map
+                                    height={520}
+                                    center={mapCenter}
+                                    zoom={mapZoom}
+                                    onBoundsChanged={({ center, zoom }) => {
+                                        setMapCenter(center);
+                                        setMapZoom(zoom);
+                                    }}
+                                    provider={mapTileProvider}
+                                >
+                                    {/* Polyline Rute Hauling Tambang */}
+                                    {haulingRoutes && (
+                                        <GeoJson
+                                            data={haulingRoutes}
+                                            styleCallback={(feature: any) => {
+                                                const site = feature?.properties?.site || 'HPA';
+                                                return {
+                                                    stroke: site === 'BDA' ? '#D97706' : '#2563EB',
+                                                    strokeWidth: 4,
+                                                    strokeOpacity: 0.85,
+                                                    fill: 'none'
+                                                };
+                                            }}
+                                        />
+                                    )}
+
+                                    {/* Checkpoint STA / KM Markers (Slide 19) */}
+                                    {CHECKPOINTS_HPA.map((cp, idx) => (
+                                        <Overlay key={`cp-${idx}`} anchor={[cp.lat, cp.lng]} offset={[30, 15]}>
+                                            <div className="bg-slate-900/90 text-amber-400 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-400/50 shadow-md pointer-events-none select-none">
+                                                📍 {cp.label}
+                                            </div>
+                                        </Overlay>
+                                    ))}
+
+                                    {/* Plot Posisi Seluruh Armada Aktif */}
+                                    {filteredFleet.map(unit => {
+                                        const isSelected = unit.id === selectedVehicleId;
+                                        const badge = getStatusBadge(unit.status);
+                                        return (
+                                            <Overlay
+                                                key={`marker-${unit.id}`}
+                                                anchor={[unit.telemetry.latitude, unit.telemetry.longitude]}
+                                                offset={[45, 20]}
+                                            >
+                                                <div
+                                                    onClick={() => setSelectedVehicleId(unit.id)}
+                                                    className={`cursor-pointer transition-all transform hover:scale-110 flex items-center gap-1 px-2 py-1 rounded-full shadow-lg border text-xs font-bold ${
+                                                        isSelected
+                                                            ? 'bg-blue-600 text-white border-white ring-2 ring-blue-400'
+                                                            : 'bg-white text-slate-800 border-slate-300'
+                                                    }`}
+                                                >
+                                                    <span className={`w-2 h-2 rounded-full ${
+                                                        unit.status === 'TRAVEL_ISI' ? 'bg-blue-500' :
+                                                        unit.status === 'TRAVEL_KOSONG' || unit.status === 'WORKING' ? 'bg-emerald-500' :
+                                                        unit.status === 'IDLING' ? 'bg-amber-400' : 'bg-slate-400'
+                                                    }`}></span>
+                                                    <span className="font-mono">{unit.unitCode}</span>
+                                                    {isSelected && (
+                                                        <span className="text-[9px] bg-white text-blue-700 px-1 rounded font-sans">
+                                                            {unit.telemetry.speed} km/j
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </Overlay>
+                                        );
+                                    })}
+                                </Map>
+                            </div>
+                        </div>
+
+                        {/* Row 2: Operator Detail & Current Trip - Dipindah ke Bawah Peta (Permintaan Pembimbing) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Card A: Operator Detail Card */}
                             <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
@@ -693,145 +824,6 @@ export default function GpsTrackingPage() {
                                         {selectedUnit.telemetry.tripProgress}%
                                     </span>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Row 2: Interactive Hauling Tracking Map (Pigeon Maps + Google Earth Tiles) */}
-                        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-4 space-y-3">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div className="flex items-center gap-2">
-                                    <MapPin className="w-4 h-4 text-blue-600" />
-                                    <span className="text-xs font-bold text-slate-800 tracking-wider uppercase">
-                                        PETA MONITORING KORIDOR HAULING & ARMADA (LIVE TRACKING)
-                                    </span>
-                                    <span className="text-[11px] font-mono text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">
-                                        [{mapCenter[0].toFixed(6)}, {mapCenter[1].toFixed(6)}]
-                                    </span>
-                                </div>
-
-                                {/* Map Controls */}
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold">
-                                        <button
-                                            type="button"
-                                            onClick={() => setMapLayer('satellite')}
-                                            className={`px-2.5 py-1 rounded transition-all cursor-pointer ${
-                                                mapLayer === 'satellite' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-                                            }`}
-                                        >
-                                            Satelit Google Earth
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMapLayer('street')}
-                                            className={`px-2.5 py-1 rounded transition-all cursor-pointer ${
-                                                mapLayer === 'street' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-                                            }`}
-                                        >
-                                            Peta Jalan
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                                        <button
-                                            type="button"
-                                            onClick={() => setMapZoom(z => Math.min(z + 1, 18))}
-                                            className="p-1 text-slate-700 hover:bg-white rounded transition-colors"
-                                            title="Zoom In"
-                                        >
-                                            <ZoomIn className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMapZoom(z => Math.max(z - 1, 8))}
-                                            className="p-1 text-slate-700 hover:bg-white rounded transition-colors"
-                                            title="Zoom Out"
-                                        >
-                                            <ZoomOut className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMapCenter([selectedUnit.telemetry.latitude, selectedUnit.telemetry.longitude])}
-                                            className="p-1 text-blue-600 hover:bg-white rounded transition-colors"
-                                            title="Pusatkan ke Armada Terpilih"
-                                        >
-                                            <Crosshair className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Canvas Map Container */}
-                            <div className="w-full h-[380px] rounded-xl overflow-hidden border border-slate-200 relative bg-slate-900">
-                                <Map
-                                    height={380}
-                                    center={mapCenter}
-                                    zoom={mapZoom}
-                                    onBoundsChanged={({ center, zoom }) => {
-                                        setMapCenter(center);
-                                        setMapZoom(zoom);
-                                    }}
-                                    provider={mapTileProvider}
-                                >
-                                    {/* Polyline Rute Hauling Tambang */}
-                                    {haulingRoutes && (
-                                        <GeoJson
-                                            data={haulingRoutes}
-                                            styleCallback={(feature: any) => {
-                                                const site = feature?.properties?.site || 'HPA';
-                                                return {
-                                                    stroke: site === 'BDA' ? '#D97706' : '#2563EB',
-                                                    strokeWidth: 4,
-                                                    strokeOpacity: 0.85,
-                                                    fill: 'none'
-                                                };
-                                            }}
-                                        />
-                                    )}
-
-                                    {/* Checkpoint STA / KM Markers (Slide 19) */}
-                                    {CHECKPOINTS_HPA.map((cp, idx) => (
-                                        <Overlay key={`cp-${idx}`} anchor={[cp.lat, cp.lng]} offset={[30, 15]}>
-                                            <div className="bg-slate-900/90 text-amber-400 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-400/50 shadow-md pointer-events-none select-none">
-                                                📍 {cp.label}
-                                            </div>
-                                        </Overlay>
-                                    ))}
-
-                                    {/* Plot Posisi Seluruh Armada Aktif */}
-                                    {filteredFleet.map(unit => {
-                                        const isSelected = unit.id === selectedVehicleId;
-                                        const badge = getStatusBadge(unit.status);
-                                        return (
-                                            <Overlay
-                                                key={`marker-${unit.id}`}
-                                                anchor={[unit.telemetry.latitude, unit.telemetry.longitude]}
-                                                offset={[45, 20]}
-                                            >
-                                                <div
-                                                    onClick={() => setSelectedVehicleId(unit.id)}
-                                                    className={`cursor-pointer transition-all transform hover:scale-110 flex items-center gap-1 px-2 py-1 rounded-full shadow-lg border text-xs font-bold ${
-                                                        isSelected
-                                                            ? 'bg-blue-600 text-white border-white ring-2 ring-blue-400'
-                                                            : 'bg-white text-slate-800 border-slate-300'
-                                                    }`}
-                                                >
-                                                    <span className={`w-2 h-2 rounded-full ${
-                                                        unit.status === 'TRAVEL_ISI' ? 'bg-blue-500' :
-                                                        unit.status === 'TRAVEL_KOSONG' || unit.status === 'WORKING' ? 'bg-emerald-500' :
-                                                        unit.status === 'IDLING' ? 'bg-amber-400' : 'bg-slate-400'
-                                                    }`}></span>
-                                                    <span className="font-mono">{unit.unitCode}</span>
-                                                    {isSelected && (
-                                                        <span className="text-[9px] bg-white text-blue-700 px-1 rounded font-sans">
-                                                            {unit.telemetry.speed} km/j
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </Overlay>
-                                        );
-                                    })}
-                                </Map>
                             </div>
                         </div>
 
