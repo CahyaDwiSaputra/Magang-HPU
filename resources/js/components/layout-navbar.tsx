@@ -59,7 +59,7 @@ const menu_items=[
     },
     {
         id: 'geofence',
-        label: 'GEOFENCE',
+        label: 'GEOFANCE',
         icon: LandPlot,
         href:"/dashboard/geofence"
     },

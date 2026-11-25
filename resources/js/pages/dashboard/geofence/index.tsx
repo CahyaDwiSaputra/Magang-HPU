@@ -897,7 +897,7 @@ export default function GeofencePage() {
             containerClassName="w-full max-w-[98%] 2xl:max-w-[1920px]"
             className="!bg-slate-100/70 rounded-2xl shadow-xl border border-slate-200/80 p-3.5 md:p-5"
         >
-            <Head title="Geofence & Pemetaan Spasial Tambang - PT Harmoni Panca Utama" />
+            <Head title="Geofance & Pemetaan Spasial Tambang - PT Harmoni Panca Utama" />
 
             <div className="space-y-4">
                 {/* ── TOP HEADER (BERSIH, PUTIH & SELARAS SISTEM SMART FLEET) ── */}
@@ -909,7 +909,7 @@ export default function GeofencePage() {
                         <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
-                                    GEOFENCE & SPATIAL DISPATCH
+                                    GEOFANCE & SPATIAL DISPATCH
                                 </h1>
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 shrink-0">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -934,11 +934,22 @@ export default function GeofencePage() {
                                 value={selectedSiteFilter}
                                 onChange={(e) => handleSiteSwitch(e.target.value as any)}
                                 className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer pr-1"
-                                title="Pilih Site Konsesi Tambang"
+                                title="Pilih Site Konsesi Tambang PT HPU (>12 Site)"
                             >
-                                <option value="ALL">Semua Site (ALL HPU)</option>
-                                <option value="HPA">Site HPA (Berau)</option>
-                                <option value="BDA">Site BDA (Barito)</option>
+                                <option value="ALL">Semua Site (ALL HPU - 14 Konsesi)</option>
+                                <option value="HPA">Site HPA (Berau, Kaltim)</option>
+                                <option value="BDA">Site BDA (Barito, Kalteng)</option>
+                                <option value="KJA">Site KJA (Kutai Janur Asri)</option>
+                                <option value="KDA">Site KDA (Kalimantan Damai Abadi)</option>
+                                <option value="DTA">Site DTA (Dayak Terang Abadi)</option>
+                                <option value="HPMU">Site HPMU (Harmoni Panca Mineral)</option>
+                                <option value="GAS">Site GAS (Gunung Asri Sejahtera)</option>
+                                <option value="OBI">Site OBI (Pulau Obi Halmahera)</option>
+                                <option value="BMB">Site BMB (Binuang Mitra Bersama)</option>
+                                <option value="AGM">Site AGM (Antang Gunung Meratus)</option>
+                                <option value="BEP">Site BEP (Bumi Enggang Perkasa)</option>
+                                <option value="BIB">Site BIB (Borneo Indobara)</option>
+                                <option value="TCMM">Site TCMM (Trubaindo Coal Mining)</option>
                             </select>
                         </div>
 
@@ -1014,11 +1025,22 @@ export default function GeofencePage() {
                                 value={selectedSiteFilter}
                                 onChange={(e) => handleSiteSwitch(e.target.value as any)}
                                 className="bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                                title="Pilih Site Konsesi Tambang"
+                                title="Pilih Site Konsesi Tambang PT HPU (>12 Site)"
                             >
-                                <option value="ALL">ALL HPU (Konsesi Kalimantan)</option>
-                                <option value="HPA">Site HPA (Berau - 49.3 KM)</option>
-                                <option value="BDA">Site BDA (Barito - 45.2 KM)</option>
+                                <option value="ALL">Semua Site (ALL HPU - 14 Konsesi)</option>
+                                <option value="HPA">Site HPA (Berau, Kaltim)</option>
+                                <option value="BDA">Site BDA (Barito, Kalteng)</option>
+                                <option value="KJA">Site KJA (Kutai Janur Asri)</option>
+                                <option value="KDA">Site KDA (Kalimantan Damai Abadi)</option>
+                                <option value="DTA">Site DTA (Dayak Terang Abadi)</option>
+                                <option value="HPMU">Site HPMU (Harmoni Panca Mineral)</option>
+                                <option value="GAS">Site GAS (Gunung Asri Sejahtera)</option>
+                                <option value="OBI">Site OBI (Pulau Obi Halmahera)</option>
+                                <option value="BMB">Site BMB (Binuang Mitra Bersama)</option>
+                                <option value="AGM">Site AGM (Antang Gunung Meratus)</option>
+                                <option value="BEP">Site BEP (Bumi Enggang Perkasa)</option>
+                                <option value="BIB">Site BIB (Borneo Indobara)</option>
+                                <option value="TCMM">Site TCMM (Trubaindo Coal Mining)</option>
                             </select>
                         </div>
 
