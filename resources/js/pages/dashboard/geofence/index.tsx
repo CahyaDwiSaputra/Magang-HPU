@@ -117,6 +117,14 @@ const MINING_COLOR_PALETTE = [
 export default function GeofencePage() {
     // ── STATE MASTER GEOFENCE & SPASIAL ──
     const [geofences, setGeofences] = useState<GeofenceItem[]>([]);
+    // Poin 2 Revisi 1.1: State Master Pit Location untuk Penamaan Geofence
+    interface PitLocationItem {
+        id: number;
+        location_name: string;
+        site: string;
+        parent_id?: number | null;
+    }
+    const [pitLocations, setPitLocations] = useState<PitLocationItem[]>([]);
     const [isLoadingGeofences, setIsLoadingGeofences] = useState<boolean>(true);
     const [haulingRoutes, setHaulingRoutes] = useState<any>(null);
     const [operationalPolygons, setOperationalPolygons] = useState<any>(null);
@@ -265,6 +273,19 @@ export default function GeofencePage() {
         }
     };
 
+    // Poin 2 Revisi 1.1: Fetch Master Pit Locations dari API Backend
+    const fetchPitLocations = async () => {
+        try {
+            const res = await fetch('/api/dashcam/geofences/pit-locations?site=ALL');
+            const data = await res.json();
+            if (data.status === 'ok' && Array.isArray(data.data)) {
+                setPitLocations(data.data);
+            }
+        } catch (e) {
+            console.error('Error fetching pit locations:', e);
+        }
+    };
+
     const fetchFleetTelemetry = async () => {
         try {
             const [ritasiRes, statusRes] = await Promise.allSettled([
@@ -316,6 +337,7 @@ export default function GeofencePage() {
         fetchOperationalPolygons();
         fetchFleetTelemetry();
         fetchOverspeedLogs();
+        fetchPitLocations();
     }, [selectedSiteFilter]);
 
     // ── TILE PROVIDER PETA ──
@@ -2096,19 +2118,63 @@ export default function GeofencePage() {
                                 </div>
                             )}
 
-                            {/* 1. NAMA GEOFENCE */}
+                            {/* 1. NAMA GEOFENCE & SELEKSI MASTER PIT LOCATION (REVISI 1.1 POIN 2) */}
                             <div>
-                                <label className="block text-slate-700 font-bold mb-1">
-                                    Nama Geofence <span className="text-rose-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formGeofence.name}
-                                    onChange={e => setFormGeofence({ ...formGeofence, name: e.target.value })}
-                                    placeholder="Contoh: PIT SELATAN (Front Loading), Workshop HPU, STA +10.200"
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden focus:border-blue-500 text-xs font-medium"
-                                />
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-slate-700 font-bold text-xs">
+                                        Nama Geofence <span className="text-rose-500">*</span>
+                                    </label>
+                                    {pitLocations.length > 0 && (
+                                        <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                                            {pitLocations.length} Master Pit Terdaftar
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Quick Selector: Master Pit Location Dropdown */}
+                                <div className="mb-2">
+                                    <select
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val) {
+                                                const found = pitLocations.find(p => p.location_name === val);
+                                                setFormGeofence(prev => ({
+                                                    ...prev,
+                                                    name: val,
+                                                    site: (found?.site && ['HPA','BDA','KDA','KJA'].includes(found.site)) ? found.site : prev.site
+                                                }));
+                                            }
+                                        }}
+                                        defaultValue=""
+                                        className="w-full bg-blue-50/80 border border-blue-200 rounded-xl px-3 py-1.5 text-blue-900 focus:outline-none focus:border-blue-500 text-xs font-semibold cursor-pointer mb-1"
+                                    >
+                                        <option value="">-- Pilih dari Master Pit Location (Poin 2) --</option>
+                                        {pitLocations.map(p => (
+                                            <option key={p.id} value={p.location_name}>
+                                                [{p.site || 'SITE'}] {p.location_name} {p.parent_id ? `(Sub Pit #${p.parent_id})` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        required
+                                        list="pit-locations-datalist"
+                                        value={formGeofence.name}
+                                        onChange={e => setFormGeofence({ ...formGeofence, name: e.target.value })}
+                                        placeholder="Pilih dari Master Pit di atas atau ketik nama lokasi..."
+                                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden focus:border-blue-500 text-xs font-medium"
+                                    />
+                                    <datalist id="pit-locations-datalist">
+                                        {pitLocations.map(p => (
+                                            <option key={`dl-${p.id}`} value={p.location_name}>
+                                                {p.site}
+                                            </option>
+                                        ))}
+                                    </datalist>
+                                </div>
                             </div>
 
                             {/* 2. SITE KONSESI & KATEGORI ZONA */}

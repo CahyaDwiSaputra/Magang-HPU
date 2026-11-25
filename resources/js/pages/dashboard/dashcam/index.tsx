@@ -2036,6 +2036,29 @@ export default function Page() {
                                     )}
                                 </div>
 
+                                {/* Poin Revisi 1.1 Sheet Dashcam: Site Drop Down dibawah search */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                        Site Drop Down:
+                                    </label>
+                                    <select
+                                        value={selectedSiteFilter}
+                                        onChange={e => setSelectedSiteFilter(e.target.value as any)}
+                                        className="w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-2xs"
+                                    >
+                                        <option value="ALL">Semua Site (All Concessions)</option>
+                                        <option value="HPU">HPU - Harmoni Panca Utama</option>
+                                        <option value="HPA">HPA - Hamparan Anugrah Abadi (Berau)</option>
+                                        <option value="KJA">KJA - Kaltim Jaya Bara</option>
+                                        <option value="BDA">BDA - Batubara Duaribu Abadi (Barito)</option>
+                                        <option value="DTA">DTA - Delta</option>
+                                        <option value="HPMU">HPMU - Head Office / Central</option>
+                                        <option value="GAS">GAS - Gane Tambang Sentosa</option>
+                                        <option value="OBI">OBI - Harita Nikel Obi</option>
+                                        <option value="KDA">KDA - Kendawangan</option>
+                                    </select>
+                                </div>
+
                                 {/* Filter Tabs */}
                                 <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-[11px] font-medium">
                                     {(['ALL', 'DT', 'EXCA', 'FT'] as const).map(tab => (
@@ -2118,55 +2141,6 @@ export default function Page() {
                                 </div>
                             </div>
 
-                            {/* Card 2: Diagnostik Hardware Unit Terpilih */}
-                            <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex flex-col gap-2.5">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                        <Activity className="w-3.5 h-3.5 text-blue-600" />
-                                        Diagnostik Hardware
-                                    </span>
-                                    <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
-                                        {currentVehicle.plateNo}
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
-                                        <span className="text-[10px] text-gray-400 uppercase font-medium">Sinyal 4G MDVR</span>
-                                        <span className={`font-bold mt-0.5 ${
-                                            currentVehicle.status === 'ONLINE' ? 'text-emerald-600' :
-                                            currentVehicle.is_registered ? 'text-amber-600' : 'text-slate-500'
-                                        }`}>
-                                            {currentVehicle.status === 'ONLINE' ? 'Kuat (-68 dBm)' : 
-                                             currentVehicle.is_registered ? 'Standby di Pit' : 'Belum Terdaftar'}
-                                        </span>
-                                    </div>
-                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
-                                        <span className="text-[10px] text-gray-400 uppercase font-medium">GPS Satelit</span>
-                                        <span className="font-bold text-blue-700 mt-0.5">
-                                            {currentVehicle.is_registered ? '18 Terkunci' : '0 Terkunci'}
-                                        </span>
-                                    </div>
-                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
-                                        <span className="text-[10px] text-gray-400 uppercase font-medium">Storage MDVR</span>
-                                        <span className="font-bold text-gray-800 mt-0.5">256 GB (Normal)</span>
-                                    </div>
-                                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 flex flex-col">
-                                        <span className="text-[10px] text-gray-400 uppercase font-medium">Kondisi Mesin</span>
-                                        <span className={`font-bold mt-0.5 ${
-                                            currentVehicle.status === 'ONLINE' ? 'text-emerald-600' :
-                                            currentVehicle.is_registered ? 'text-amber-600' : 'text-slate-500'
-                                        }`}>
-                                            {currentVehicle.status === 'ONLINE' ? 'ON (Running)' :
-                                             currentVehicle.is_registered ? 'STANDBY (Engine OFF)' : 'STANDBY (Virtual)'}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 text-[11px] flex items-center justify-between">
-                                    <span className="text-gray-500">Kanal Video Aktif:</span>
-                                    <span className="font-semibold text-gray-800">CH1 Jalan • CH2 Kabin DMS</span>
-                                </div>
-                            </div>
-
                             {/* Card 3: CMSV6 Gateway & Dispatch Network */}
                             <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex flex-col gap-2">
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-2 text-xs">
@@ -2193,37 +2167,61 @@ export default function Page() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Card 4: Status Kesiapan Armada Tambang */}
-                            <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-xs flex flex-col gap-2">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 text-xs">
-                                    <span className="font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                                        <Layers className="w-3.5 h-3.5 text-blue-600" />
-                                        Kesiapan Armada
-                                    </span>
-                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                        20/20 Aktif
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
-                                    <div className="bg-slate-50 p-1.5 rounded-lg border border-slate-200/80">
-                                        <span className="text-[9px] text-gray-400 font-bold uppercase block">DT Hauler</span>
-                                        <span className="font-bold text-blue-700 text-xs">14 Unit</span>
-                                    </div>
-                                    <div className="bg-slate-50 p-1.5 rounded-lg border border-slate-200/80">
-                                        <span className="text-[9px] text-gray-400 font-bold uppercase block">Excavator</span>
-                                        <span className="font-bold text-amber-700 text-xs">4 Unit</span>
-                                    </div>
-                                    <div className="bg-slate-50 p-1.5 rounded-lg border border-slate-200/80">
-                                        <span className="text-[9px] text-gray-400 font-bold uppercase block">Fuel Truck</span>
-                                        <span className="font-bold text-emerald-700 text-xs">2 Unit</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
-                        {/* ── KOLOM KANAN (lg:col-span-9): LIVECAM SURVEILLANCE & MODULAR METRICS (CARDS) ── */}
+                        {/* ── KOLOM KANAN (lg:col-span-9): LIVECAM SURVEILLANCE & MAPS (SHEET 2 REVISI 1.1) ── */}
                         <div className="lg:col-span-8 xl:col-span-9 space-y-4 min-w-0">
+                            {/* Poin 2 Sheet Dashcam: PETA LIVE TRACKING POSISI EQUIPMENT/DASHCAM (BUKAN GEOFENCE) */}
+                            <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-4 space-y-3">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-blue-600" />
+                                        <span className="text-xs font-bold text-slate-800 tracking-wider uppercase">
+                                            PETA LOKASI POSISI EQUIPMENT & DASHCAM (LIVE TRACKING)
+                                        </span>
+                                        <span className="text-[11px] font-mono text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">
+                                            [{(telemetry.lat ?? 2.045000).toFixed(6)}, {(telemetry.lng ?? 117.200000).toFixed(6)}]
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1 font-mono">
+                                            <Navigation className="w-3 h-3 text-blue-600" />
+                                            {currentVehicle.plateNo} • {telemetry.speed} km/j
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                // Center map to vehicle
+                                            }}
+                                            className="p-1.5 text-blue-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                                            title="Pusatkan ke Armada Terpilih"
+                                        >
+                                            <Crosshair className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Map Canvas */}
+                                <div className="w-full h-[280px] rounded-xl overflow-hidden border border-slate-200 relative bg-slate-900">
+                                    <Map
+                                        height={280}
+                                        center={[(telemetry.lat ?? 2.045000), (telemetry.lng ?? 117.200000)]}
+                                        zoom={14}
+                                        provider={(x, y, z) => `https://mt1.google.com/vt/lyrs=y&x=${x}&y=${y}&z=${z}`}
+                                    >
+                                        <Overlay anchor={[(telemetry.lat ?? 2.045000), (telemetry.lng ?? 117.200000)]} offset={[40, 20]}>
+                                            <div className="bg-blue-600 text-white font-bold text-xs px-2.5 py-1 rounded-full shadow-lg border border-white flex items-center gap-1.5 animate-pulse">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                                <span>{currentVehicle.plateNo}</span>
+                                                <span className="bg-white/20 text-[10px] px-1 rounded font-mono">
+                                                    {telemetry.speed} km/j
+                                                </span>
+                                            </div>
+                                        </Overlay>
+                                    </Map>
+                                </div>
+                            </div>
                             {/* Card 5: Integrated Video Surveillance & Command Center Card */}
                             <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 sm:p-4 shadow-xs">
                                 {/* Command Bar Inside Surveillance Card */}
@@ -2589,460 +2587,8 @@ export default function Page() {
                                 )}
                             </div>
 
-                            {/* ── MODULAR CARDS: SIKLUS OPERASIONAL HAULING & TELEMETRI SENSOR HARDWARE ── */}
-                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
-<div className="xl:col-span-7 flex flex-col">
-                                    {selectedVehicle === 'DT' ? (
-                                        /* Card 6: SIKLUS OPERASIONAL HAULING */
-                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
-                                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                                        <Activity className="w-3.5 h-3.5 text-blue-600" />
-                                                        SIKLUS OPERASIONAL HAULING
-                                                    </span>
-                                                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                                                        Tahap: {haulingStage}
-                                                    </span>
-                                                </div>
-
-                                                {/* Stepper Progress & Algoritma Ritasi (Poin 13: Dekat Exca -> Menuju Dumping -> Keluar Dumping = +1 Rit) */}
-                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs font-bold">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setHaulingStage('LOADING');
-                                                            setGeofenceNotice('⛏️ Tahap 1: Unit DT/HD mendekati Excavator di Pit front loading.');
-                                                        }}
-                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
-                                                            haulingStage === 'LOADING' 
-                                                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
-                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
-                                                        }`}
-                                                        title="Unit DT/HD mendekati Excavator di Pit"
-                                                    >
-                                                        <Layers className="w-3.5 h-3.5 shrink-0" />
-                                                        <span className="truncate">1. Dekat Exca (Pit)</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setHaulingStage('TRAVEL_ISI');
-                                                            setGeofenceNotice('🚛 Tahap 2: Unit DT/HD membawa muatan menuju lokasi dumping.');
-                                                        }}
-                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
-                                                            haulingStage === 'TRAVEL_ISI' 
-                                                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
-                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
-                                                        }`}
-                                                        title="Menuju lokasi dumping (Travel Isi)"
-                                                    >
-                                                        <Truck className="w-3.5 h-3.5 shrink-0" />
-                                                        <span className="truncate">2. Menuju Dumping</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setHaulingStage('DUMPING');
-                                                            setGeofenceNotice('📍 Tahap 3: Unit DT/HD berada di lokasi dumping pembuangan material.');
-                                                        }}
-                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
-                                                            haulingStage === 'DUMPING' 
-                                                                ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
-                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
-                                                        }`}
-                                                        title="Tiba di lokasi dumping"
-                                                    >
-                                                        <ArrowRightCircle className="w-3.5 h-3.5 shrink-0" />
-                                                        <span className="truncate">3. Di Lokasi Dumping</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setHaulingStage('TRAVEL_KOSONG');
-                                                            void recordRitasi({
-                                                                dumpingGeofenceId: lastGeofenceId || 3,
-                                                                dumpingName: activeGeofence?.name || 'Disposal OPD LW',
-                                                                loadType: selectedMaterial,
-                                                            });
-                                                        }}
-                                                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition cursor-pointer text-left ${
-                                                            haulingStage === 'TRAVEL_KOSONG' 
-                                                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                                                                : 'bg-slate-50 border-slate-200/80 text-gray-500 hover:bg-slate-100'
-                                                        }`}
-                                                        title="Keluar dari lokasi dumping = Dihitung 1 Rit (Poin 13)"
-                                                    >
-                                                        <RotateCcw className="w-3.5 h-3.5 shrink-0" />
-                                                        <span className="truncate">4. Keluar Dump (+1 Rit!)</span>
-                                                    </button>
-                                                </div>
-
-                                                {/* Trip Info & Big RIT Box */}
-                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center bg-slate-50/70 p-3 rounded-lg border border-slate-200/80">
-                                                    <div className="md:col-span-8 flex flex-col gap-1.5 text-xs">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Start Pit:</span>
-                                                            <span className="font-bold text-gray-800 truncate">{activeGeofence?.type === 'loading' ? activeGeofence.name : (ritasiLogs.length > 0 ? (ritasiLogs[0].pit_name || 'PIT HPU') : '-')}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Jam Siklus:</span>
-                                                            <span className="font-bold text-slate-800 font-mono">{new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                                                            <span className="font-semibold text-gray-400 uppercase w-18 text-[11px]">Tujuan:</span>
-                                                            <span className="font-bold text-gray-800 truncate">{activeGeofence?.type === 'dumping' ? activeGeofence.name : (activeGeofence ? activeGeofence.name : 'Jalur Hauling Tambang')}</span>
-                                                        </div>
-                                                        <div className="mt-1">
-                                                            <div className="flex justify-between text-xs font-semibold text-gray-500 mb-1">
-                                                                <span>Produksi Terakumulasi</span>
-                                                                <span className="font-mono text-blue-600 font-bold">{totalBcmToday} BCM</span>
-                                                            </div>
-                                                            <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
-                                                                <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, ritasiToday * 5)}%` }}></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="md:col-span-4 flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-slate-200/80 text-center gap-0.5">
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Total Ritasi</p>
-                                                        <p className="text-2xl font-black text-blue-700 leading-none">
-                                                            {ritasiToday} <span className="text-xs font-bold text-gray-500">RIT</span>
-                                                        </p>
-                                                        {/* Poin 14: Informasi Tanggal & Shift pada Tampilan Ritase */}
-                                                        <div className="mt-1 pt-1 border-t border-slate-100 w-full text-center">
-                                                            <p className="text-[10px] font-extrabold text-slate-800">Shift 1 Siang (06:00 - 18:00)</p>
-                                                            <p className="text-[9px] text-slate-500 font-medium">
-                                                                {new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Material Selector */}
-                                            <div className="pt-2.5 mt-2.5 border-t border-slate-100">
-                                                <div className="flex items-center justify-between mb-1.5 text-xs">
-                                                    <span className="font-bold text-gray-700 flex items-center gap-1">
-                                                        <Layers className="w-3 h-3 text-gray-400" /> Material Muatan:
-                                                    </span>
-                                                    <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-[11px]">
-                                                        {selectedMaterial}
-                                                    </span>
-                                                </div>
-                                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                                                    {[
-                                                        { name: 'OB', label: 'OB (Overburden)', bg: 'bg-slate-700' },
-                                                        { name: 'COAL', label: 'Coal (Batubara)', bg: 'bg-gray-900' },
-                                                        { name: 'MUD', label: 'Mud (Lumpur)', bg: 'bg-amber-800' },
-                                                        { name: 'TOP SOIL', label: 'Top Soil', bg: 'bg-orange-700' },
-                                                        { name: 'LIMONIT', label: 'Limonit', bg: 'bg-yellow-700' },
-                                                        { name: 'SAPROLIT', label: 'Saprolit', bg: 'bg-emerald-800' },
-                                                    ].map(mat => (
-                                                        <button
-                                                            key={mat.name}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setSelectedMaterial(mat.name as MaterialType);
-                                                                setGeofenceNotice(`Material diubah ke: ${mat.name}`);
-                                                                setTimeout(() => setGeofenceNotice(null), 3000);
-                                                            }}
-                                                            className={`py-1 px-1.5 rounded-lg text-[11px] font-bold text-white transition cursor-pointer text-center truncate ${mat.bg} ${
-                                                                selectedMaterial === mat.name ? 'ring-2 ring-blue-500 shadow-xs' : 'opacity-80 hover:opacity-100'
-                                                            }`}
-                                                            title={mat.label}
-                                                        >
-                                                            {mat.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        /* Card 6 (Excavator): OPERASIONAL EXCAVATOR & TOGGLE MATERIAL (POIN 14) */
-                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
-                                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                                        <LandPlot className="w-3.5 h-3.5 text-amber-600" />
-                                                        UNIT EXCAVATOR & FRONT LOADING
-                                                    </span>
-                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
-                                                        currentVehicle.status === 'ONLINE' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-600 bg-slate-50 border-slate-200'
-                                                    }`}>
-                                                        <span className={`w-2 h-2 rounded-full ${currentVehicle.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                                                        {currentVehicle.status === 'ONLINE' ? 'EXCA ONLINE' : 'EXCA STANDBY'}
-                                                    </span>
-                                                </div>
-                                                <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 flex flex-col gap-2">
-                                                    <div className="flex justify-between items-center text-xs">
-                                                        <span className="text-gray-400 font-semibold uppercase text-[10px]">Identitas Unit</span>
-                                                        <span className="text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-gray-700">{currentVehicle.site}</span>
-                                                    </div>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <h4 className="text-xl font-bold text-amber-600">{currentVehicle.plateNo}</h4>
-                                                        <span className="text-xs text-gray-400 font-mono">ID: {currentVehicle.deviceNo}</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
-                                                        <div className="bg-white p-2 rounded border border-slate-200">
-                                                            <p className="text-gray-400 font-medium uppercase text-[10px]">Operator Kabin</p>
-                                                            <p className="font-bold text-gray-800 truncate">{driver?.name || 'Kabin Standby'}</p>
-                                                        </div>
-                                                        <div className="bg-white p-2 rounded border border-slate-200">
-                                                            <p className="text-gray-400 font-medium uppercase text-[10px]">Zona Operasional</p>
-                                                            <p className="font-bold text-gray-800 truncate">{activeGeofence ? activeGeofence.name : 'Area Pit Front'}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* POIN 14: TOGGLE MATERIAL MUATAN EXCAVATOR (COAL VS OB) */}
-                                                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col gap-2 mt-2.5">
-                                                    <div className="flex items-center justify-between text-xs">
-                                                        <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                                                            <Layers className="w-3.5 h-3.5 text-blue-600" />
-                                                            Toggle Material Exca (Poin 14):
-                                                        </span>
-                                                        <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full border ${
-                                                            excaMaterial === 'COAL'
-                                                                ? 'bg-slate-900 text-amber-400 border-black'
-                                                                : 'bg-amber-100 text-amber-900 border-amber-300'
-                                                        }`}>
-                                                            {excaMaterial === 'COAL' ? 'COAL (Batubara)' : 'OB (Overburden)'}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Primary Toggle Buttons: OB vs COAL */}
-                                                    <div className="grid grid-cols-2 gap-2 pt-0.5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setExcaMaterial('OB');
-                                                                setSelectedMaterial('OB');
-                                                                setGeofenceNotice('🚜 Material Excavator diatur ke: OB (Overburden)');
-                                                                setTimeout(() => setGeofenceNotice(null), 4000);
-                                                            }}
-                                                            className={`py-2 px-3 rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
-                                                                excaMaterial === 'OB'
-                                                                    ? 'bg-slate-700 text-white border-slate-800 shadow-md ring-2 ring-blue-500'
-                                                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                                                            }`}
-                                                        >
-                                                            <span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
-                                                            <span>OB (Overburden)</span>
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setExcaMaterial('COAL');
-                                                                setSelectedMaterial('COAL');
-                                                                setGeofenceNotice('🚜 Material Excavator diatur ke: COAL (Batubara)');
-                                                                setTimeout(() => setGeofenceNotice(null), 4000);
-                                                            }}
-                                                            className={`py-2 px-3 rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 border ${
-                                                                excaMaterial === 'COAL'
-                                                                    ? 'bg-slate-950 text-white border-black shadow-md ring-2 ring-blue-500'
-                                                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                                                            }`}
-                                                        >
-                                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                                                            <span>COAL (Batubara)</span>
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Secondary Minerals per Slide 28 */}
-                                                    <div className="flex items-center gap-1.5 pt-1 overflow-x-auto text-[10px]">
-                                                        <span className="text-slate-400 font-medium">Lainnya:</span>
-                                                        {(['MUD', 'TOP SOIL', 'LIMONIT', 'SAPROLIT'] as const).map(mat => (
-                                                            <button
-                                                                key={mat}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setExcaMaterial(mat);
-                                                                    setSelectedMaterial(mat);
-                                                                    setGeofenceNotice(`🚜 Material Excavator diatur ke: ${mat}`);
-                                                                    setTimeout(() => setGeofenceNotice(null), 3000);
-                                                                }}
-                                                                className={`px-2 py-0.5 rounded-md font-semibold transition cursor-pointer ${
-                                                                    excaMaterial === mat ? 'bg-blue-600 text-white font-bold' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                                                }`}
-                                                            >
-                                                                {mat}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-<div className="xl:col-span-5 flex flex-col">
-                                    {selectedVehicle === 'DT' ? (
-                                        /* ── CARD 8: TELEMETRI & DATA PEKERJAAN AKTIF (POIN 9 & 10) ── */
-                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
-                                                    <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                                        <Gauge className="w-3.5 h-3.5 text-blue-600" />
-                                                        TELEMETRI & DATA PEKERJAAN AKTIF
-                                                    </span>
-                                                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                        <Activity className="w-3 h-3" /> Live Telemetri
-                                                    </span>
-                                                </div>
-
-                                                {/* 4 Summary Metrik */}
-                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center mb-3">
-                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
-                                                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-1">
-                                                            <Gauge className="w-3.5 h-3.5" />
-                                                        </div>
-                                                        <p className="text-sm font-bold text-gray-900 leading-tight">
-                                                            {telemetry.speed} <span className="text-[10px] font-normal text-gray-500">km/j</span>
-                                                        </p>
-                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Kecepatan</p>
-                                                    </div>
-                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
-                                                        <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-1">
-                                                            <Clock className="w-3.5 h-3.5" />
-                                                        </div>
-                                                        <p className="text-sm font-bold text-purple-700 leading-tight">
-                                                            {avgCycleTimeToday > 0 ? avgCycleTimeToday : (telemetry.cycleTimeMinutes || 21.5)} <span className="text-[10px] font-normal text-gray-500">min</span>
-                                                        </p>
-                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Cycle Time</p>
-                                                    </div>
-                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
-                                                        <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-1">
-                                                            <Power className="w-3.5 h-3.5" />
-                                                        </div>
-                                                        <p className="text-sm font-bold text-emerald-700 leading-tight">
-                                                            {telemetry.distance > 0 ? telemetry.distance.toFixed(1) : (totalDistanceKm > 0 ? totalDistanceKm.toFixed(1) : '24.8')} <span className="text-[10px] font-normal text-gray-500">KM</span>
-                                                        </p>
-                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Odometer GPS</p>
-                                                    </div>
-                                                    <div className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50 flex flex-col items-center justify-center">
-                                                        <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1">
-                                                            <Fuel className="w-3.5 h-3.5" />
-                                                        </div>
-                                                        <p className="text-sm font-bold text-amber-700 leading-tight">
-                                                            {telemetry.fuel > 0 ? telemetry.fuel : '28.4'} <span className="text-[10px] font-normal text-gray-500">L</span>
-                                                        </p>
-                                                        <p className="text-[10px] font-medium text-gray-400 uppercase mt-0.5">Konsumsi BBM</p>
-                                                    </div>
-                                                </div>
-
-                                                {/* POIN 9: KONEKSI TELEMETRI DENGAN DATA PEKERJAAN YANG SEDANG DIKERJAKAN */}
-                                                <div className="bg-slate-50/90 border border-slate-200/80 rounded-xl p-3 mb-3 text-xs space-y-2">
-                                                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/70">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                            <Layers className="w-3.5 h-3.5 text-blue-600" />
-                                                            Pekerjaan / Job Unit (Slide 22)
-                                                        </span>
-                                                        <span className="font-extrabold text-[11px] text-blue-800 bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-200">
-                                                            {selectedMaterial === 'COAL' ? 'Coal Hauling ke Port Jetty KM 16' : 'OB Removal ke Disposal OPD-LW'}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-[11px]">
-                                                        <div className="bg-white p-2 rounded-lg border border-slate-200/70">
-                                                            <span className="text-slate-400 block text-[9px] uppercase font-bold">Status Operasi (Slide 23)</span>
-                                                            <span className="font-bold text-slate-800 flex items-center gap-1 mt-0.5">
-                                                                <span className={`w-2 h-2 rounded-full ${
-                                                                    haulingStage === 'TRAVEL_ISI' ? 'bg-blue-600 animate-pulse' :
-                                                                    haulingStage === 'DUMPING' ? 'bg-amber-500' :
-                                                                    haulingStage === 'LOADING' ? 'bg-indigo-600' : 'bg-emerald-500'
-                                                                }`}></span>
-                                                                {haulingStage === 'TRAVEL_ISI' ? 'Working (Hauling)' :
-                                                                 haulingStage === 'DUMPING' ? 'Dumping di Disposal' :
-                                                                 haulingStage === 'LOADING' ? 'Loading Material Front' : 'Travel Kosong (Return)'}
-                                                            </span>
-                                                        </div>
-                                                        <div className="bg-white p-2 rounded-lg border border-slate-200/70">
-                                                            <span className="text-slate-400 block text-[9px] uppercase font-bold">Material Muatan</span>
-                                                            <span className="font-bold text-slate-800 block mt-0.5 truncate">
-                                                                {selectedMaterial} • 22 BCM (30 Ton)
-                                                            </span>
-                                                        </div>
-                                                        <div className="bg-white p-2 rounded-lg border border-slate-200/70 col-span-2 sm:col-span-1">
-                                                            <span className="text-slate-400 block text-[9px] uppercase font-bold">Lokasi Sektor</span>
-                                                            <span className="font-bold text-slate-800 truncate block mt-0.5">
-                                                                {activeGeofence ? activeGeofence.name : 'Koridor Hauling Site ' + currentVehicle.site}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* POIN 10: INFORMASI WAKTU START DAN STOP PADA EQUIPMENT & JAM OPERASIONAL LENGKAP */}
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1 border-t border-slate-100">
-                                                <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
-                                                    <p className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider">Waktu Start</p>
-                                                    <p className="text-xs font-bold text-emerald-800 mt-0.5 font-mono">06:00 WITA</p>
-                                                    <span className="text-[9px] text-slate-400">Mulai Operasi Equipment</span>
-                                                </div>
-                                                <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
-                                                    <p className="text-[9px] text-rose-700 font-bold uppercase tracking-wider">Waktu Stop</p>
-                                                    <p className="text-xs font-bold text-rose-800 mt-0.5 font-mono">18:00 WITA</p>
-                                                    <span className="text-[9px] text-slate-400">Selesai Shift Equipment</span>
-                                                </div>
-                                                <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
-                                                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Jam Aktual (WITA)</p>
-                                                    <div className="flex items-center gap-1 mt-0.5">
-                                                        <Clock className="w-3 h-3 text-blue-600" />
-                                                        <span className="font-bold text-xs text-slate-900 font-mono">
-                                                            {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-[9px] text-blue-600 font-medium">Real-time GPS</span>
-                                                </div>
-                                                <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
-                                                    <p className="text-[9px] text-purple-700 font-bold uppercase tracking-wider">Total Jam Operasi</p>
-                                                    <p className="text-xs font-bold text-purple-700 mt-0.5 font-mono">4.8 Jam (HM)</p>
-                                                    <span className="text-[9px] text-slate-400">{totalBcmToday} BCM Hari Ini</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        /* Card 8 (Excavator): STATUS PEMUATAN */
-                                        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
-                                            <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
-                                                <span className="text-xs font-semibold text-gray-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                                    <Activity className="w-3.5 h-3.5 text-blue-600" />
-                                                    STATUS PEMUATAN (LOADING)
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <div className="flex justify-between items-end text-xs">
-                                                    <div>
-                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Estimasi Muatan</p>
-                                                        <p className="text-lg font-bold text-amber-600">14.5 <span className="text-xs font-normal text-gray-500">BCM</span></p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-gray-400 font-medium uppercase text-[10px]">Target</p>
-                                                        <p className="text-lg font-bold text-gray-900">20.0 <span className="text-xs font-normal text-gray-500">BCM</span></p>
-                                                    </div>
-                                                </div>
-                                                <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                                                    <div className="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style={{ width: '72%' }}></div>
-                                                </div>
-                                                <div className="flex justify-between text-xs font-semibold text-gray-500">
-                                                    <span>Pass 3 dari 4</span>
-                                                    <span className="text-amber-600 font-bold">72% Terisi</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* ── MODULAR CARDS: SAFETY ALARM DMS & OPERATOR DETAIL ── */}
-                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
-                                <div className="xl:col-span-7 flex flex-col">
-<div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs space-y-3">
+                            {/* ── SAFETY ALARM DMS & ADAS & OVERSPEED (SHEET 2 IMAGE 11) ── */}
+                            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3">
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                                     <div className="flex items-center gap-2">
                                         <div className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
@@ -3232,11 +2778,11 @@ export default function Page() {
                                         })
                                     )}
                                 </div>
-                                </div>
-
                             </div>
-<div className="xl:col-span-5 flex flex-col">
-                                    {/* Card 9: OPERATOR DETAIL */}
+
+                            {/* ── BOTTOM ROW: OPERATOR DETAIL (IMAGE 6) & DIAGNOSTIK HARDWARE (IMAGE 10) ── */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Card 9: OPERATOR DETAIL (IMAGE 6) */}
                                     <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-xs flex-1 flex flex-col justify-between">
                                         <div>
                                             <div className="flex items-center justify-between mb-2.5 border-b border-slate-100 pb-2">
@@ -3385,11 +2931,61 @@ export default function Page() {
                                             )}
                                         </div>
                                     </div>
+
+                                </div>
+
+                                {/* Card 10: DIAGNOSTIK HARDWARE (IMAGE 10 PADA SHEET 2) */}
+                                <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-col justify-between space-y-3">
+                                    <div>
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <Radio className="w-4 h-4 text-blue-600" />
+                                                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                                    DIAGNOSTIK HARDWARE MDVR
+                                                </span>
+                                            </div>
+                                            <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                                {currentVehicle.plateNo}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2.5 text-xs text-center mb-3">
+                                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase block">Sinyal 4G MDVR</span>
+                                                <span className="font-bold text-slate-900 text-sm mt-0.5 block">Kuat (-68 dBm)</span>
+                                                <span className="text-[9px] text-emerald-600 font-medium">Standby di Pit</span>
+                                            </div>
+                                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase block">GPS Satelit</span>
+                                                <span className="font-bold text-blue-700 text-sm mt-0.5 block">18 Terkunci</span>
+                                                <span className="text-[9px] text-slate-400 font-mono">Presisi Tinggi</span>
+                                            </div>
+                                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase block">Storage MDVR</span>
+                                                <span className="font-bold text-emerald-700 text-sm mt-0.5 block">256 GB (Normal)</span>
+                                                <span className="text-[9px] text-slate-400">Status SD/SSD OK</span>
+                                            </div>
+                                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase block">Kondisi Mesin</span>
+                                                <span className="font-bold text-slate-900 text-sm mt-0.5 block">ON (Running)</span>
+                                                <span className="text-[9px] text-emerald-600 font-medium">Engine Active</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                                        <span className="font-bold text-[11px] flex items-center gap-1.5">
+                                            <Video className="w-3.5 h-3.5 text-blue-600" />
+                                            Kanal Video Aktif:
+                                        </span>
+                                        <span className="font-mono text-slate-700 font-bold bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/70">
+                                            CH1 Jalan • CH2 Kabin DMS
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                </div>
 
                 {/* ── MODAL: RIWAYAT SCAN WAJAH & PENUGASAN DRIVER ── */}
                 {showHistory && (

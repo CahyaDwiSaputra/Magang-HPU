@@ -205,6 +205,7 @@ Route::controller(DashcamController::class)->prefix("/dashcam")->withoutMiddlewa
     Route::post("/checkout", "checkout");
     Route::get("/geofences", "getGeofences");
     Route::get("/geofences/overspeed-history", "getOverspeedHistory");
+    Route::get("/geofences/pit-locations", "getPitLocations");
     Route::get("/geofences-geojson", "getGeofencesGeoJson");
     Route::get("/hauling-routes", "getHaulingRoutes");
     Route::get("/drone-photos", "getDronePhotos");

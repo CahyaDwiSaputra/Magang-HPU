@@ -1170,4 +1170,26 @@ class DashcamController extends Controller
             'data'   => $overspeedLogs,
         ]);
     }
+
+    /**
+     * GET /api/dashcam/geofences/pit-locations (Revisi 1.1 Sheet Geofence Poin 2)
+     * Mengambil daftar master pit location untuk penamaan geofence
+     */
+    public function getPitLocations(Request $request): JsonResponse
+    {
+        $site = strtoupper($request->query('site', 'ALL'));
+        $query = \App\Models\PitLocationModel::whereNull('deleted_at');
+
+        if ($site !== 'ALL') {
+            $query->where('site', $site);
+        }
+
+        $locations = $query->orderBy('location_name')->get(['id', 'location_name', 'site', 'parent_id']);
+
+        return response()->json([
+            'status' => 'ok',
+            'total'  => $locations->count(),
+            'data'   => $locations,
+        ]);
+    }
 }

@@ -10,6 +10,7 @@ import {
     Clock, 
     Gauge, 
     RotateCw, 
+    RotateCcw,
     Hourglass, 
     Fuel, 
     Database, 
@@ -46,8 +47,8 @@ import { useInitials } from '@/hooks/use-initials';
 const menu_items=[
     {
         id: 'dashboard',
-        label: 'GPS TRACKING',
-        icon: Navigation,
+        label: 'FLEET CYCLE',
+        icon: RotateCcw,
         href:"/dashboard"
     },
     {
