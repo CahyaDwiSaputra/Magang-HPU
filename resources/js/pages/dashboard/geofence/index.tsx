@@ -901,39 +901,39 @@ export default function GeofencePage() {
 
             <div className="space-y-4">
                 {/* ── TOP HEADER (BERSIH, PUTIH & SELARAS SISTEM SMART FLEET) ── */}
-                <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 md:p-4 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
                             <LandPlot className="w-5 h-5" />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                                     GEOFENCE & SPATIAL DISPATCH
                                 </h1>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 shrink-0">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                     Enterprise Spasial
                                 </span>
                             </div>
-                            <p className="text-xs text-slate-500 font-medium">
+                            <p className="text-xs text-slate-500 font-medium truncate">
                                 Monitoring perimeter konsesi, front loading, disposal timbunan, & rute hauling 94.5 KM PT Harmoni Panca Utama
                             </p>
                         </div>
                     </div>
 
-                    {/* Quick Site Switcher Dropdown & Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-2.5">
+                    {/* Quick Site Switcher Dropdown & Action Buttons (One-Line Fixed, Never Drops Below) */}
+                    <div className="flex items-center gap-2 shrink-0 flex-nowrap self-start lg:self-center">
                         {/* Site Dropdown Selector */}
-                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 shadow-xs">
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-                                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 rounded-xl px-2.5 py-1.5 shadow-xs">
+                            <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
                                 Site:
                             </span>
                             <select
                                 value={selectedSiteFilter}
                                 onChange={(e) => handleSiteSwitch(e.target.value as any)}
-                                className="bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs min-w-[170px]"
+                                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer pr-1"
                                 title="Pilih Site Konsesi Tambang"
                             >
                                 <option value="ALL">Semua Site (ALL HPU)</option>
@@ -946,10 +946,10 @@ export default function GeofencePage() {
                         <button
                             type="button"
                             onClick={() => setShowOverspeedModal(true)}
-                            className="px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            className="px-2.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 whitespace-nowrap"
                             title="Riwayat Pelanggaran Batas Kecepatan Spasial Geofence"
                         >
-                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                             <span>Riwayat Overspeed ({overspeedLogs.length})</span>
                         </button>
 
@@ -957,21 +957,21 @@ export default function GeofencePage() {
                         <button
                             type="button"
                             onClick={() => setShowZonesDrawer(true)}
-                            className="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 whitespace-nowrap"
                             title="Buka daftar & pengaturan visibilitas zona"
                         >
-                            <SlidersHorizontal className="w-3.5 h-3.5 text-blue-400" />
-                            <span>Daftar & Kelola Zona ({operationalGeofences.length})</span>
+                            <SlidersHorizontal className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                            <span>Kelola Zona ({operationalGeofences.length})</span>
                         </button>
 
                         {/* Tombol Tambah Geofence Baru */}
                         <button
                             type="button"
                             onClick={handleOpenCreateModal}
-                            className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition flex items-center gap-1 cursor-pointer shadow-xs"
+                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 whitespace-nowrap"
                             title="Tambah Geofence Baru"
                         >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus className="w-3.5 h-3.5 shrink-0" />
                             <span>Tambah Zona</span>
                         </button>
                     </div>
