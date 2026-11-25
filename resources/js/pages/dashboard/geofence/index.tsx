@@ -1634,68 +1634,6 @@ export default function GeofencePage() {
                         )}
                     </div>
                 </div>
-
-                {/* ── CARD: STATISTIK SPASIAL KONSESI & FITUR PENDUKUNG (POIN 2 & POIN 7: MURNI SPASIAL TANPA DATA ARMADA) ── */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center p-2 rounded-xl bg-slate-50 border border-slate-200/90 shadow-xs">
-                    {/* 1. Total Geofence Terdaftar */}
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Total Geofence</p>
-                        <p className="font-black text-sm text-blue-700">
-                            {operationalGeofences.length}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">Zona</span>
-                        </p>
-                        <span className="text-[9px] font-mono text-slate-500">Konsesi {selectedSiteFilter}</span>
-                    </div>
-
-                    {/* 2. Rute Hauling Konsesi */}
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Koridor Hauling</p>
-                        <p className="font-black text-amber-600 text-sm">
-                            {selectedSiteFilter === 'HPA' ? '49.3' : selectedSiteFilter === 'BDA' ? '45.2' : '94.5'}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">KM</span>
-                        </p>
-                        <span className="text-[9px] font-mono text-slate-500">Rute Jalan Tambang</span>
-                    </div>
-
-                    {/* 3. Pit Front Loading */}
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Pit Front Loading</p>
-                        <p className="font-black text-indigo-700 text-sm">
-                            {loadingGeofences.length}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">Area Pit</span>
-                        </p>
-                        <span className="text-[9px] font-mono text-slate-500">Pemuatan Material</span>
-                    </div>
-
-                    {/* 4. Disposal Timbunan */}
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Disposal Timbunan</p>
-                        <p className="font-black text-emerald-700 text-sm">
-                            {dumpingGeofences.length}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">Lokasi</span>
-                        </p>
-                        <span className="text-[9px] font-mono text-slate-500">Area Dumping Waste</span>
-                    </div>
-
-                    {/* 5. Cycle Time Standar Rute (Poin 2) */}
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Cycle Time Hauling</p>
-                        <p className="font-black text-purple-700 text-sm">
-                            24.5 <span className="text-[10px] font-normal text-gray-500">mnt</span>
-                        </p>
-                        <span className="text-[9px] font-mono text-slate-400">Standar Estimasi Rute</span>
-                    </div>
-
-                    {/* 6. Riwayat Overspeed Terdeteksi (Poin 12) */}
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Riwayat Overspeed</p>
-                        <p className="font-black text-rose-600 text-sm">
-                            {overspeedLogs.length}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">Kejadian</span>
-                        </p>
-                        <span className="text-[9px] font-mono text-slate-500">Pelanggaran Batas Zona</span>
-                    </div>
-                </div>
             </div>
 
             {/* ── SLIDE-OVER DRAWER: RIWAYAT PELANGGARAN OVERSPEED PADA GEOFENCE (POIN 12) ── */}
