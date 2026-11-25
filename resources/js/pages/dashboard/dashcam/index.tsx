@@ -2712,7 +2712,13 @@ export default function Page() {
                                                         <p className="text-2xl font-black text-blue-700 leading-none">
                                                             {ritasiToday} <span className="text-xs font-bold text-gray-500">RIT</span>
                                                         </p>
-                                                        <span className="text-[10px] text-slate-400 font-medium mt-1">Shift Berjalan</span>
+                                                        {/* Poin 14: Informasi Tanggal & Shift pada Tampilan Ritase */}
+                                                        <div className="mt-1 pt-1 border-t border-slate-100 w-full text-center">
+                                                            <p className="text-[10px] font-extrabold text-slate-800">Shift 1 Siang (06:00 - 18:00)</p>
+                                                            <p className="text-[9px] text-slate-500 font-medium">
+                                                                {new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2971,30 +2977,30 @@ export default function Page() {
                                                 </div>
                                             </div>
 
-                                            {/* POIN 10: PENGGANTIAN SENSOR PTO DENGAN WAKTU & JAM SIKLUS OPERASIONAL LENGKAP */}
+                                            {/* POIN 10: INFORMASI WAKTU START DAN STOP PADA EQUIPMENT & JAM OPERASIONAL LENGKAP */}
                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1 border-t border-slate-100">
                                                 <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
-                                                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Mulai Shift</p>
-                                                    <p className="text-xs font-bold text-slate-800 mt-0.5 font-mono">06:00 WITA</p>
-                                                    <span className="text-[9px] text-slate-400">Shift 1 Pagi</span>
+                                                    <p className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider">Waktu Start</p>
+                                                    <p className="text-xs font-bold text-emerald-800 mt-0.5 font-mono">06:00 WITA</p>
+                                                    <span className="text-[9px] text-slate-400">Mulai Operasi Equipment</span>
                                                 </div>
                                                 <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
-                                                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Mulai Siklus Ini</p>
-                                                    <p className="text-xs font-bold text-blue-700 mt-0.5 font-mono">10:14 WITA</p>
-                                                    <span className="text-[9px] text-slate-400">Loading di Front</span>
+                                                    <p className="text-[9px] text-rose-700 font-bold uppercase tracking-wider">Waktu Stop</p>
+                                                    <p className="text-xs font-bold text-rose-800 mt-0.5 font-mono">18:00 WITA</p>
+                                                    <span className="text-[9px] text-slate-400">Selesai Shift Equipment</span>
                                                 </div>
                                                 <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
                                                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Jam Aktual (WITA)</p>
                                                     <div className="flex items-center gap-1 mt-0.5">
-                                                        <Clock className="w-3 h-3 text-emerald-600" />
+                                                        <Clock className="w-3 h-3 text-blue-600" />
                                                         <span className="font-bold text-xs text-slate-900 font-mono">
                                                             {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
-                                                    <span className="text-[9px] text-emerald-600 font-medium">Real-time GPS</span>
+                                                    <span className="text-[9px] text-blue-600 font-medium">Real-time GPS</span>
                                                 </div>
                                                 <div className="p-2 rounded-lg border border-slate-200/80 bg-slate-50 text-center flex flex-col items-center justify-center">
-                                                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Jam Operasi</p>
+                                                    <p className="text-[9px] text-purple-700 font-bold uppercase tracking-wider">Total Jam Operasi</p>
                                                     <p className="text-xs font-bold text-purple-700 mt-0.5 font-mono">4.8 Jam (HM)</p>
                                                     <span className="text-[9px] text-slate-400">{totalBcmToday} BCM Hari Ini</span>
                                                 </div>

@@ -902,41 +902,47 @@ export default function GeofencePage() {
 
                     {/* Quick Site Switcher Pills & Action Buttons */}
                     <div className="flex flex-wrap items-center gap-2.5">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Konsesi:</span>
-                            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-bold">
+                        {/* Poin 3: Daftar Site Ditampilkan Secara Vertikal (Ke Bawah), Jangan Horizontal */}
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Daftar Site Konsesi (Vertikal):
+                            </span>
+                            <div className="flex flex-col gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-bold min-w-[160px]">
                                 <button
                                     type="button"
                                     onClick={() => handleSiteSwitch('ALL')}
-                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer text-left flex items-center justify-between ${
                                         selectedSiteFilter === 'ALL'
                                             ? 'bg-white text-slate-900 shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                                     }`}
                                 >
-                                    ALL HPU
+                                    <span>ALL HPU</span>
+                                    <span className="text-[10px] text-slate-400 font-mono">Semua</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => handleSiteSwitch('HPA')}
-                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer text-left flex items-center justify-between ${
                                         selectedSiteFilter === 'HPA'
                                             ? 'bg-blue-600 text-white shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                                     }`}
                                 >
-                                    Site HPA (Berau)
+                                    <span>Site HPA</span>
+                                    <span className={`text-[10px] ${selectedSiteFilter === 'HPA' ? 'text-blue-100' : 'text-slate-400'} font-mono`}>Berau</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => handleSiteSwitch('BDA')}
-                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer text-left flex items-center justify-between ${
                                         selectedSiteFilter === 'BDA'
                                             ? 'bg-amber-600 text-white shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                                     }`}
                                 >
-                                    Site BDA (Barito)
+                                    <span>Site BDA</span>
+                                    <span className={`text-[10px] ${selectedSiteFilter === 'BDA' ? 'text-amber-100' : 'text-slate-400'} font-mono`}>Barito</span>
                                 </button>
                             </div>
                         </div>
@@ -1003,27 +1009,22 @@ export default function GeofencePage() {
                 >
                     {/* Command Bar / Toolbar di atas Peta */}
                     <div className="p-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-white">
-                        {/* Left: Site Switcher Segmented Control */}
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">
-                                Site Tambang:
+                        {/* Left: Site Switcher Vertikal (Poin 3) */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                                Site:
                             </span>
-                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs font-semibold">
-                                {(['ALL', 'HPA', 'BDA'] as const).map(site => (
-                                    <button
-                                        key={site}
-                                        type="button"
-                                        onClick={() => handleSiteSwitch(site)}
-                                        className={`px-3 py-1 rounded text-center transition cursor-pointer text-xs ${
-                                            selectedSiteFilter === site
-                                                ? 'bg-white text-gray-900 shadow-xs font-bold'
-                                                : 'text-gray-500 hover:text-gray-900'
-                                        }`}
-                                    >
-                                        {site === 'ALL' ? 'Semua Site' : site === 'HPA' ? 'HPA (Berau)' : 'BDA (Barito)'}
-                                    </button>
-                                ))}
-                            </div>
+                            <select
+                                value={selectedSiteFilter}
+                                onChange={(e) => handleSiteSwitch(e.target.value as any)}
+                                className="bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                title="Pilih Site Konsesi Tambang"
+                            >
+                                <option value="ALL">ALL HPU (Konsesi Kalimantan)</option>
+                                <option value="HPA">Site HPA (Berau - 49.3 KM)</option>
+                                <option value="BDA">Site BDA (Barito - 45.2 KM)</option>
+                            </select>
                         </div>
 
                         {/* Center: Pengkategorian Group Antar Zona (Poin 4) */}
@@ -1639,53 +1640,65 @@ export default function GeofencePage() {
                     </div>
                 </div>
 
-                {/* ── CARD: INTEGRATED FLEET TELEMETRY STRIP (DI BAWAH MAPS - POIN 2) ── */}
+                {/* ── CARD: STATISTIK SPASIAL KONSESI & FITUR PENDUKUNG (POIN 2 & POIN 7: MURNI SPASIAL TANPA DATA ARMADA) ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center p-2 rounded-xl bg-slate-50 border border-slate-200/90 shadow-xs">
+                    {/* 1. Total Geofence Terdaftar */}
                     <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Kecepatan GPS</p>
-                        <p className="font-black text-sm text-gray-900">
-                            {fleetTelemetry.speed} <span className="text-[10px] font-normal text-gray-500">km/j</span>
+                        <p className="text-gray-400 font-bold uppercase text-[9px]">Total Geofence</p>
+                        <p className="font-black text-sm text-blue-700">
+                            {operationalGeofences.length}{' '}
+                            <span className="text-[10px] font-normal text-gray-500">Zona</span>
                         </p>
-                        <span className="text-[9px] font-mono text-slate-500">Batas: {activeSpeedLimit} km/j</span>
+                        <span className="text-[9px] font-mono text-slate-500">Konsesi {selectedSiteFilter}</span>
                     </div>
+
+                    {/* 2. Rute Hauling Konsesi */}
                     <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Odometer Hari Ini</p>
-                        <p className="font-black text-blue-600 text-sm">
-                            {fleetTelemetry.distance.toFixed(1)}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">km</span>
-                        </p>
-                    </div>
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Zona Geofence</p>
-                        <p className="font-bold text-gray-800 truncate px-1 text-xs" title={activeZoneLabel}>
-                            {activeZoneLabel}
-                        </p>
-                    </div>
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Total Ritasi</p>
-                        <p className="font-black text-emerald-700 text-sm">
-                            {fleetTelemetry.totalRitasi}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">Trip</span>
-                        </p>
-                    </div>
-                    {/* Poin 2: Satelit GPS diganti dengan Cycle Time */}
-                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Cycle Time</p>
+                        <p className="text-gray-400 font-bold uppercase text-[9px]">Koridor Hauling</p>
                         <p className="font-black text-amber-600 text-sm">
-                            {fleetTelemetry.cycleTimeMinutes}{' '}
-                            <span className="text-[10px] font-normal text-gray-500">mnt</span>
+                            {selectedSiteFilter === 'HPA' ? '49.3' : selectedSiteFilter === 'BDA' ? '45.2' : '94.5'}{' '}
+                            <span className="text-[10px] font-normal text-gray-500">KM</span>
                         </p>
-                        <span className="text-[9px] font-mono text-slate-400">Rata-rata trip</span>
+                        <span className="text-[9px] font-mono text-slate-500">Rute Jalan Tambang</span>
                     </div>
+
+                    {/* 3. Pit Front Loading */}
                     <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
-                        <p className="text-gray-400 font-bold uppercase text-[9px]">Kondisi Mesin</p>
-                        <p
-                            className={`font-bold text-xs ${
-                                fleetTelemetry.status === 'ONLINE' ? 'text-slate-700' : 'text-slate-500'
-                            }`}
-                        >
-                            {fleetTelemetry.status === 'ONLINE' ? 'Standby (Idle)' : 'OFF'}
+                        <p className="text-gray-400 font-bold uppercase text-[9px]">Pit Front Loading</p>
+                        <p className="font-black text-indigo-700 text-sm">
+                            {loadingGeofences.length}{' '}
+                            <span className="text-[10px] font-normal text-gray-500">Area Pit</span>
                         </p>
+                        <span className="text-[9px] font-mono text-slate-500">Pemuatan Material</span>
+                    </div>
+
+                    {/* 4. Disposal Timbunan */}
+                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                        <p className="text-gray-400 font-bold uppercase text-[9px]">Disposal Timbunan</p>
+                        <p className="font-black text-emerald-700 text-sm">
+                            {dumpingGeofences.length}{' '}
+                            <span className="text-[10px] font-normal text-gray-500">Lokasi</span>
+                        </p>
+                        <span className="text-[9px] font-mono text-slate-500">Area Dumping Waste</span>
+                    </div>
+
+                    {/* 5. Cycle Time Standar Rute (Poin 2) */}
+                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                        <p className="text-gray-400 font-bold uppercase text-[9px]">Cycle Time Hauling</p>
+                        <p className="font-black text-purple-700 text-sm">
+                            24.5 <span className="text-[10px] font-normal text-gray-500">mnt</span>
+                        </p>
+                        <span className="text-[9px] font-mono text-slate-400">Standar Estimasi Rute</span>
+                    </div>
+
+                    {/* 6. Riwayat Overspeed Terdeteksi (Poin 12) */}
+                    <div className="p-1.5 rounded-lg bg-white border border-slate-200/80">
+                        <p className="text-gray-400 font-bold uppercase text-[9px]">Riwayat Overspeed</p>
+                        <p className="font-black text-rose-600 text-sm">
+                            {overspeedLogs.length}{' '}
+                            <span className="text-[10px] font-normal text-gray-500">Kejadian</span>
+                        </p>
+                        <span className="text-[9px] font-mono text-slate-500">Pelanggaran Batas Zona</span>
                     </div>
                 </div>
             </div>

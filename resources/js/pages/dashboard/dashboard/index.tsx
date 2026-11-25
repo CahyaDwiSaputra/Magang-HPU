@@ -620,44 +620,65 @@ export default function GpsTrackingPage() {
                                 </div>
                             </div>
 
-                            {/* Card B: Current Trip Card (Slide 19) */}
+                            {/* Card B: Current Trip Card (Slide 19 + Poin 10: Waktu Start & Stop + Poin 14: Tanggal & Shift) */}
                             <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
                                 <div>
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
-                                        <span className="text-xs font-bold text-slate-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                            <Activity className="w-3.5 h-3.5 text-blue-600" />
-                                            CURRENT TRIP & HAULING
-                                        </span>
-                                        <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
-                                            <Flag className="w-3 h-3" />
-                                            {selectedUnit.telemetry.totalRit} RIT SELESAI
-                                        </span>
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+                                        <div>
+                                            <span className="text-xs font-bold text-slate-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                                <Activity className="w-3.5 h-3.5 text-blue-600" />
+                                                CURRENT TRIP & HAULING
+                                            </span>
+                                            {/* Poin 14: Penanda Tanggal & Shift Operasional pada Tampilan Ritase */}
+                                            <p className="text-[10px] font-medium text-slate-400 mt-0.5">
+                                                {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })} • Shift 1 Siang
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="bg-blue-50 text-blue-700 text-xs font-black px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                                                <Flag className="w-3 h-3 text-blue-600" />
+                                                {selectedUnit.telemetry.totalRit} RIT SELESAI
+                                            </span>
+                                            <span className="text-[9px] text-slate-400 block mt-0.5 font-medium">Target: 30 RIT / Shift</span>
+                                        </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+                                    {/* Poin 10: Informasi Waktu Start & Waktu Stop pada Equipment */}
+                                    <div className="grid grid-cols-3 gap-2 text-xs mb-3">
                                         <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/70">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                                                 WAKTU START
                                             </span>
-                                            <div className="text-sm font-bold text-slate-900 mt-0.5">
-                                                {selectedUnit.telemetry.startTime}
+                                            <div className="text-xs font-bold text-emerald-700 mt-0.5 font-mono">
+                                                {selectedUnit.telemetry.startTime || '06:00 WITA'}
                                             </div>
-                                            <div className="text-[10px] text-slate-500 font-medium">
-                                                Shift Berjalan
+                                            <div className="text-[9px] text-slate-400 font-medium">
+                                                Mulai Operasi
                                             </div>
                                         </div>
                                         <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/70">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                                JENIS MUATAN
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                WAKTU STOP
                                             </span>
-                                            <div className="text-sm font-bold text-slate-900 mt-0.5 flex items-center gap-1.5">
-                                                <span className={`w-2 h-2 rounded-full ${
+                                            <div className="text-xs font-bold text-rose-700 mt-0.5 font-mono">
+                                                18:00 WITA
+                                            </div>
+                                            <div className="text-[9px] text-slate-400 font-medium">
+                                                Selesai Shift
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/70">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                MUATAN
+                                            </span>
+                                            <div className="text-xs font-bold text-slate-900 mt-0.5 flex items-center gap-1 truncate">
+                                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                                     selectedUnit.telemetry.loadType === 'COAL' ? 'bg-slate-900' : 'bg-amber-600'
                                                 }`}></span>
-                                                {selectedUnit.telemetry.loadType === 'COAL' ? 'COAL (Batubara)' : 'OB (Overburden)'}
+                                                <span className="truncate">{selectedUnit.telemetry.loadType === 'COAL' ? 'COAL' : 'OB'}</span>
                                             </div>
-                                            <div className="text-[10px] text-slate-500 font-medium">
-                                                Kapasitas Penuh
+                                            <div className="text-[9px] text-slate-400 font-medium truncate">
+                                                22 BCM Full
                                             </div>
                                         </div>
                                     </div>
