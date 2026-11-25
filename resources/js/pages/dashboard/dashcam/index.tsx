@@ -8,7 +8,7 @@ import {
     Plus, Trash2, MapPin, Clock, Gauge, Layers, Activity, FileText, CheckCircle,
     LayoutGrid, Rows, Star, ArrowUpRight, RotateCcw, Smartphone, Radio, Phone,
     Maximize2, Minimize2, ZoomIn, ZoomOut, Crosshair, Globe, Compass,
-    Mic, MicOff, Volume2, Calendar, Coffee, AlertTriangle, Circle, Minus
+    Mic, MicOff, Volume2, Calendar, Coffee, AlertTriangle, Circle, Minus, Building2
 } from 'lucide-react';
 import { useEffect, useRef, useState, useMemo } from 'react';
 
@@ -285,7 +285,7 @@ export default function Page() {
     const [haulingRoutes, setHaulingRoutes] = useState<any>(null);
     const [operationalPolygons, setOperationalPolygons] = useState<any>(null);
     const [zoneFilterTab, setZoneFilterTab] = useState<'all' | 'operational' | 'sta'>('operational');
-    const [selectedSiteFilter, setSelectedSiteFilter] = useState<'ALL' | 'HPA' | 'BDA'>('ALL');
+    const [selectedSiteFilter, setSelectedSiteFilter] = useState<string>('ALL');
     const [zoneSearchQuery, setZoneSearchQuery] = useState<string>('');
     // Flag: true saat vehicle baru dipilih & peta belum terpusat ke GPS terbaru
     const mapNeedsRecenter = useRef<boolean>(false);
@@ -1903,43 +1903,34 @@ export default function Page() {
                             </div>
                         </div>
 
-                        {/* Quick Site Switcher Pills (SAMA PERSIS DENGAN GPS TRACKING & GEOFENCE) */}
+                        {/* Quick Site Switcher Dropdown (Poin Revisi Mitra: >12 Site) */}
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Konsesi:</span>
-                            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs font-bold">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSiteFilter('ALL')}
-                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                                        selectedSiteFilter === 'ALL'
-                                            ? 'bg-white text-slate-900 shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900'
-                                    }`}
+                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 shadow-xs">
+                                <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">
+                                    Konsesi / Site:
+                                </span>
+                                <select
+                                    value={selectedSiteFilter}
+                                    onChange={(e) => setSelectedSiteFilter(e.target.value)}
+                                    className="bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs min-w-[210px]"
+                                    title="Pilih Site Konsesi Tambang PT HPU (>12 Site)"
                                 >
-                                    ALL HPU ({fleet.length})
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSiteFilter('HPA')}
-                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                                        selectedSiteFilter === 'HPA'
-                                            ? 'bg-blue-600 text-white shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900'
-                                    }`}
-                                >
-                                    Site HPA (Berau)
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSiteFilter('BDA')}
-                                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                                        selectedSiteFilter === 'BDA'
-                                            ? 'bg-amber-600 text-white shadow-xs'
-                                            : 'text-slate-600 hover:text-slate-900'
-                                    }`}
-                                >
-                                    Site BDA (Barito)
-                                </button>
+                                    <option value="ALL">Semua Site (ALL HPU - 14 Konsesi)</option>
+                                    <option value="HPA">Site HPA (Berau, Kaltim)</option>
+                                    <option value="BDA">Site BDA (Barito, Kalteng)</option>
+                                    <option value="KJA">Site KJA (Kutai Janur Asri)</option>
+                                    <option value="KDA">Site KDA (Kalimantan Damai Abadi)</option>
+                                    <option value="DTA">Site DTA (Dayak Terang Abadi)</option>
+                                    <option value="HPMU">Site HPMU (Harmoni Panca Mineral)</option>
+                                    <option value="GAS">Site GAS (Gunung Asri Sejahtera)</option>
+                                    <option value="OBI">Site OBI (Pulau Obi Halmahera)</option>
+                                    <option value="BMB">Site BMB (Binuang Mitra Bersama)</option>
+                                    <option value="AGM">Site AGM (Antang Gunung Meratus)</option>
+                                    <option value="BEP">Site BEP (Bumi Enggang Perkasa)</option>
+                                    <option value="BIB">Site BIB (Borneo Indobara)</option>
+                                    <option value="TCMM">Site TCMM (Trubaindo Coal Mining)</option>
+                                </select>
                             </div>
                         </div>
                     </div>
