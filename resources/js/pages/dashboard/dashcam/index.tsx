@@ -1914,22 +1914,11 @@ export default function Page() {
                                     value={selectedSiteFilter}
                                     onChange={(e) => setSelectedSiteFilter(e.target.value)}
                                     className="bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs min-w-[210px]"
-                                    title="Pilih Site Konsesi Tambang PT HPU (>12 Site)"
+                                    title="Pilih Site Konsesi Tambang PT HPU"
                                 >
-                                    <option value="ALL">Semua Site (ALL HPU - 14 Konsesi)</option>
-                                    <option value="HPA">Site HPA (Berau, Kaltim)</option>
-                                    <option value="BDA">Site BDA (Barito, Kalteng)</option>
-                                    <option value="KJA">Site KJA (Kutai Janur Asri)</option>
-                                    <option value="KDA">Site KDA (Kalimantan Damai Abadi)</option>
-                                    <option value="DTA">Site DTA (Dayak Terang Abadi)</option>
-                                    <option value="HPMU">Site HPMU (Harmoni Panca Mineral)</option>
-                                    <option value="GAS">Site GAS (Gunung Asri Sejahtera)</option>
-                                    <option value="OBI">Site OBI (Pulau Obi Halmahera)</option>
-                                    <option value="BMB">Site BMB (Binuang Mitra Bersama)</option>
-                                    <option value="AGM">Site AGM (Antang Gunung Meratus)</option>
-                                    <option value="BEP">Site BEP (Bumi Enggang Perkasa)</option>
-                                    <option value="BIB">Site BIB (Borneo Indobara)</option>
-                                    <option value="TCMM">Site TCMM (Trubaindo Coal Mining)</option>
+                                        <option value="ALL">Semua Site (ALL HPU)</option>
+                                    <option value="HPA">Site HPA (Berau)</option>
+                                    <option value="BDA">Site BDA (Barito)</option>
                                 </select>
                             </div>
                         </div>
@@ -2036,20 +2025,9 @@ export default function Page() {
                                         onChange={e => setSelectedSiteFilter(e.target.value as any)}
                                         className="w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-2xs"
                                     >
-                                        <option value="ALL">Semua Site (ALL HPU - 14 Konsesi)</option>
-                                        <option value="HPA">Site HPA (Berau, Kaltim)</option>
-                                        <option value="BDA">Site BDA (Barito, Kalteng)</option>
-                                        <option value="KJA">Site KJA (Kutai Janur Asri)</option>
-                                        <option value="KDA">Site KDA (Kalimantan Damai Abadi)</option>
-                                        <option value="DTA">Site DTA (Dayak Terang Abadi)</option>
-                                        <option value="HPMU">Site HPMU (Harmoni Panca Mineral)</option>
-                                        <option value="GAS">Site GAS (Gunung Asri Sejahtera)</option>
-                                        <option value="OBI">Site OBI (Pulau Obi Halmahera)</option>
-                                        <option value="BMB">Site BMB (Binuang Mitra Bersama)</option>
-                                        <option value="AGM">Site AGM (Antang Gunung Meratus)</option>
-                                        <option value="BEP">Site BEP (Bumi Enggang Perkasa)</option>
-                                        <option value="BIB">Site BIB (Borneo Indobara)</option>
-                                        <option value="TCMM">Site TCMM (Trubaindo Coal Mining)</option>
+                                            <option value="ALL">Semua Site (ALL HPU)</option>
+                                    <option value="HPA">Site HPA (Berau)</option>
+                                    <option value="BDA">Site BDA (Barito)</option>
                                     </select>
                                 </div>
 
