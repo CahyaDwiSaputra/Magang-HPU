@@ -11,6 +11,7 @@ import {
     Mic, MicOff, Volume2, Calendar, Coffee, AlertTriangle, Circle, Minus, Building2
 } from 'lucide-react';
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { Map, Marker, Overlay, GeoJson } from 'pigeon-maps';
 
 export type FleetVehicle = {
     id: string;
@@ -2681,6 +2682,166 @@ export default function Page() {
                                         )}
                                     </div>
                                 )}
+                            </div>
+
+                            {/* ── PETA LOKASI POSISI UNIT TERKINI (COMPACT GPS TRACKING - PERMINTAAN PAK TAUFIQ) ── */}
+                            <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-3.5 space-y-2.5">
+                                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                                            <MapPin className="w-4 h-4 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-800 tracking-wider uppercase">
+                                                    PETA LOKASI UNIT & GPS LIVE TRACKING
+                                                </span>
+                                                <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                                    {currentVehicle.plateNo}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
+                                                <span>
+                                                    [{(telemetry.lat ?? (currentVehicle.site?.includes('BDA') ? -1.180000 : 2.045000)).toFixed(6)}, {(telemetry.lng ?? (currentVehicle.site?.includes('BDA') ? 114.980000 : 117.200000)).toFixed(6)}]
+                                                </span>
+                                                <span>•</span>
+                                                <span className="text-blue-600 font-bold font-sans">
+                                                    Kecepatan: {telemetry.speed || currentVehicle.speed || 0} km/j
+                                                </span>
+                                                {activeGeofence && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-sans font-bold border border-emerald-200">
+                                                            📍 {activeGeofence.name}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Map Controls */}
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[11px] font-bold">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapLayer('satellite')}
+                                                className={`px-2 py-0.8 rounded transition-all cursor-pointer ${
+                                                    mapLayer === 'satellite' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                                                }`}
+                                            >
+                                                Satelit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapLayer('street')}
+                                                className={`px-2 py-0.8 rounded transition-all cursor-pointer ${
+                                                    mapLayer === 'street' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                                                }`}
+                                            >
+                                                Jalan
+                                            </button>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapZoom(z => Math.min(z + 1, 18))}
+                                                className="p-1 text-slate-700 hover:bg-white rounded transition-colors cursor-pointer"
+                                                title="Zoom In"
+                                            >
+                                                <ZoomIn className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMapZoom(z => Math.max(z - 1, 8))}
+                                                className="p-1 text-slate-700 hover:bg-white rounded transition-colors cursor-pointer"
+                                                title="Zoom Out"
+                                            >
+                                                <ZoomOut className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const targetLat = telemetry.lat ?? (currentVehicle.site?.includes('BDA') ? -1.180000 : 2.045000);
+                                                    const targetLng = telemetry.lng ?? (currentVehicle.site?.includes('BDA') ? 114.980000 : 117.200000);
+                                                    setMapCenter([targetLat, targetLng]);
+                                                }}
+                                                className="p-1 text-blue-600 hover:bg-white rounded transition-colors cursor-pointer"
+                                                title="Pusatkan ke Posisi Unit Ini"
+                                            >
+                                                <Crosshair className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Canvas Map Container - Compact Height (220px) */}
+                                <div className="w-full h-[220px] rounded-xl overflow-hidden border border-slate-200 relative bg-slate-900">
+                                    <Map
+                                        height={220}
+                                        center={mapCenter}
+                                        zoom={mapZoom}
+                                        onBoundsChanged={({ center, zoom }) => {
+                                            setMapCenter(center);
+                                            setMapZoom(zoom);
+                                        }}
+                                        provider={mapTileProvider}
+                                    >
+                                        {/* Rute Hauling Tambang */}
+                                        {haulingRoutes && (
+                                            <GeoJson
+                                                data={haulingRoutes}
+                                                styleCallback={(feature: any) => {
+                                                    const featName = (feature.properties?.name || '').toUpperCase();
+                                                    let strokeColor = '#F59E0B';
+                                                    if (featName.includes('BDA')) strokeColor = '#EA580C';
+                                                    if (featName.includes('TAMBANG UTAMA')) strokeColor = '#3B82F6';
+                                                    return {
+                                                        stroke: strokeColor,
+                                                        strokeWidth: 3,
+                                                        strokeOpacity: 0.85,
+                                                        fill: 'none'
+                                                    };
+                                                }}
+                                            />
+                                        )}
+
+                                        {/* Poligon Geofence Fasilitas Tambang */}
+                                        {operationalPolygons && (
+                                            <GeoJson
+                                                data={operationalPolygons}
+                                                styleCallback={(feature: any) => {
+                                                    const color = feature.properties?.color || '#2563EB';
+                                                    return {
+                                                        fill: color,
+                                                        fillOpacity: 0.18,
+                                                        stroke: color,
+                                                        strokeWidth: 1.5,
+                                                        strokeDasharray: '4 3',
+                                                    };
+                                                }}
+                                            />
+                                        )}
+
+                                        {/* Marker Titik Lokasi Unit Terpilih */}
+                                        <Overlay
+                                            anchor={[
+                                                telemetry.lat ?? (currentVehicle.site?.includes('BDA') ? -1.180000 : 2.045000),
+                                                telemetry.lng ?? (currentVehicle.site?.includes('BDA') ? 114.980000 : 117.200000)
+                                            ]}
+                                            offset={[45, 20]}
+                                        >
+                                            <div className="cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-xl border-2 border-white bg-blue-600 text-white text-xs font-bold ring-4 ring-blue-500/30 animate-pulse">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                                <span className="font-mono">{currentVehicle.plateNo}</span>
+                                                <span className="text-[10px] bg-white text-blue-700 px-1 rounded font-sans">
+                                                    {telemetry.speed || currentVehicle.speed || 0} km/j
+                                                </span>
+                                            </div>
+                                        </Overlay>
+                                    </Map>
+                                </div>
                             </div>
 
                             {/* ── SAFETY ALARM DMS & ADAS & OVERSPEED (SHEET 2 IMAGE 11) ── */}

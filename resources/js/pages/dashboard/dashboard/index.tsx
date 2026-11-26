@@ -293,6 +293,9 @@ export default function GpsTrackingPage() {
     const [mapLayer, setMapLayer] = useState<'satellite' | 'street'>('satellite');
     const [mapZoom, setMapZoom] = useState<number>(14);
     const [haulingRoutes, setHaulingRoutes] = useState<any>(null);
+    const [geofences, setGeofences] = useState<any[]>([]);
+    const [operationalPolygons, setOperationalPolygons] = useState<any>(null);
+    const [showGeofences, setShowGeofences] = useState<boolean>(true);
     const [fleet, setFleet] = useState<GpsVehicle[]>(FLEET_DATA);
 
     // Ambil status real-time langsung dari server CMSV6 HPU (10.10.0.33)
@@ -337,7 +340,7 @@ export default function GpsTrackingPage() {
         setMapCenter([selectedUnit.telemetry.latitude, selectedUnit.telemetry.longitude]);
     }, [selectedUnit]);
 
-    // Fetch rute hauling polyline
+    // Fetch rute hauling polyline & seluruh master geofence tambang
     useEffect(() => {
         fetch('/api/dashcam/hauling-routes')
             .then(res => res.json())
@@ -347,7 +350,49 @@ export default function GpsTrackingPage() {
                 }
             })
             .catch(err => console.error('Error fetching hauling routes:', err));
+
+        fetch('/api/dashcam/geofences')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok' && Array.isArray(data.data)) {
+                    setGeofences(data.data);
+                }
+            })
+            .catch(err => console.error('Error fetching geofences:', err));
+
+        fetch('/api/dashcam/geofences-geojson')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok' && data.data) {
+                    setOperationalPolygons(data.data);
+                }
+            })
+            .catch(err => console.error('Error fetching operational polygons:', err));
     }, []);
+
+    // Filter geofences fasilitas tambang (Pit, Disposal, Stockpile, Workshop) berdasarkan site
+    const operationalGeofences = useMemo(() => {
+        return geofences.filter(gf => {
+            if (gf.type === 'road') return false;
+            if (selectedSite !== 'ALL' && (gf.site || 'HPA').toUpperCase() !== selectedSite) return false;
+            return true;
+        });
+    }, [geofences, selectedSite]);
+
+    // Sinkronisasi fokus peta saat pemilihan site konsesi berubah
+    useEffect(() => {
+        if (selectedSite !== 'ALL') {
+            const firstUnit = fleet.find(u => u.site === selectedSite);
+            if (firstUnit) {
+                setSelectedVehicleId(firstUnit.id);
+                setMapCenter([firstUnit.telemetry.latitude, firstUnit.telemetry.longitude]);
+            } else if (selectedSite === 'BDA') {
+                setMapCenter([-1.119625, 115.020731]);
+            } else if (selectedSite === 'HPA') {
+                setMapCenter([2.045000, 117.200000]);
+            }
+        }
+    }, [selectedSite, fleet]);
 
     // Filter armada berdasarkan Site dan Query Pencarian
     const filteredFleet = useMemo(() => {
@@ -575,7 +620,22 @@ export default function GpsTrackingPage() {
                                 </div>
 
                                 {/* Map Controls */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {/* Toggle Layer Geofence Tambang (Permintaan Pak Taufiq: Semua Geofence Ditampilkan) */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGeofences(!showGeofences)}
+                                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                            showGeofences
+                                                ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+                                                : 'bg-white text-slate-600 hover:text-slate-900 border-slate-200'
+                                        }`}
+                                        title="Tampilkan / Sembunyikan Poligon & Titik Geofence Tambang"
+                                    >
+                                        <Layers className="w-3.5 h-3.5" />
+                                        <span>Geofence ({operationalGeofences.length} Zona)</span>
+                                    </button>
+
                                     <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold">
                                         <button
                                             type="button"
@@ -654,6 +714,28 @@ export default function GpsTrackingPage() {
                                         />
                                     )}
 
+                                    {/* Layer Poligon Fasilitas Geofence Operasional (Pit, Disposal, Stockpile, Workshop) */}
+                                    {showGeofences && operationalPolygons && (
+                                        <GeoJson
+                                            data={operationalPolygons}
+                                            styleCallback={(feature: any) => {
+                                                const featSite = (feature.properties?.site || 'HPA').toUpperCase();
+                                                if (selectedSite !== 'ALL' && featSite !== selectedSite) {
+                                                    return { fill: 'transparent', stroke: 'transparent', strokeWidth: 0 };
+                                                }
+
+                                                const color = feature.properties?.color || '#2563EB';
+                                                return {
+                                                    fill: color,
+                                                    fillOpacity: 0.22,
+                                                    stroke: color,
+                                                    strokeWidth: 2,
+                                                    strokeDasharray: '4 3',
+                                                };
+                                            }}
+                                        />
+                                    )}
+
                                     {/* Checkpoint STA / KM Markers (Slide 19) */}
                                     {CHECKPOINTS_HPA.map((cp, idx) => (
                                         <Overlay key={`cp-${idx}`} anchor={[cp.lat, cp.lng]} offset={[30, 15]}>
@@ -662,6 +744,41 @@ export default function GpsTrackingPage() {
                                             </div>
                                         </Overlay>
                                     ))}
+
+                                    {/* Pin & Label Geofence Fasilitas Tambang (Semua Geofence yang Dibuat - Permintaan Pak Taufiq) */}
+                                    {showGeofences && operationalGeofences.map(gf => {
+                                        const lat = Number(gf.latitude);
+                                        const lng = Number(gf.longitude);
+                                        if (isNaN(lat) || isNaN(lng)) return null;
+
+                                        return (
+                                            <Overlay key={`gf-${gf.id}`} anchor={[lat, lng]} offset={[0, 0]}>
+                                                <div className="relative group -translate-x-1/2 -translate-y-1/2 pointer-events-auto select-none">
+                                                    <div
+                                                        onClick={() => {
+                                                            setMapCenter([lat, lng]);
+                                                            setMapZoom(16);
+                                                        }}
+                                                        className="px-2 py-0.5 rounded-lg border backdrop-blur-md text-[10px] font-bold shadow-md flex items-center gap-1.5 bg-white/95 text-slate-800 border-slate-300 hover:bg-slate-50 cursor-pointer transition-transform hover:scale-105"
+                                                        title={`${gf.name} (${gf.type} • Radius ${gf.radius}m)`}
+                                                    >
+                                                        <span
+                                                            className="w-2 h-2 rounded-full shrink-0"
+                                                            style={{ backgroundColor: gf.color || '#2563EB' }}
+                                                        ></span>
+                                                        <span className="truncate max-w-[130px]">
+                                                            {gf.name}
+                                                        </span>
+                                                        {gf.material && (
+                                                            <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 text-slate-700 font-mono">
+                                                                {gf.material}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </Overlay>
+                                        );
+                                    })}
 
                                     {/* Plot Posisi Seluruh Armada Aktif */}
                                     {filteredFleet.map(unit => {
