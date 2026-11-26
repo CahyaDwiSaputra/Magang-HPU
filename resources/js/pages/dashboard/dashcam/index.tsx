@@ -543,6 +543,30 @@ export default function Page() {
         OB: 0, COAL: 0, MUD: 0, 'TOP SOIL': 0, LIMONIT: 0, SAPROLIT: 0
     });
     const [ritasiLogs, setRitasiLogs] = useState<RitasiLogItem[]>([]);
+    
+    // Poin 12: Riwayat Kejadian Overspeed Spasial Geofence (Dipindah ke Dashcam Safety Alarm per Revisi Pak Taufiq)
+    interface OverspeedLogItem {
+        id: string;
+        unit_code: string;
+        driver_name: string;
+        site: string;
+        geofence_id: number;
+        geofence_name: string;
+        geofence_type: string;
+        speed: number;
+        speed_limit: number;
+        excess_speed: number;
+        duration_seconds: number;
+        duration_formatted: string;
+        time: string;
+        time_formatted: string;
+        status: string;
+        latitude: number;
+        longitude: number;
+    }
+    const [overspeedLogs, setOverspeedLogs] = useState<OverspeedLogItem[]>([]);
+    const [overspeedSearchQuery, setOverspeedSearchQuery] = useState<string>('');
+
     const [activeGeofence, setActiveGeofence] = useState<{ id: number; name: string; type: string; distance: number } | null>(null);
     const [lastGeofenceId, setLastGeofenceId] = useState<number | null>(null);
     const [showGeofenceModal, setShowGeofenceModal] = useState(false);
@@ -1086,6 +1110,18 @@ export default function Page() {
         } catch (err) {}
     };
 
+    const fetchOverspeedLogs = async () => {
+        try {
+            const res = await fetch(`/api/dashcam/geofences/overspeed-history?site=${selectedSiteFilter}`);
+            const data = await res.json();
+            if (data.status === 'ok' && Array.isArray(data.data)) {
+                setOverspeedLogs(data.data);
+            }
+        } catch (err) {
+            console.error('Error fetching overspeed history:', err);
+        }
+    };
+
     const fetchRitasiToday = async () => {
         try {
             const res = await fetch('/api/dashcam/ritasi-today');
@@ -1555,6 +1591,7 @@ export default function Page() {
         fetchHaulingRoutes();
         fetchOperationalPolygons();
         fetchRitasiToday();
+        fetchOverspeedLogs();
 
         // Ambil daftar unit real-time dari server backend
         fetch('/api/cmsv6/vehicles')
@@ -1845,6 +1882,31 @@ export default function Page() {
     });
 
     const untreatedCount = currentVehicleAlarms.filter(a => (a.handle_status ?? 'Untreated') === 'Untreated').length;
+
+    // Filter riwayat overspeed (Poin 12) berdasarkan scope armada terpilih vs seluruh armada konsesi
+    const scopedOverspeedLogs = useMemo(() => {
+        return overspeedLogs.filter(log => {
+            if (selectedSiteFilter !== 'ALL' && log.site !== selectedSiteFilter) return false;
+            if (alarmScope === 'vehicle') {
+                const normPlate = (currentVehicle.plateNo || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                const normId = (currentVehicle.id || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                const normUnitCode = (log.unit_code || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                return normUnitCode.includes(normPlate) || normPlate.includes(normUnitCode) || normUnitCode.includes(normId) || normId.includes(normUnitCode);
+            }
+            return true;
+        });
+    }, [overspeedLogs, alarmScope, currentVehicle, selectedSiteFilter]);
+
+    const searchedOverspeedLogs = useMemo(() => {
+        if (!overspeedSearchQuery.trim()) return scopedOverspeedLogs;
+        const q = overspeedSearchQuery.toLowerCase();
+        return scopedOverspeedLogs.filter(log =>
+            (log.unit_code || '').toLowerCase().includes(q) ||
+            (log.geofence_name || '').toLowerCase().includes(q) ||
+            (log.driver_name || '').toLowerCase().includes(q) ||
+            (log.id || '').toLowerCase().includes(q)
+        );
+    }, [scopedOverspeedLogs, overspeedSearchQuery]);
 
     // ── REVISI 4: PENGKATEGORIAN MAX SPEED BERDASARKAN SIDE / SITE (40 - 60 KM/H) ──
     const siteKey = Object.keys(SITE_SPEED_LIMITS).find(k => (currentVehicle.site || '').toUpperCase().includes(k)) || 'DEFAULT';
@@ -2903,10 +2965,10 @@ export default function Page() {
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1 overflow-x-auto text-xs">
                                         {[
-                                            { id: 'all', label: `Semua (${currentVehicleAlarms.length})` },
+                                            { id: 'all', label: `Semua (${currentVehicleAlarms.length + (alarmScope === 'vehicle' ? scopedOverspeedLogs.length : overspeedLogs.length)})` },
                                             { id: 'dms', label: 'DMS (Driver Safety)' },
                                             { id: 'adas', label: 'ADAS (Road Hazard)' },
-                                            { id: 'overspeed', label: 'Overspeed (Kecepatan)' },
+                                            { id: 'overspeed', label: `Overspeed (${alarmScope === 'vehicle' ? scopedOverspeedLogs.length : overspeedLogs.length})` },
                                         ].map(tab => (
                                             <button
                                                 key={tab.id}
@@ -2923,7 +2985,7 @@ export default function Page() {
                                         ))}
                                     </div>
 
-                                    {untreatedCount > 0 && (
+                                    {untreatedCount > 0 && alarmTab !== 'overspeed' && (
                                         <button
                                             type="button"
                                             onClick={handleBatchAction}
@@ -2934,25 +2996,170 @@ export default function Page() {
                                     )}
                                 </div>
 
-                                {/* Alarms Feed List */}
-                                <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-                                    {filteredAlarms.length === 0 ? (
-                                        <div className="text-center py-5 text-gray-400">
-                                            <ShieldCheck className="w-7 h-7 text-emerald-500 mx-auto mb-1" />
-                                            <p className="text-xs font-bold text-gray-700">Tidak ada peringatan aktif untuk unit ini</p>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">Semua parameter safety armada {currentVehicle.plateNo} berada dalam kondisi normal</p>
-                                            {alarmScope === 'vehicle' && alarms.length > 0 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setAlarmScope('fleet')}
-                                                    className="mt-2 text-[11px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
-                                                >
-                                                    Lihat {alarms.length} Alarm Seluruh Armada Tambang →
-                                                </button>
+                                {/* Alarms Feed List / Overspeed Records List (Poin 12 Dipindah ke Dashcam per Revisi Pak Taufiq) */}
+                                {alarmTab === 'overspeed' ? (
+                                    <div className="space-y-3">
+                                        {/* Search & Site Filter (Persis Gambar 1 Revisi Pak Taufiq) */}
+                                        <div className="p-3 border border-slate-200/90 rounded-xl space-y-2 bg-slate-50/70">
+                                            <div className="relative">
+                                                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                                <input
+                                                    type="text"
+                                                    value={overspeedSearchQuery}
+                                                    onChange={e => setOverspeedSearchQuery(e.target.value)}
+                                                    placeholder="Cari unit nopol, zona, atau driver..."
+                                                    className="w-full bg-white border border-slate-200 text-xs text-slate-900 rounded-lg pl-8 pr-8 py-2 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                                                />
+                                                {overspeedSearchQuery && (
+                                                    <button
+                                                        onClick={() => setOverspeedSearchQuery('')}
+                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center justify-between text-xs pt-0.5">
+                                                <span className="text-slate-500 font-medium">
+                                                    Total Kejadian:{' '}
+                                                    <strong className="text-rose-600 font-bold">
+                                                        {searchedOverspeedLogs.length}
+                                                    </strong>
+                                                </span>
+                                                <span className="text-[11px] font-bold text-slate-500">
+                                                    Site: {selectedSiteFilter}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Overspeed Records List */}
+                                        <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                                            {searchedOverspeedLogs.length === 0 ? (
+                                                <div className="text-center py-6 text-gray-400">
+                                                    <ShieldCheck className="w-8 h-8 text-emerald-500 mx-auto mb-1.5" />
+                                                    <p className="text-xs font-bold text-gray-700">Tidak ada riwayat overspeed aktif untuk unit ini</p>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">Armada {currentVehicle.plateNo} mematuhi batas kecepatan operasional konsesi</p>
+                                                    {alarmScope === 'vehicle' && overspeedLogs.length > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setAlarmScope('fleet')}
+                                                            className="mt-2 text-[11px] font-bold text-rose-600 hover:text-rose-800 underline cursor-pointer"
+                                                        >
+                                                            Lihat {overspeedLogs.length} Kejadian Overspeed Seluruh Armada Tambang →
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                searchedOverspeedLogs.map(log => (
+                                                    <div
+                                                        key={log.id}
+                                                        className="bg-white border border-slate-200/90 hover:border-rose-300 rounded-xl p-3 shadow-xs hover:shadow-md transition-all space-y-2"
+                                                    >
+                                                        {/* Row 1: Unit & Timestamp */}
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div>
+                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                                    <span className="font-extrabold text-xs text-slate-900">
+                                                                        {log.unit_code}
+                                                                    </span>
+                                                                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
+                                                                        {log.driver_name}
+                                                                    </span>
+                                                                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700">
+                                                                        Site {log.site}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                                                    ID: {log.id} • {log.time_formatted}
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Speed Badge */}
+                                                            <div className="text-right shrink-0">
+                                                                <div className="text-sm font-black text-rose-600">
+                                                                    {log.speed} <span className="text-[10px] font-normal text-slate-500">km/j</span>
+                                                                </div>
+                                                                <div className="text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                                                                    +{log.excess_speed} km/j di atas batas ({log.speed_limit})
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 2: Location & Duration (POIN 12 INTI: LOKASI DI MANA & BERAPA LAMA) */}
+                                                        <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/70 text-xs grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <span className="text-[9px] font-bold text-slate-400 uppercase block">
+                                                                    Lokasi Zona Geofence:
+                                                                </span>
+                                                                <span className="font-bold text-slate-800 text-[11px] truncate block flex items-center gap-1 mt-0.5">
+                                                                    <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
+                                                                    <span className="truncate">{log.geofence_name}</span>
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-[9px] font-bold text-slate-400 uppercase block">
+                                                                    Durasi Pelanggaran:
+                                                                </span>
+                                                                <span className="font-bold text-purple-700 text-[11px] flex items-center gap-1 mt-0.5 font-mono">
+                                                                    <Clock className="w-3 h-3 text-purple-600 shrink-0" />
+                                                                    <span>{log.duration_formatted}</span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 3: Action Buttons */}
+                                                        <div className="flex items-center justify-between pt-1 text-xs">
+                                                            <span className="text-[10px] font-semibold text-emerald-700 flex items-center gap-1">
+                                                                <Check className="w-3 h-3" />
+                                                                {log.status}
+                                                            </span>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setMapCenter([log.latitude, log.longitude]);
+                                                                    setMapZoom(16);
+                                                                    const matchingUnit = fleet.find(v => {
+                                                                        const normPlate = (v.plateNo || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                                                                        const normUnit = (log.unit_code || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                                                                        return normUnit.includes(normPlate) || normPlate.includes(normUnit);
+                                                                    });
+                                                                    if (matchingUnit) {
+                                                                        setSelectedVehicleId(matchingUnit.id);
+                                                                    }
+                                                                }}
+                                                                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-xs"
+                                                                title="Fokuskan peta ke lokasi zona geofence ini"
+                                                            >
+                                                                <Crosshair className="w-3 h-3" />
+                                                                <span>Fokus ke Peta</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
                                             )}
                                         </div>
-                                    ) : (
-                                        filteredAlarms.map((alarm) => {
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                                        {filteredAlarms.length === 0 ? (
+                                            <div className="text-center py-5 text-gray-400">
+                                                <ShieldCheck className="w-7 h-7 text-emerald-500 mx-auto mb-1" />
+                                                <p className="text-xs font-bold text-gray-700">Tidak ada peringatan aktif untuk unit ini</p>
+                                                <p className="text-[10px] text-gray-400 mt-0.5">Semua parameter safety armada {currentVehicle.plateNo} berada dalam kondisi normal</p>
+                                                {alarmScope === 'vehicle' && alarms.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setAlarmScope('fleet')}
+                                                        className="mt-2 text-[11px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                                                    >
+                                                        Lihat {alarms.length} Alarm Seluruh Armada Tambang →
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            filteredAlarms.map((alarm) => {
                                             const isHandled = (alarm.handle_status ?? 'Untreated') === 'Handled';
                                             return (
                                                 <div
@@ -3035,6 +3242,7 @@ export default function Page() {
                                         })
                                     )}
                                 </div>
+                                )}
                             </div>
 
                             {/* ── BOTTOM ROW: OPERATOR DETAIL (IMAGE 6) & DIAGNOSTIK HARDWARE (IMAGE 10) ── */}
