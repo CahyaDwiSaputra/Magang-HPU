@@ -351,7 +351,7 @@ export default function GpsTrackingPage() {
             })
             .catch(err => console.error('Error fetching hauling routes:', err));
 
-        fetch('/api/dashcam/geofences')
+        fetch('/api/dashcam/geofences?category=operational')
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'ok' && Array.isArray(data.data)) {
