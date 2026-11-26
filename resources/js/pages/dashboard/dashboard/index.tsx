@@ -16,7 +16,6 @@ import {
     MapPin,
     User,
     Phone,
-    Star,
     Layers,
     ZoomIn,
     ZoomOut,
@@ -46,7 +45,9 @@ export type GpsVehicle = {
         name: string;
         nik: string;
         phone: string;
-        rating: number;
+        rating?: number;
+        simperType: string;
+        safetyScore: number;
         shift: string;
     };
     telemetry: {
@@ -81,6 +82,8 @@ const FLEET_DATA: GpsVehicle[] = [
             nik: '90012030',
             phone: '+62 812-5432-8901',
             rating: 5,
+            simperType: 'SIMPER B2 Umum (CAT 777)',
+            safetyScore: 100,
             shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
         },
         telemetry: {
@@ -112,6 +115,8 @@ const FLEET_DATA: GpsVehicle[] = [
             nik: '90011842',
             phone: '+62 813-8821-4470',
             rating: 4,
+            simperType: 'SIMPER B2 Alat Berat (PC2000)',
+            safetyScore: 98,
             shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
         },
         telemetry: {
@@ -143,6 +148,8 @@ const FLEET_DATA: GpsVehicle[] = [
             nik: '90013319',
             phone: '+62 821-9901-2345',
             rating: 5,
+            simperType: 'SIMPER B2 Umum (Scania P460)',
+            safetyScore: 100,
             shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
         },
         telemetry: {
@@ -174,6 +181,8 @@ const FLEET_DATA: GpsVehicle[] = [
             nik: '90014022',
             phone: '+62 852-7712-3344',
             rating: 4,
+            simperType: 'SIMPER B2 Umum (Water Truck)',
+            safetyScore: 100,
             shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
         },
         telemetry: {
@@ -205,6 +214,8 @@ const FLEET_DATA: GpsVehicle[] = [
             nik: '90015501',
             phone: '+62 811-5502-1234',
             rating: 5,
+            simperType: 'SIMPER A Tambang (Light Vehicle)',
+            safetyScore: 100,
             shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
         },
         telemetry: {
@@ -223,64 +234,64 @@ const FLEET_DATA: GpsVehicle[] = [
     }
 ];
 
-// Checkpoint KM Hauling (STA) per Slide 19 Mockup
+// Checkpoint KM Hauling (STA) per Standar Stasioning Tambang HPU
 const CHECKPOINTS_HPA = [
-    { label: 'KM 13', lat: 2.058000, lng: 117.218000 },
-    { label: 'KM 14', lat: 2.068000, lng: 117.228000 },
-    { label: 'KM 15', lat: 2.079000, lng: 117.239000 },
-    { label: 'KM 16', lat: 2.091000, lng: 117.251000 }
+    { label: 'KM 13', sta: 'STA 13+000', lat: 2.058000, lng: 117.218000 },
+    { label: 'KM 14', sta: 'STA 14+000', lat: 2.068000, lng: 117.228000 },
+    { label: 'KM 15', sta: 'STA 15+000', lat: 2.079000, lng: 117.239000 },
+    { label: 'KM 16', sta: 'STA 16+000', lat: 2.091000, lng: 117.251000 }
 ];
 
-// Badge status visual berdasar Slide 28 & 29 PPTX
+// Badge status visual berdasar Standar Enterprise Mining Dispatch (Refined Anti-Slop)
 const getStatusBadge = (status: GpsVehicle['status']) => {
     switch (status) {
         case 'TRAVEL_ISI':
             return {
-                bg: 'bg-blue-600 text-white',
-                border: 'border-blue-700',
-                dot: 'bg-white',
+                bg: 'bg-blue-50 text-blue-700 border border-blue-200/90',
+                border: 'border-blue-300',
+                dot: 'bg-blue-600',
                 label: 'TRAVEL ISI'
             };
         case 'TRAVEL_KOSONG':
             return {
-                bg: 'bg-emerald-600 text-white',
-                border: 'border-emerald-700',
-                dot: 'bg-white',
+                bg: 'bg-emerald-50 text-emerald-700 border border-emerald-200/90',
+                border: 'border-emerald-300',
+                dot: 'bg-emerald-600',
                 label: 'TRAVEL KOSONG'
             };
         case 'WORKING':
             return {
-                bg: 'bg-emerald-500 text-white',
-                border: 'border-emerald-600',
-                dot: 'bg-white',
+                bg: 'bg-teal-50 text-teal-700 border border-teal-200/90',
+                border: 'border-teal-300',
+                dot: 'bg-teal-600',
                 label: 'WORKING'
             };
         case 'IDLING':
             return {
-                bg: 'bg-amber-500 text-white',
-                border: 'border-amber-600',
-                dot: 'bg-white',
+                bg: 'bg-amber-50 text-amber-800 border border-amber-200/90',
+                border: 'border-amber-300',
+                dot: 'bg-amber-500',
                 label: 'IDLING'
             };
         case 'STANDBY':
             return {
-                bg: 'bg-slate-500 text-white',
-                border: 'border-slate-600',
-                dot: 'bg-white',
+                bg: 'bg-slate-100 text-slate-700 border border-slate-200',
+                border: 'border-slate-300',
+                dot: 'bg-slate-400',
                 label: 'STANDBY'
             };
         case 'BREAKDOWN':
             return {
-                bg: 'bg-rose-600 text-white',
-                border: 'border-rose-700',
-                dot: 'bg-white',
+                bg: 'bg-rose-50 text-rose-700 border border-rose-200/90',
+                border: 'border-rose-300',
+                dot: 'bg-rose-600',
                 label: 'BREAKDOWN'
             };
         default:
             return {
-                bg: 'bg-slate-400 text-white',
-                border: 'border-slate-500',
-                dot: 'bg-white',
+                bg: 'bg-slate-100 text-slate-600 border border-slate-200',
+                border: 'border-slate-300',
+                dot: 'bg-slate-400',
                 label: 'OFFLINE'
             };
     }
@@ -543,7 +554,8 @@ export default function GpsTrackingPage() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 ${badge.bg}`}>
+                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${badge.bg}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
                                                         {badge.label}
                                                     </span>
                                                 </div>
@@ -592,7 +604,8 @@ export default function GpsTrackingPage() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 ${badge.bg}`}>
+                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${badge.bg}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
                                                         {badge.label}
                                                     </span>
                                                 </div>
@@ -736,11 +749,15 @@ export default function GpsTrackingPage() {
                                         />
                                     )}
 
-                                    {/* Checkpoint STA / KM Markers (Slide 19) */}
+                                    {/* Checkpoint STA / KM Markers (Patok Stasioning Hauling) */}
                                     {CHECKPOINTS_HPA.map((cp, idx) => (
-                                        <Overlay key={`cp-${idx}`} anchor={[cp.lat, cp.lng]} offset={[30, 15]}>
-                                            <div className="bg-slate-900/90 text-amber-400 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-400/50 shadow-md pointer-events-none select-none">
-                                                📍 {cp.label}
+                                        <Overlay key={`cp-${idx}`} anchor={[cp.lat, cp.lng]} offset={[30, 14]}>
+                                            <div className="bg-white/95 text-slate-800 text-[11px] font-bold px-2 py-0.5 rounded-md border border-slate-300 shadow-md flex items-center gap-1.5 backdrop-blur-xs select-none pointer-events-none">
+                                                <span className="w-2 h-2 rounded-full bg-blue-600 ring-2 ring-blue-100 shrink-0"></span>
+                                                <span className="font-mono tracking-tight text-slate-900 font-bold">{cp.label}</span>
+                                                <span className="text-[9px] text-slate-400 font-mono font-medium border-l border-slate-200 pl-1.5">
+                                                    {cp.sta}
+                                                </span>
                                             </div>
                                         </Overlay>
                                     ))}
@@ -832,43 +849,52 @@ export default function GpsTrackingPage() {
                                         </span>
                                     </div>
 
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="space-y-1">
-                                            <div className="text-base font-extrabold text-slate-900">
-                                                {selectedUnit.operator.name}
-                                            </div>
-                                            <div className="text-xs font-mono text-slate-500 font-semibold">
-                                                NIK: {selectedUnit.operator.nik}
-                                            </div>
-
-                                            <div className="flex items-center gap-2 pt-1">
-                                                <span className="bg-slate-100 text-slate-800 text-xs font-bold px-2.5 py-0.5 rounded-md border border-slate-200">
-                                                    {selectedUnit.plateNo}
-                                                </span>
-                                                <div className="flex items-center text-amber-500">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <Star
-                                                            key={i}
-                                                            className={`w-3.5 h-3.5 ${
-                                                                i < selectedUnit.operator.rating
-                                                                    ? 'fill-amber-400 text-amber-400'
-                                                                    : 'text-slate-300'
-                                                            }`}
-                                                        />
-                                                    ))}
-                                                    <span className="text-xs font-bold text-slate-700 ml-1">
-                                                        ({selectedUnit.operator.rating}.0)
+                                    <div className="flex items-start justify-between gap-3.5">
+                                        <div className="space-y-2 flex-1 min-w-0">
+                                            <div>
+                                                <div className="text-base font-bold text-slate-900 truncate">
+                                                    {selectedUnit.operator.name}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                                    <span className="font-mono font-semibold">NIK: {selectedUnit.operator.nik}</span>
+                                                    <span>•</span>
+                                                    <span className="bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200/80">
+                                                        {selectedUnit.plateNo}
                                                     </span>
                                                 </div>
                                             </div>
+
+                                            {/* Kredensial Resmi Tambang (Menggantikan Star Rating B2C) */}
+                                            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+                                                    <ShieldCheck className="w-3 h-3 text-blue-600" />
+                                                    {selectedUnit.operator.simperType || 'SIMPER B2 Umum (Aktif)'}
+                                                </span>
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                                    Safety: {selectedUnit.operator.safetyScore ?? 100}% (Zero LTI)
+                                                </span>
+                                            </div>
+
+                                            <div className="text-[11px] text-slate-500 flex items-center gap-1.5 pt-0.5">
+                                                <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                <span className="truncate">{selectedUnit.operator.shift}</span>
+                                            </div>
                                         </div>
 
-                                        {/* Avatar Thumbnail */}
-                                        <div className="w-16 h-20 rounded-xl bg-slate-900 text-amber-400 flex flex-col items-center justify-center shrink-0 border border-slate-800 shadow-inner">
-                                            <User className="w-7 h-7" />
-                                            <span className="text-[9px] font-bold uppercase mt-1 text-slate-300">
-                                                DRIVER
-                                            </span>
+                                        {/* Foto Profil / ID Badge Operator (Bersih, Selaras Light Mode, Bebas Kotak Hitam "DRIVER") */}
+                                        <div className="w-20 h-24 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col items-center justify-between p-1.5 shrink-0 shadow-xs">
+                                            <div className="w-full flex-1 rounded-lg bg-white border border-slate-200/80 flex flex-col items-center justify-center relative overflow-hidden group">
+                                                <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-700 font-bold font-mono text-sm shadow-2xs">
+                                                    {selectedUnit.operator.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                                </div>
+                                                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+                                            </div>
+                                            <div className="w-full text-center pt-1 border-t border-slate-100">
+                                                <span className="block text-[8px] font-mono font-bold text-slate-500 tracking-wider uppercase">
+                                                    HPU OPERATOR
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
