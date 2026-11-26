@@ -191,7 +191,7 @@ export default function Page() {
                                             : 'text-slate-600 hover:text-slate-900'
                                     }`}
                                 >
-                                    Semua ({gets_equipment.data?.total || 99})
+                                    Semua ({gets_equipment.data?.total || 918})
                                 </button>
                                 <button
                                     type="button"
@@ -202,7 +202,7 @@ export default function Page() {
                                             : 'text-slate-600 hover:text-slate-900'
                                     }`}
                                 >
-                                    General (16)
+                                    General (744)
                                 </button>
                                 <button
                                     type="button"
@@ -213,7 +213,7 @@ export default function Page() {
                                             : 'text-slate-600 hover:text-slate-900'
                                     }`}
                                 >
-                                    Support (83)
+                                    Support (174)
                                 </button>
                             </div>
                         </div>
