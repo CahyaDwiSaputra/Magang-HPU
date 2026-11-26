@@ -119,319 +119,53 @@ class CmsV6ProxyController extends Controller
      */
     public function vehicles(): JsonResponse
     {
-        $vehicles = [
-            [
-                'id' => 'HPA-CWR-DT44123XC',
-                'plateNo' => 'HPA-CWR-DT44123XC',
-                'deviceNo' => '240078921470',
-                'sim' => '081119759083',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (44123XC)',
-                'site' => 'HPA CWR Pit',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'HPA-CWR-DT44121XC',
-                'plateNo' => 'HPA-CWR-DT44121XC',
-                'deviceNo' => '240078921678',
-                'sim' => '081119759094',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (44121XC)',
-                'site' => 'HPA CWR Pit',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'HPA-DT49109MB',
-                'plateNo' => 'HPA-DT49109MB',
-                'deviceNo' => '240078916025',
-                'sim' => '081100105674',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (49109MB)',
-                'site' => 'HPA Pit Front',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'BDA-DT41107VV-RU-225',
-                'plateNo' => 'BDA-DT41107VV (RU-225)',
-                'deviceNo' => '240078740672',
-                'sim' => '08115125648',
-                'type' => 'DT',
-                'model' => 'Dump Truck RU-225',
-                'site' => 'BDA Pit Area',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'BDA-DT41121VV-RU-227',
-                'plateNo' => 'BDA-DT41121VV (RU-227)',
-                'deviceNo' => '291073208720',
-                'sim' => '081120270220',
-                'type' => 'DT',
-                'model' => 'Dump Truck RU-227',
-                'site' => 'BDA Pit Area',
-                'status' => 'STANDBY',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'HPA-DT47101VV',
-                'plateNo' => 'HPA-DT47101VV',
-                'deviceNo' => '240078735201',
-                'sim' => '081119759089',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (47101)',
-                'site' => 'HPA Pit Front',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'HPA-DT47109VV',
-                'plateNo' => 'HPA-DT47109VV',
-                'deviceNo' => '240078734998',
-                'sim' => '081119759085',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (47109)',
-                'site' => 'HPA Pit Front',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'HPA-DT47103VV',
-                'plateNo' => 'HPA-DT47103VV',
-                'deviceNo' => '240078735110',
-                'sim' => '081119759087',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (47103)',
-                'site' => 'HPA Pit Front',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'HPA-DT47106VV',
-                'plateNo' => 'HPA-DT47106VV',
-                'deviceNo' => '240078734980',
-                'sim' => '081119759080',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (47106)',
-                'site' => 'HPA Pit Front',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'KDA-FT28001HN',
-                'plateNo' => 'KDA-FT28001HN',
-                'deviceNo' => '240079626307',
-                'sim' => '08115219303',
-                'type' => 'FT',
-                'model' => 'Fuel Truck 28,000L',
-                'site' => 'KDA Pit',
-                'status' => 'STANDBY',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin'],
-                ]
-            ],
-            [
-                'id' => 'KDA-FT40003MB',
-                'plateNo' => 'KDA-FT40003MB',
-                'deviceNo' => '240079658477',
-                'sim' => '08115219305',
-                'type' => 'FT',
-                'model' => 'Fuel Truck 40,000L',
-                'site' => 'KDA Pit',
-                'status' => 'STANDBY',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin'],
-                ]
-            ],
-            [
-                'id' => 'KIA-DT42101VV-HAUL',
-                'plateNo' => 'KIA-DT42101VV (HAUL)',
-                'deviceNo' => '240079676909',
-                'sim' => '08115219637',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (42101)',
-                'site' => 'KIA Hauling Road',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'KJA-DT49125MB-HAUL',
-                'plateNo' => 'KJA-DT49125MB (HAUL)',
-                'deviceNo' => '240079664063',
-                'sim' => '08115219644',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (49125)',
-                'site' => 'KJA Hauling Road',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'KJA-DT49115MB-HAUL',
-                'plateNo' => 'KJA-DT49115MB (HAUL)',
-                'deviceNo' => '240079636952',
-                'sim' => '08115219314',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (49115)',
-                'site' => 'KJA Hauling Road',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'KJA-DT49113MB-HAUL',
-                'plateNo' => 'KJA-DT49113MB (HAUL)',
-                'deviceNo' => '240079608836',
-                'sim' => '08115219307',
-                'type' => 'DT',
-                'model' => 'Dump Truck Hauling (49113)',
-                'site' => 'KJA Hauling Road',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'EXCA-PC2000-01',
-                'plateNo' => 'EX-2001 (Komatsu PC2000)',
-                'deviceNo' => '240078915951',
-                'sim' => '08115219999',
-                'type' => 'EXCA',
-                'model' => 'Excavator Komatsu PC2000-8',
-                'site' => 'Pit Front Alfa',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Area Kerja (Loading)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Operator'],
-                ]
-            ],
-            [
-                'id' => 'EXCA-PC1250-02',
-                'plateNo' => 'EX-1252 (Komatsu PC1250)',
-                'deviceNo' => '240078915952',
-                'sim' => '08115219998',
-                'type' => 'EXCA',
-                'model' => 'Excavator Komatsu PC1250-8',
-                'site' => 'Pit Front Bravo',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Area Kerja (Loading)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Operator'],
-                ]
-            ],
-            [
-                'id' => 'BDA-DT41110VV-RU-230',
-                'plateNo' => 'BDA-DT41110VV (RU-230)',
-                'deviceNo' => '240078740557',
-                'sim' => '08115125650',
-                'type' => 'DT',
-                'model' => 'Dump Truck RU-230',
-                'site' => 'BDA Pit Area',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ],
-            [
-                'id' => 'DT-HPU-01',
-                'plateNo' => 'HD-78501 (Trial UNS)',
-                'deviceNo' => '240078916116',
-                'sim' => '081119759000',
-                'type' => 'DT',
-                'model' => 'Dump Truck HD-785',
-                'site' => 'Trial Mining Route',
-                'status' => 'ONLINE',
-                'channels' => [
-                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
-                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
-                ]
-            ]
-        ];
+        $baseFleetFile = storage_path('app/cmsv6_base_fleet.json');
+        if (file_exists($baseFleetFile)) {
+            $vehicles = json_decode(file_get_contents($baseFleetFile), true) ?: [];
+        } else {
+            $vehicles = [
+                ['id' => 'HPA-CWR-DT44123XC', 'plateNo' => 'HPA-CWR-DT44123XC', 'deviceNo' => '240078921470', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (44123XC)'],
+                ['id' => 'HPA-CWR-DT44121XC', 'plateNo' => 'HPA-CWR-DT44121XC', 'deviceNo' => '240078921678', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (44121XC)'],
+                ['id' => 'HPA-DT49109MB', 'plateNo' => 'HPA-DT49109MB', 'deviceNo' => '240078916025', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (49109MB)'],
+                ['id' => 'BDA-DT41107VV-RU-225', 'plateNo' => 'BDA-DT41107VV (RU-225)', 'deviceNo' => '240078740672', 'type' => 'DT', 'site' => 'BDA', 'model' => 'Dump Truck RU-225'],
+                ['id' => 'HPA-DT47101VV', 'plateNo' => 'HPA-DT47101VV', 'deviceNo' => '240078735201', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (47101)'],
+                ['id' => 'HPA-DT47109VV', 'plateNo' => 'HPA-DT47109VV', 'deviceNo' => '240078734998', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (47109)'],
+                ['id' => 'HPA-DT47103VV', 'plateNo' => 'HPA-DT47103VV', 'deviceNo' => '240078735110', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (47103)'],
+                ['id' => 'HPA-DT47106VV', 'plateNo' => 'HPA-DT47106VV', 'deviceNo' => '240078734980', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (47106)'],
+                ['id' => 'KDA-FT40003MB', 'plateNo' => 'KDA-FT40003MB', 'deviceNo' => '240079658477', 'type' => 'FT', 'site' => 'HPA', 'model' => 'Fuel Truck 40,000L'],
+                ['id' => 'KIA-DT42101VV-HAUL', 'plateNo' => 'KIA-DT42101VV (HAUL)', 'deviceNo' => '240079676909', 'type' => 'DT', 'site' => 'BDA', 'model' => 'Dump Truck Hauling (42101)'],
+                ['id' => 'KJA-DT49115MB-HAUL', 'plateNo' => 'KJA-DT49115MB (HAUL)', 'deviceNo' => '240079636952', 'type' => 'DT', 'site' => 'HPA', 'model' => 'Dump Truck Hauling (49115)'],
+                ['id' => 'BDA-DT41110VV-RU-230', 'plateNo' => 'BDA-DT41110VV (RU-230)', 'deviceNo' => '240078740557', 'type' => 'DT', 'site' => 'BDA', 'model' => 'Dump Truck RU-230']
+            ];
+        }
 
         // Ambil status real-time langsung dari server CMSV6 HPU Monitoring (10.10.0.33:8088)
-        $statusMap = Cache::remember('cmsv6_online_map_v4', 10, function() use ($vehicles) {
+        $statusMap = Cache::remember('cmsv6_online_map_v5', 10, function() use ($vehicles) {
             $map = [];
             $devIds = array_filter(array_column($vehicles, 'deviceNo'));
             
-            // 1. Batch query device status (GPS, speed, online, last time gt)
+            // 1. Batch query device status (GPS, speed, online, last time gt) in chunks of 50
             if (!empty($devIds)) {
-                $batchStr = implode(',', $devIds);
-                $stRes = $this->callWithRetry('/808gps/StandardApiAction_getDeviceStatus.action', [
-                    'devIdno' => $batchStr
-                ]);
-                if (($stRes['result'] ?? -1) === 0 && isset($stRes['status']) && is_array($stRes['status'])) {
-                    foreach ($stRes['status'] as $st) {
-                        $id = $st['id'] ?? '';
-                        if ($id) {
-                            $map[$id] = [
-                                'status_raw' => $st,
-                                'ol'         => ($st['ol'] ?? 0) == 1,
-                                'sp'         => ($st['sp'] ?? 0) / 10.0,
-                                'gt'         => $st['gt'] ?? null,
-                                'lat'        => isset($st['lat']) ? $st['lat'] / 1000000.0 : null,
-                                'lng'        => isset($st['lng']) ? $st['lng'] / 1000000.0 : null,
-                            ];
+                $chunks = array_chunk($devIds, 50);
+                foreach ($chunks as $chunk) {
+                    $batchStr = implode(',', $chunk);
+                    $stRes = $this->callWithRetry('/808gps/StandardApiAction_getDeviceStatus.action', [
+                        'devIdno' => $batchStr
+                    ]);
+                    if (($stRes['result'] ?? -1) === 0 && isset($stRes['status']) && is_array($stRes['status'])) {
+                        foreach ($stRes['status'] as $st) {
+                            $id = $st['id'] ?? '';
+                            if ($id) {
+                                $map[$id] = [
+                                    'status_raw' => $st,
+                                    'ol'         => ($st['ol'] ?? 0) == 1,
+                                    'sp'         => ($st['sp'] ?? 0) / 10.0,
+                                    'gt'         => $st['gt'] ?? null,
+                                    'lat'        => isset($st['lat']) ? $st['lat'] / 1000000.0 : null,
+                                    'lng'        => isset($st['lng']) ? $st['lng'] / 1000000.0 : null,
+                                ];
+                            }
                         }
-                    }
-                }
-            }
-
-            // 2. Query video device capability for registered devices
-            foreach ($devIds as $devId) {
-                $vRes = $this->callWithRetry('/808gps/open/player/StandardApiAction_getVideoDevice.action', [
-                    'devIdno' => $devId
-                ]);
-                $hasVideo = (($vRes['result'] ?? -1) === 0 && ($vRes['isVideoDevice'] ?? 0) == 1);
-                $chnCount = $vRes['chnCount'] ?? ($hasVideo ? 2 : 0);
-                
-                if (!isset($map[$devId])) {
-                    $map[$devId] = [];
-                }
-                $map[$devId]['has_video'] = $hasVideo;
-                $map[$devId]['chn_count'] = $chnCount;
-                if (($vRes['result'] ?? -1) === 0 && isset($vRes['isOnline'])) {
-                    if (!isset($map[$devId]['ol'])) {
-                        $map[$devId]['ol'] = ($vRes['isOnline'] == 1);
                     }
                 }
             }
@@ -447,7 +181,6 @@ class CmsV6ProxyController extends Controller
             $info = $statusMap[$devId] ?? null;
             
             $isOnline = $info['ol'] ?? false;
-            $hasVideo = $info['has_video'] ?? false;
             $lastSeen = $info['gt'] ?? null;
             $speed    = $info['sp'] ?? 0;
             $lat      = $info['lat'] ?? null;
@@ -459,13 +192,15 @@ class CmsV6ProxyController extends Controller
                 $v['dashcam_status_label'] = 'Livecam Tersedia';
                 $v['status']               = 'ONLINE';
                 $v['is_registered']        = true;
+                $v['has_dashcam']          = true;
                 $availCount++;
-            } elseif ($hasVideo || (!empty($lastSeen) && $lastSeen !== 'Never')) {
+            } elseif (!empty($lastSeen) && $lastSeen !== 'Never') {
                 // Unit memiliki hardware MDVR terdaftar di CMSV6, namun sedang offline / sinyal putus
                 $v['dashcam_status']       = 'LOST_CONNECTION';
                 $v['dashcam_status_label'] = 'Lost Connection';
                 $v['status']               = 'LOST_CONNECTION';
                 $v['is_registered']        = true;
+                $v['has_dashcam']          = true;
                 $lostCount++;
             } else {
                 // Unit armada tambang belum dipasangi dashcam / belum terdaftar di CMSV6
@@ -473,15 +208,21 @@ class CmsV6ProxyController extends Controller
                 $v['dashcam_status_label'] = 'Belum Tersedia';
                 $v['status']               = 'STANDBY';
                 $v['is_registered']        = false;
+                $v['has_dashcam']          = false;
                 $notAvailCount++;
             }
 
-            $v['has_dashcam'] = $hasVideo;
-            $v['last_seen']   = $lastSeen;
-            $v['speed']       = $speed;
+            $v['last_seen'] = $lastSeen;
+            $v['speed']     = $speed;
             if ($lat !== null && $lng !== null) {
                 $v['latitude']  = $lat;
                 $v['longitude'] = $lng;
+            }
+            if (!isset($v['channels'])) {
+                $v['channels'] = [
+                    ['channel' => 0, 'name' => 'CAM 1 — Depan (Jalan)'],
+                    ['channel' => 1, 'name' => 'CAM 2 — Kabin Pengemudi'],
+                ];
             }
         }
         unset($v);
