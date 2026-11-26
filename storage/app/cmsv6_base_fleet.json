@@ -1,0 +1,2468 @@
+[
+  {
+    "id": "BDA-DT34931",
+    "plateNo": "BDA-DT34931",
+    "deviceNo": "240078734931",
+    "type": "DT",
+    "model": "Dump Truck RU-931",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT34949",
+    "plateNo": "HPU-DT34949",
+    "deviceNo": "240078734949",
+    "type": "DT",
+    "model": "Mining Dump Truck (4949)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT34956",
+    "plateNo": "HPA-DT34956",
+    "deviceNo": "240078734956",
+    "type": "DT",
+    "model": "Scania P460 Hauler (4956)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT34964",
+    "plateNo": "HPU-DT34964",
+    "deviceNo": "240078734964",
+    "type": "DT",
+    "model": "Mining Dump Truck (4964)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT34972",
+    "plateNo": "BDA-DT34972",
+    "deviceNo": "240078734972",
+    "type": "DT",
+    "model": "Dump Truck RU-972",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT47106VV",
+    "plateNo": "HPA-DT47106VV",
+    "deviceNo": "240078734980",
+    "type": "DT",
+    "model": "Dump Truck Hauling (47106)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT47109VV",
+    "plateNo": "HPA-DT47109VV",
+    "deviceNo": "240078734998",
+    "type": "DT",
+    "model": "Dump Truck Hauling (47109)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT35003",
+    "plateNo": "HPA-DT35003",
+    "deviceNo": "240078735003",
+    "type": "DT",
+    "model": "Scania P460 Hauler (5003)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT35011",
+    "plateNo": "HPA-DT35011",
+    "deviceNo": "240078735011",
+    "type": "DT",
+    "model": "Scania P460 Hauler (5011)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT35029",
+    "plateNo": "HPA-DT35029",
+    "deviceNo": "240078735029",
+    "type": "DT",
+    "model": "Scania P460 Hauler (5029)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35045",
+    "plateNo": "BDA-DT35045",
+    "deviceNo": "240078735045",
+    "type": "DT",
+    "model": "Dump Truck RU-045",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35052",
+    "plateNo": "BDA-DT35052",
+    "deviceNo": "240078735052",
+    "type": "DT",
+    "model": "Dump Truck RU-052",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35060",
+    "plateNo": "BDA-DT35060",
+    "deviceNo": "240078735060",
+    "type": "DT",
+    "model": "Dump Truck RU-060",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT35078",
+    "plateNo": "HPU-DT35078",
+    "deviceNo": "240078735078",
+    "type": "DT",
+    "model": "Mining Dump Truck (5078)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35086",
+    "plateNo": "BDA-DT35086",
+    "deviceNo": "240078735086",
+    "type": "DT",
+    "model": "Dump Truck RU-086",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35094",
+    "plateNo": "BDA-DT35094",
+    "deviceNo": "240078735094",
+    "type": "DT",
+    "model": "Dump Truck RU-094",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35102",
+    "plateNo": "BDA-DT35102",
+    "deviceNo": "240078735102",
+    "type": "DT",
+    "model": "Dump Truck RU-102",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT47103VV",
+    "plateNo": "HPA-DT47103VV",
+    "deviceNo": "240078735110",
+    "type": "DT",
+    "model": "Dump Truck Hauling (47103)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35128",
+    "plateNo": "BDA-DT35128",
+    "deviceNo": "240078735128",
+    "type": "DT",
+    "model": "Dump Truck RU-128",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT35136",
+    "plateNo": "HPU-DT35136",
+    "deviceNo": "240078735136",
+    "type": "DT",
+    "model": "Mining Dump Truck (5136)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35144",
+    "plateNo": "BDA-DT35144",
+    "deviceNo": "240078735144",
+    "type": "DT",
+    "model": "Dump Truck RU-144",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT35151",
+    "plateNo": "HPU-DT35151",
+    "deviceNo": "240078735151",
+    "type": "DT",
+    "model": "Mining Dump Truck (5151)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35169",
+    "plateNo": "BDA-DT35169",
+    "deviceNo": "240078735169",
+    "type": "DT",
+    "model": "Dump Truck RU-169",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT35177",
+    "plateNo": "HPA-DT35177",
+    "deviceNo": "240078735177",
+    "type": "DT",
+    "model": "Scania P460 Hauler (5177)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35185",
+    "plateNo": "BDA-DT35185",
+    "deviceNo": "240078735185",
+    "type": "DT",
+    "model": "Dump Truck RU-185",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT35193",
+    "plateNo": "BDA-DT35193",
+    "deviceNo": "240078735193",
+    "type": "DT",
+    "model": "Dump Truck RU-193",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT47101VV",
+    "plateNo": "HPA-DT47101VV",
+    "deviceNo": "240078735201",
+    "type": "DT",
+    "model": "Dump Truck Hauling (47101)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40409",
+    "plateNo": "HPU-DT40409",
+    "deviceNo": "240078740409",
+    "type": "DT",
+    "model": "Mining Dump Truck (0409)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40417",
+    "plateNo": "HPU-DT40417",
+    "deviceNo": "240078740417",
+    "type": "DT",
+    "model": "Mining Dump Truck (0417)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40508",
+    "plateNo": "HPU-DT40508",
+    "deviceNo": "240078740508",
+    "type": "DT",
+    "model": "Mining Dump Truck (0508)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT40516",
+    "plateNo": "BDA-DT40516",
+    "deviceNo": "240078740516",
+    "type": "DT",
+    "model": "Dump Truck RU-516",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40524",
+    "plateNo": "HPU-DT40524",
+    "deviceNo": "240078740524",
+    "type": "DT",
+    "model": "Mining Dump Truck (0524)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40540",
+    "plateNo": "HPU-DT40540",
+    "deviceNo": "240078740540",
+    "type": "DT",
+    "model": "Mining Dump Truck (0540)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT41110VV-RU-230",
+    "plateNo": "BDA-DT41110VV (RU-230)",
+    "deviceNo": "240078740557",
+    "type": "DT",
+    "model": "Dump Truck RU-230",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40573",
+    "plateNo": "HPU-DT40573",
+    "deviceNo": "240078740573",
+    "type": "DT",
+    "model": "Mining Dump Truck (0573)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT40599",
+    "plateNo": "BDA-DT40599",
+    "deviceNo": "240078740599",
+    "type": "DT",
+    "model": "Dump Truck RU-599",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40607",
+    "plateNo": "HPU-DT40607",
+    "deviceNo": "240078740607",
+    "type": "DT",
+    "model": "Mining Dump Truck (0607)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40631",
+    "plateNo": "HPU-DT40631",
+    "deviceNo": "240078740631",
+    "type": "DT",
+    "model": "Mining Dump Truck (0631)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40649",
+    "plateNo": "HPU-DT40649",
+    "deviceNo": "240078740649",
+    "type": "DT",
+    "model": "Mining Dump Truck (0649)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT40656",
+    "plateNo": "BDA-DT40656",
+    "deviceNo": "240078740656",
+    "type": "DT",
+    "model": "Dump Truck RU-656",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT40664",
+    "plateNo": "HPU-DT40664",
+    "deviceNo": "240078740664",
+    "type": "DT",
+    "model": "Mining Dump Truck (0664)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT41107VV-RU-225",
+    "plateNo": "BDA-DT41107VV (RU-225)",
+    "deviceNo": "240078740672",
+    "type": "DT",
+    "model": "Dump Truck RU-225",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT40714",
+    "plateNo": "BDA-DT40714",
+    "deviceNo": "240078740714",
+    "type": "DT",
+    "model": "Dump Truck RU-714",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15704",
+    "plateNo": "HPU-DT15704",
+    "deviceNo": "240078915704",
+    "type": "DT",
+    "model": "Mining Dump Truck (5704)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15712",
+    "plateNo": "HPU-DT15712",
+    "deviceNo": "240078915712",
+    "type": "DT",
+    "model": "Mining Dump Truck (5712)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15720",
+    "plateNo": "HPU-DT15720",
+    "deviceNo": "240078915720",
+    "type": "DT",
+    "model": "Mining Dump Truck (5720)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15738",
+    "plateNo": "HPU-DT15738",
+    "deviceNo": "240078915738",
+    "type": "DT",
+    "model": "Mining Dump Truck (5738)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15746",
+    "plateNo": "HPU-DT15746",
+    "deviceNo": "240078915746",
+    "type": "DT",
+    "model": "Mining Dump Truck (5746)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15753",
+    "plateNo": "HPU-DT15753",
+    "deviceNo": "240078915753",
+    "type": "DT",
+    "model": "Mining Dump Truck (5753)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15779",
+    "plateNo": "BDA-DT15779",
+    "deviceNo": "240078915779",
+    "type": "DT",
+    "model": "Dump Truck RU-779",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15787",
+    "plateNo": "BDA-DT15787",
+    "deviceNo": "240078915787",
+    "type": "DT",
+    "model": "Dump Truck RU-787",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT15795",
+    "plateNo": "HPA-DT15795",
+    "deviceNo": "240078915795",
+    "type": "DT",
+    "model": "Scania P460 Hauler (5795)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15803",
+    "plateNo": "HPU-DT15803",
+    "deviceNo": "240078915803",
+    "type": "DT",
+    "model": "Mining Dump Truck (5803)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15811",
+    "plateNo": "HPU-DT15811",
+    "deviceNo": "240078915811",
+    "type": "DT",
+    "model": "Mining Dump Truck (5811)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15829",
+    "plateNo": "BDA-DT15829",
+    "deviceNo": "240078915829",
+    "type": "DT",
+    "model": "Dump Truck RU-829",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15837",
+    "plateNo": "BDA-DT15837",
+    "deviceNo": "240078915837",
+    "type": "DT",
+    "model": "Dump Truck RU-837",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15845",
+    "plateNo": "BDA-DT15845",
+    "deviceNo": "240078915845",
+    "type": "DT",
+    "model": "Dump Truck RU-845",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15852",
+    "plateNo": "HPU-DT15852",
+    "deviceNo": "240078915852",
+    "type": "DT",
+    "model": "Mining Dump Truck (5852)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15860",
+    "plateNo": "HPU-DT15860",
+    "deviceNo": "240078915860",
+    "type": "DT",
+    "model": "Mining Dump Truck (5860)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15878",
+    "plateNo": "HPU-DT15878",
+    "deviceNo": "240078915878",
+    "type": "DT",
+    "model": "Mining Dump Truck (5878)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15886",
+    "plateNo": "BDA-DT15886",
+    "deviceNo": "240078915886",
+    "type": "DT",
+    "model": "Dump Truck RU-886",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT15894",
+    "plateNo": "HPA-DT15894",
+    "deviceNo": "240078915894",
+    "type": "DT",
+    "model": "Scania P460 Hauler (5894)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15902",
+    "plateNo": "HPU-DT15902",
+    "deviceNo": "240078915902",
+    "type": "DT",
+    "model": "Mining Dump Truck (5902)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15910",
+    "plateNo": "BDA-DT15910",
+    "deviceNo": "240078915910",
+    "type": "DT",
+    "model": "Dump Truck RU-910",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15928",
+    "plateNo": "BDA-DT15928",
+    "deviceNo": "240078915928",
+    "type": "DT",
+    "model": "Dump Truck RU-928",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15936",
+    "plateNo": "BDA-DT15936",
+    "deviceNo": "240078915936",
+    "type": "DT",
+    "model": "Dump Truck RU-936",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15944",
+    "plateNo": "BDA-DT15944",
+    "deviceNo": "240078915944",
+    "type": "DT",
+    "model": "Dump Truck RU-944",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15969",
+    "plateNo": "HPU-DT15969",
+    "deviceNo": "240078915969",
+    "type": "DT",
+    "model": "Mining Dump Truck (5969)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT15977",
+    "plateNo": "BDA-DT15977",
+    "deviceNo": "240078915977",
+    "type": "DT",
+    "model": "Dump Truck RU-977",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT15993",
+    "plateNo": "HPU-DT15993",
+    "deviceNo": "240078915993",
+    "type": "DT",
+    "model": "Mining Dump Truck (5993)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16009",
+    "plateNo": "HPU-DT16009",
+    "deviceNo": "240078916009",
+    "type": "DT",
+    "model": "Mining Dump Truck (6009)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16017",
+    "plateNo": "HPU-DT16017",
+    "deviceNo": "240078916017",
+    "type": "DT",
+    "model": "Mining Dump Truck (6017)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT49109MB",
+    "plateNo": "HPA-DT49109MB",
+    "deviceNo": "240078916025",
+    "type": "DT",
+    "model": "Dump Truck Hauling (49109MB)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT16033",
+    "plateNo": "BDA-DT16033",
+    "deviceNo": "240078916033",
+    "type": "DT",
+    "model": "Dump Truck RU-033",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16041",
+    "plateNo": "HPU-DT16041",
+    "deviceNo": "240078916041",
+    "type": "DT",
+    "model": "Mining Dump Truck (6041)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16058",
+    "plateNo": "HPU-DT16058",
+    "deviceNo": "240078916058",
+    "type": "DT",
+    "model": "Mining Dump Truck (6058)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16066",
+    "plateNo": "HPU-DT16066",
+    "deviceNo": "240078916066",
+    "type": "DT",
+    "model": "Mining Dump Truck (6066)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16074",
+    "plateNo": "HPU-DT16074",
+    "deviceNo": "240078916074",
+    "type": "DT",
+    "model": "Mining Dump Truck (6074)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT16082",
+    "plateNo": "BDA-DT16082",
+    "deviceNo": "240078916082",
+    "type": "DT",
+    "model": "Dump Truck RU-082",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT16090",
+    "plateNo": "BDA-DT16090",
+    "deviceNo": "240078916090",
+    "type": "DT",
+    "model": "Dump Truck RU-090",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT16108",
+    "plateNo": "BDA-DT16108",
+    "deviceNo": "240078916108",
+    "type": "DT",
+    "model": "Dump Truck RU-108",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16124",
+    "plateNo": "HPU-DT16124",
+    "deviceNo": "240078916124",
+    "type": "DT",
+    "model": "Mining Dump Truck (6124)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16132",
+    "plateNo": "HPU-DT16132",
+    "deviceNo": "240078916132",
+    "type": "DT",
+    "model": "Mining Dump Truck (6132)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16140",
+    "plateNo": "HPU-DT16140",
+    "deviceNo": "240078916140",
+    "type": "DT",
+    "model": "Mining Dump Truck (6140)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT16157",
+    "plateNo": "BDA-DT16157",
+    "deviceNo": "240078916157",
+    "type": "DT",
+    "model": "Dump Truck RU-157",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16165",
+    "plateNo": "HPU-DT16165",
+    "deviceNo": "240078916165",
+    "type": "DT",
+    "model": "Mining Dump Truck (6165)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16173",
+    "plateNo": "HPU-DT16173",
+    "deviceNo": "240078916173",
+    "type": "DT",
+    "model": "Mining Dump Truck (6173)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT16181",
+    "plateNo": "HPA-DT16181",
+    "deviceNo": "240078916181",
+    "type": "DT",
+    "model": "Scania P460 Hauler (6181)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT16199",
+    "plateNo": "BDA-DT16199",
+    "deviceNo": "240078916199",
+    "type": "DT",
+    "model": "Dump Truck RU-199",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16207",
+    "plateNo": "HPU-DT16207",
+    "deviceNo": "240078916207",
+    "type": "DT",
+    "model": "Mining Dump Truck (6207)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT16215",
+    "plateNo": "HPA-DT16215",
+    "deviceNo": "240078916215",
+    "type": "DT",
+    "model": "Scania P460 Hauler (6215)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT16223",
+    "plateNo": "HPU-DT16223",
+    "deviceNo": "240078916223",
+    "type": "DT",
+    "model": "Mining Dump Truck (6223)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21462",
+    "plateNo": "BDA-DT21462",
+    "deviceNo": "240078921462",
+    "type": "DT",
+    "model": "Dump Truck RU-462",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-CWR-DT44123XC",
+    "plateNo": "HPA-CWR-DT44123XC",
+    "deviceNo": "240078921470",
+    "type": "DT",
+    "model": "Dump Truck Hauling (44123XC)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21488",
+    "plateNo": "BDA-DT21488",
+    "deviceNo": "240078921488",
+    "type": "DT",
+    "model": "Dump Truck RU-488",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21496",
+    "plateNo": "BDA-DT21496",
+    "deviceNo": "240078921496",
+    "type": "DT",
+    "model": "Dump Truck RU-496",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21504",
+    "plateNo": "HPU-DT21504",
+    "deviceNo": "240078921504",
+    "type": "DT",
+    "model": "Mining Dump Truck (1504)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21512",
+    "plateNo": "BDA-DT21512",
+    "deviceNo": "240078921512",
+    "type": "DT",
+    "model": "Dump Truck RU-512",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT21520",
+    "plateNo": "HPA-DT21520",
+    "deviceNo": "240078921520",
+    "type": "DT",
+    "model": "Scania P460 Hauler (1520)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT21538",
+    "plateNo": "HPA-DT21538",
+    "deviceNo": "240078921538",
+    "type": "DT",
+    "model": "Scania P460 Hauler (1538)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21546",
+    "plateNo": "BDA-DT21546",
+    "deviceNo": "240078921546",
+    "type": "DT",
+    "model": "Dump Truck RU-546",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21561",
+    "plateNo": "HPU-DT21561",
+    "deviceNo": "240078921561",
+    "type": "DT",
+    "model": "Mining Dump Truck (1561)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21579",
+    "plateNo": "BDA-DT21579",
+    "deviceNo": "240078921579",
+    "type": "DT",
+    "model": "Dump Truck RU-579",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21595",
+    "plateNo": "HPU-DT21595",
+    "deviceNo": "240078921595",
+    "type": "DT",
+    "model": "Mining Dump Truck (1595)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21603",
+    "plateNo": "HPU-DT21603",
+    "deviceNo": "240078921603",
+    "type": "DT",
+    "model": "Mining Dump Truck (1603)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21611",
+    "plateNo": "HPU-DT21611",
+    "deviceNo": "240078921611",
+    "type": "DT",
+    "model": "Mining Dump Truck (1611)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21629",
+    "plateNo": "BDA-DT21629",
+    "deviceNo": "240078921629",
+    "type": "DT",
+    "model": "Dump Truck RU-629",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21637",
+    "plateNo": "HPU-DT21637",
+    "deviceNo": "240078921637",
+    "type": "DT",
+    "model": "Mining Dump Truck (1637)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT21645",
+    "plateNo": "BDA-DT21645",
+    "deviceNo": "240078921645",
+    "type": "DT",
+    "model": "Dump Truck RU-645",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21652",
+    "plateNo": "HPU-DT21652",
+    "deviceNo": "240078921652",
+    "type": "DT",
+    "model": "Mining Dump Truck (1652)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21660",
+    "plateNo": "HPU-DT21660",
+    "deviceNo": "240078921660",
+    "type": "DT",
+    "model": "Mining Dump Truck (1660)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-CWR-DT44121XC",
+    "plateNo": "HPA-CWR-DT44121XC",
+    "deviceNo": "240078921678",
+    "type": "DT",
+    "model": "Dump Truck Hauling (44121XC)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT21686",
+    "plateNo": "HPA-DT21686",
+    "deviceNo": "240078921686",
+    "type": "DT",
+    "model": "Scania P460 Hauler (1686)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21694",
+    "plateNo": "HPU-DT21694",
+    "deviceNo": "240078921694",
+    "type": "DT",
+    "model": "Mining Dump Truck (1694)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21702",
+    "plateNo": "HPU-DT21702",
+    "deviceNo": "240078921702",
+    "type": "DT",
+    "model": "Mining Dump Truck (1702)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21710",
+    "plateNo": "HPU-DT21710",
+    "deviceNo": "240078921710",
+    "type": "DT",
+    "model": "Mining Dump Truck (1710)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21728",
+    "plateNo": "HPU-DT21728",
+    "deviceNo": "240078921728",
+    "type": "DT",
+    "model": "Mining Dump Truck (1728)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21736",
+    "plateNo": "HPU-DT21736",
+    "deviceNo": "240078921736",
+    "type": "DT",
+    "model": "Mining Dump Truck (1736)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT21744",
+    "plateNo": "HPA-DT21744",
+    "deviceNo": "240078921744",
+    "type": "DT",
+    "model": "Scania P460 Hauler (1744)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPU-DT21751",
+    "plateNo": "HPU-DT21751",
+    "deviceNo": "240078921751",
+    "type": "DT",
+    "model": "Mining Dump Truck (1751)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT20378",
+    "plateNo": "HPA-DT20378",
+    "deviceNo": "240079620378",
+    "type": "DT",
+    "model": "Scania P460 Hauler (0378)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT25195",
+    "plateNo": "BDA-DT25195",
+    "deviceNo": "240079625195",
+    "type": "DT",
+    "model": "Dump Truck RU-195",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT26367",
+    "plateNo": "BDA-DT26367",
+    "deviceNo": "240079626367",
+    "type": "DT",
+    "model": "Dump Truck RU-367",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT28249",
+    "plateNo": "HPA-DT28249",
+    "deviceNo": "240079628249",
+    "type": "DT",
+    "model": "Scania P460 Hauler (8249)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT29031",
+    "plateNo": "BDA-DT29031",
+    "deviceNo": "240079629031",
+    "type": "DT",
+    "model": "Dump Truck RU-031",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "KJA-DT49115MB-HAUL",
+    "plateNo": "KJA-DT49115MB (HAUL)",
+    "deviceNo": "240079636952",
+    "type": "DT",
+    "model": "Dump Truck Hauling (49115)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT37208",
+    "plateNo": "HPA-DT37208",
+    "deviceNo": "240079637208",
+    "type": "DT",
+    "model": "Scania P460 Hauler (7208)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT39832",
+    "plateNo": "BDA-DT39832",
+    "deviceNo": "240079639832",
+    "type": "DT",
+    "model": "Dump Truck RU-832",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "KDA-FT40003MB",
+    "plateNo": "KDA-FT40003MB",
+    "deviceNo": "240079658477",
+    "type": "FT",
+    "model": "Fuel Truck 40,000L",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT61372",
+    "plateNo": "HPA-DT61372",
+    "deviceNo": "240079661372",
+    "type": "DT",
+    "model": "Scania P460 Hauler (1372)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT62818",
+    "plateNo": "HPA-DT62818",
+    "deviceNo": "240079662818",
+    "type": "DT",
+    "model": "Scania P460 Hauler (2818)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT64863",
+    "plateNo": "HPA-DT64863",
+    "deviceNo": "240079664863",
+    "type": "DT",
+    "model": "Scania P460 Hauler (4863)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "BDA-DT65324",
+    "plateNo": "BDA-DT65324",
+    "deviceNo": "240079665324",
+    "type": "DT",
+    "model": "Dump Truck RU-324",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT68856",
+    "plateNo": "HPA-DT68856",
+    "deviceNo": "240079668856",
+    "type": "DT",
+    "model": "Scania P460 Hauler (8856)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT69227",
+    "plateNo": "HPA-DT69227",
+    "deviceNo": "240079669227",
+    "type": "DT",
+    "model": "Scania P460 Hauler (9227)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "HPA-DT76255",
+    "plateNo": "HPA-DT76255",
+    "deviceNo": "240079676255",
+    "type": "DT",
+    "model": "Scania P460 Hauler (6255)",
+    "site": "HPA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  },
+  {
+    "id": "KIA-DT42101VV-HAUL",
+    "plateNo": "KIA-DT42101VV (HAUL)",
+    "deviceNo": "240079676909",
+    "type": "DT",
+    "model": "Dump Truck Hauling (42101)",
+    "site": "BDA",
+    "channels": [
+      {
+        "channel": 0,
+        "name": "CAM 1 \u2014 Depan (Jalan)"
+      },
+      {
+        "channel": 1,
+        "name": "CAM 2 \u2014 Kabin Pengemudi"
+      }
+    ]
+  }
+]
