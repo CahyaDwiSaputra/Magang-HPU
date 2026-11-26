@@ -20,7 +20,12 @@ export type FleetVehicle = {
     type: 'DT' | 'EXCA' | 'FT';
     model: string;
     site: string;
-    status?: 'ONLINE' | 'STANDBY';
+    status?: 'ONLINE' | 'STANDBY' | 'LOST_CONNECTION';
+    dashcam_status?: 'AVAILABLE' | 'LOST_CONNECTION' | 'NOT_AVAILABLE';
+    dashcam_status_label?: string;
+    has_dashcam?: boolean;
+    speed?: number;
+    last_seen?: string | null;
     is_registered?: boolean;
     last_ping?: string | null;
     server_name?: string;
@@ -262,6 +267,18 @@ export default function Page() {
     const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
     const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
     const [vehicleTypeFilter, setVehicleTypeFilter] = useState<'ALL' | 'DT' | 'EXCA' | 'FT'>('ALL');
+    const [vehicleStatusFilter, setVehicleStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'LOST_CONNECTION' | 'NOT_AVAILABLE'>('ALL');
+
+    const statusCounts = useMemo(() => {
+        let avail = 0, lost = 0, notAvail = 0;
+        fleet.forEach(v => {
+            const st = v.dashcam_status || (v.status === 'ONLINE' ? 'AVAILABLE' : (v.is_registered ? 'LOST_CONNECTION' : 'NOT_AVAILABLE'));
+            if (st === 'AVAILABLE') avail++;
+            else if (st === 'LOST_CONNECTION') lost++;
+            else notAvail++;
+        });
+        return { avail, lost, notAvail };
+    }, [fleet]);
     const [streamEngine, setStreamEngine] = useState<'cmsv6' | 'flv'>('flv');
 
     // ── REVISI 1: ON/OFF LIVECAM (DEFAULT: OFF TERLEBIH DAHULU) ──
@@ -330,7 +347,12 @@ export default function Page() {
 
     // Filter daftar kendaraan berdasarkan pencarian & filter tipe
     const filteredVehicles = fleet.filter(v => {
+        if (selectedSiteFilter !== 'ALL' && v.site && !v.site.toUpperCase().includes(selectedSiteFilter)) return false;
         if (vehicleTypeFilter !== 'ALL' && v.type !== vehicleTypeFilter) return false;
+        if (vehicleStatusFilter !== 'ALL') {
+            const st = v.dashcam_status || (v.status === 'ONLINE' ? 'AVAILABLE' : (v.is_registered ? 'LOST_CONNECTION' : 'NOT_AVAILABLE'));
+            if (st !== vehicleStatusFilter) return false;
+        }
         if (!vehicleSearchQuery.trim()) return true;
         const q = vehicleSearchQuery.toLowerCase();
         return (
@@ -2031,7 +2053,7 @@ export default function Page() {
                                     </select>
                                 </div>
 
-                                {/* Filter Tabs */}
+                                {/* Filter Tipe Armada */}
                                 <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-[11px] font-medium">
                                     {(['ALL', 'DT', 'EXCA', 'FT'] as const).map(tab => (
                                         <button
@@ -2047,6 +2069,64 @@ export default function Page() {
                                             {tab === 'ALL' ? 'Semua' : tab === 'DT' ? 'Truck' : tab === 'EXCA' ? 'Exca' : 'Fuel'}
                                         </button>
                                     ))}
+                                </div>
+
+                                {/* Status Ketersediaan Dashcam Server 10.10.0.33 (Permintaan Mitra) */}
+                                <div className="grid grid-cols-2 gap-1 text-[10px] font-bold">
+                                    <button
+                                        type="button"
+                                        onClick={() => setVehicleStatusFilter('ALL')}
+                                        className={`py-1 px-2 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                            vehicleStatusFilter === 'ALL'
+                                                ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        <span>Semua Unit</span>
+                                        <span className="font-mono">{fleet.length}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setVehicleStatusFilter('AVAILABLE')}
+                                        className={`py-1 px-1.5 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                            vehicleStatusFilter === 'AVAILABLE'
+                                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                                : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                        }`}
+                                    >
+                                        <span className="flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            Live Siap
+                                        </span>
+                                        <span className="font-mono">{statusCounts.avail}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setVehicleStatusFilter('LOST_CONNECTION')}
+                                        className={`py-1 px-1.5 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                            vehicleStatusFilter === 'LOST_CONNECTION'
+                                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                                : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                                        }`}
+                                    >
+                                        <span className="flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                            Lost Conn
+                                        </span>
+                                        <span className="font-mono">{statusCounts.lost}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setVehicleStatusFilter('NOT_AVAILABLE')}
+                                        className={`py-1 px-1.5 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                            vehicleStatusFilter === 'NOT_AVAILABLE'
+                                                ? 'bg-slate-600 text-white border-slate-600 shadow-xs'
+                                                : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                                        }`}
+                                    >
+                                        <span>Non-Dashcam</span>
+                                        <span className="font-mono">{statusCounts.notAvail}</span>
+                                    </button>
                                 </div>
 
                                 {/* Vehicle List Panel */}
@@ -2078,32 +2158,47 @@ export default function Page() {
                                                             {v.type === 'EXCA' ? <LandPlot className="w-3.5 h-3.5" /> : <Truck className="w-3.5 h-3.5" />}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <div className="flex items-center gap-1.5">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
                                                                 <span className="font-bold text-xs truncate text-gray-900">{v.plateNo}</span>
-                                                                {v.is_registered && (
-                                                                    <span className="text-[8px] font-extrabold px-1 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-300">
-                                                                        CMSV6
+                                                                {/* Status Ketersediaan Dashcam Live / Lost / Belum */}
+                                                                {v.dashcam_status === 'AVAILABLE' || v.status === 'ONLINE' ? (
+                                                                    <span className="text-[8px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-0.5">
+                                                                        <span className="w-1 h-1 rounded-full bg-emerald-600 animate-pulse"></span>
+                                                                        LIVE
+                                                                    </span>
+                                                                ) : v.dashcam_status === 'LOST_CONNECTION' ? (
+                                                                    <span className="text-[8px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-0.5">
+                                                                        <span className="w-1 h-1 rounded-full bg-rose-600"></span>
+                                                                        LOST
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-slate-100 text-slate-500 border border-slate-200">
+                                                                        NON-CAM
                                                                     </span>
                                                                 )}
-                                                                <span className={`text-[9px] font-bold px-1 rounded ${
-                                                                    v.type === 'EXCA' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                                                                    v.type === 'FT' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
-                                                                    'bg-blue-50 text-blue-800 border border-blue-200'
-                                                                }`}>
-                                                                    {v.type}
-                                                                </span>
                                                             </div>
-                                                            <div className="text-[10px] text-gray-400 truncate font-mono">
-                                                                Device: {v.deviceNo} • {v.site}
+                                                            <div className="text-[10px] text-gray-400 truncate font-mono flex items-center gap-1 mt-0.5">
+                                                                <span>Dev: {v.deviceNo}</span>
+                                                                {v.speed != null && v.speed > 0 && (
+                                                                    <span className="text-blue-600 font-bold">• {v.speed} km/j</span>
+                                                                )}
+                                                                {v.dashcam_status === 'LOST_CONNECTION' && v.last_seen && (
+                                                                    <span className="text-rose-600 font-mono" title={`Terakhir aktif: ${v.last_seen}`}>
+                                                                        • Lost: {v.last_seen.split(' ')[1]?.slice(0, 5) || ''}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex items-center gap-1.5 shrink-0">
-                                                        <span className={`w-2 h-2 rounded-full ${
-                                                            v.status === 'ONLINE' ? 'bg-emerald-500 shadow-xs' : 
-                                                            v.is_registered ? 'bg-amber-400' : 'bg-slate-300'
-                                                        }`} title={v.status === 'ONLINE' ? 'Online' : v.is_registered ? 'Standby di Pit' : 'Belum Terdaftar'}></span>
+                                                        <span className={`w-2.5 h-2.5 rounded-full ${
+                                                            v.dashcam_status === 'AVAILABLE' || v.status === 'ONLINE' ? 'bg-emerald-500 shadow-xs animate-pulse' : 
+                                                            v.dashcam_status === 'LOST_CONNECTION' ? 'bg-rose-500' : 'bg-slate-300'
+                                                        }`} title={
+                                                            v.dashcam_status === 'AVAILABLE' || v.status === 'ONLINE' ? 'Livecam Siap' :
+                                                            v.dashcam_status === 'LOST_CONNECTION' ? (v.last_seen ? `Lost connection sejak ${v.last_seen}` : 'Lost connection') : 'Hardware Dashcam Belum Tersedia'
+                                                        }></span>
                                                         {isSelected && <Check className="w-4 h-4 text-blue-600" />}
                                                     </div>
                                                 </button>
@@ -2257,18 +2352,39 @@ export default function Page() {
                                             </button>
                                         </div>
 
-                                        {/* REVISI 1: Tombol On/Off Livecam (Default: OFF Terlebih Dahulu) */}
+                                        {/* Tombol On/Off Livecam Berdasarkan Status Real-time 10.10.0.33 */}
                                         <button
                                             type="button"
+                                            disabled={currentVehicle.dashcam_status === 'NOT_AVAILABLE' || currentVehicle.dashcam_status === 'LOST_CONNECTION'}
                                             onClick={() => setIsLivecamActive(!isLivecamActive)}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
-                                                isLivecamActive
-                                                    ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse'
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs ${
+                                                currentVehicle.dashcam_status === 'LOST_CONNECTION'
+                                                    ? 'bg-rose-100 text-rose-700 border border-rose-300 cursor-not-allowed opacity-90'
+                                                    : currentVehicle.dashcam_status === 'NOT_AVAILABLE'
+                                                    ? 'bg-slate-100 text-slate-400 border border-slate-300 cursor-not-allowed opacity-80'
+                                                    : isLivecamActive
+                                                    ? 'bg-rose-600 hover:bg-rose-700 text-white cursor-pointer'
+                                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse cursor-pointer'
                                             }`}
-                                            title={isLivecamActive ? 'Matikan siaran langsung livecam untuk menghemat bandwidth' : 'Nyalakan siaran langsung kamera kabin & jalan'}
+                                            title={
+                                                currentVehicle.dashcam_status === 'LOST_CONNECTION'
+                                                    ? 'Unit sedang Lost Connection dari server 10.10.0.33'
+                                                    : currentVehicle.dashcam_status === 'NOT_AVAILABLE'
+                                                    ? 'Hardware Dashcam belum terpasang'
+                                                    : isLivecamActive ? 'Matikan siaran langsung livecam' : 'Nyalakan siaran langsung kamera kabin & jalan'
+                                            }
                                         >
-                                            {isLivecamActive ? (
+                                            {currentVehicle.dashcam_status === 'LOST_CONNECTION' ? (
+                                                <>
+                                                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                                                    <span>Lost Connection</span>
+                                                </>
+                                            ) : currentVehicle.dashcam_status === 'NOT_AVAILABLE' ? (
+                                                <>
+                                                    <VideoOff className="w-3.5 h-3.5 text-slate-400" />
+                                                    <span>Belum Tersedia</span>
+                                                </>
+                                            ) : isLivecamActive ? (
                                                 <>
                                                     <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
                                                     <VideoOff className="w-3.5 h-3.5" />
@@ -2481,29 +2597,88 @@ export default function Page() {
                                 ) : (
                                     <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800/90 shadow-inner relative flex flex-col items-center justify-center min-h-[300px] sm:min-h-[360px] p-6 text-center">
                                         <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none"></div>
-                                        <div className="relative z-10 max-w-md mx-auto space-y-3">
-                                            <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 text-amber-500 flex items-center justify-center mx-auto shadow-md">
-                                                <Video className="w-7 h-7" />
+                                        
+                                        {currentVehicle.dashcam_status === 'LOST_CONNECTION' ? (
+                                            <div className="relative z-10 max-w-md mx-auto space-y-3">
+                                                <div className="w-14 h-14 rounded-2xl bg-rose-950/80 border border-rose-700 text-rose-400 flex items-center justify-center mx-auto shadow-md">
+                                                    <AlertTriangle className="w-7 h-7" />
+                                                </div>
+                                                <div>
+                                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-900/80 text-rose-200 border border-rose-700">
+                                                        Sinyal Terputus • Lost Connection
+                                                    </span>
+                                                    <h3 className="text-sm font-bold text-white tracking-wide uppercase mt-2">
+                                                        MDVR Unit {currentVehicle.plateNo} Tidak Merespons
+                                                    </h3>
+                                                    <p className="text-xs text-rose-200/80 mt-1 leading-relaxed">
+                                                        Perangkat MDVR Dashcam terdaftar dengan Device ID <strong className="text-white font-mono">{currentVehicle.deviceNo}</strong> di server CMSV6 (10.10.0.33), namun saat ini sedang <strong>Lost Connection</strong> dari jaringan tambang.
+                                                    </p>
+                                                    {currentVehicle.last_seen && (
+                                                        <div className="mt-2 p-2 bg-slate-900/80 border border-rose-800/60 rounded-lg text-xs font-mono text-slate-300">
+                                                            Komunikasi Terakhir: <span className="text-amber-400 font-bold">{currentVehicle.last_seen}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            fetch('/api/cmsv6/vehicles').then(r=>r.json()).then(d => {
+                                                                if(d.vehicles) setFleet(d.vehicles);
+                                                            });
+                                                        }}
+                                                        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 shadow-md transition flex items-center gap-2 cursor-pointer"
+                                                    >
+                                                        <RotateCw className="w-4 h-4" />
+                                                        <span>Periksa Ulang Sinyal 10.10.0.33</span>
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="text-sm font-bold text-white tracking-wide uppercase">
-                                                    Livecam Standby • Kamera Siap Ditampilkan
-                                                </h3>
-                                                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                                                    Siaran langsung kamera depan (CAM 1) & kabin operator (CAM 2) unit <strong className="text-white">{currentVehicle.plateNo}</strong> berada dalam mode standby untuk menghemat kuota seluler 4G tambang.
-                                                </p>
+                                        ) : currentVehicle.dashcam_status === 'NOT_AVAILABLE' ? (
+                                            <div className="relative z-10 max-w-md mx-auto space-y-3">
+                                                <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center mx-auto shadow-md">
+                                                    <VideoOff className="w-7 h-7" />
+                                                </div>
+                                                <div>
+                                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">
+                                                        Hardware Non-Dashcam
+                                                    </span>
+                                                    <h3 className="text-sm font-bold text-white tracking-wide uppercase mt-2">
+                                                        Unit {currentVehicle.plateNo} Belum Pasang Dashcam
+                                                    </h3>
+                                                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                                        Unit armada tambang ini belum dipasangi perangkat hardware MDVR atau belum terdaftar di gateway video CMSV6 (10.10.0.33). Pemantauan posisi dan status unit tetap dapat diakses melalui modul telemetri spasial.
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="pt-1 flex flex-wrap items-center justify-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setIsLivecamActive(true)}
-                                                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 shadow-md transition flex items-center gap-2 cursor-pointer"
-                                                >
-                                                    <Video className="w-4 h-4" />
-                                                    <span>Nyalakan Livecam Sekarang (Dual HD)</span>
-                                                </button>
+                                        ) : (
+                                            <div className="relative z-10 max-w-md mx-auto space-y-3">
+                                                <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 text-emerald-400 flex items-center justify-center mx-auto shadow-md">
+                                                    <Video className="w-7 h-7" />
+                                                </div>
+                                                <div>
+                                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-800">
+                                                        Livecam Siap • Sinyal Terhubung (10.10.0.33)
+                                                    </span>
+                                                    <h3 className="text-sm font-bold text-white tracking-wide uppercase mt-2">
+                                                        Siaran Langsung Dual-HD Siap Ditampilkan
+                                                    </h3>
+                                                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                                        Kamera depan jalan (CAM 1) & kabin operator (CAM 2) unit <strong className="text-white">{currentVehicle.plateNo}</strong> terhubung aktif ke gateway CMSV6.
+                                                    </p>
+                                                </div>
+                                                <div className="pt-1 flex flex-wrap items-center justify-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsLivecamActive(true)}
+                                                        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 shadow-md transition flex items-center gap-2 cursor-pointer"
+                                                    >
+                                                        <Video className="w-4 h-4" />
+                                                        <span>Nyalakan Livecam Sekarang (Dual HD)</span>
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

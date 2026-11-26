@@ -293,11 +293,39 @@ export default function GpsTrackingPage() {
     const [mapLayer, setMapLayer] = useState<'satellite' | 'street'>('satellite');
     const [mapZoom, setMapZoom] = useState<number>(14);
     const [haulingRoutes, setHaulingRoutes] = useState<any>(null);
+    const [fleet, setFleet] = useState<GpsVehicle[]>(FLEET_DATA);
+
+    // Ambil status real-time langsung dari server CMSV6 HPU (10.10.0.33)
+    useEffect(() => {
+        fetch('/api/cmsv6/vehicles')
+            .then(res => res.json())
+            .then(data => {
+                if (data.result === 0 && Array.isArray(data.vehicles)) {
+                    setFleet(prev => prev.map(unit => {
+                        const cms = data.vehicles.find((cv: any) => cv.deviceNo === unit.deviceNo);
+                        if (cms) {
+                            return {
+                                ...unit,
+                                status: cms.dashcam_status === 'AVAILABLE' ? 'TRAVEL_ISI' : cms.dashcam_status === 'LOST_CONNECTION' ? 'IDLING' : 'STANDBY',
+                                telemetry: {
+                                    ...unit.telemetry,
+                                    speed: cms.speed !== undefined ? cms.speed : unit.telemetry.speed,
+                                    latitude: cms.latitude || unit.telemetry.latitude,
+                                    longitude: cms.longitude || unit.telemetry.longitude
+                                }
+                            };
+                        }
+                        return unit;
+                    }));
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     // Ambil data unit aktif yang dipilih
     const selectedUnit = useMemo(() => {
-        return FLEET_DATA.find(u => u.id === selectedVehicleId) || FLEET_DATA[0];
-    }, [selectedVehicleId]);
+        return fleet.find(u => u.id === selectedVehicleId) || fleet[0];
+    }, [fleet, selectedVehicleId]);
 
     // Viewport peta mengikuti unit yang dipilih
     const [mapCenter, setMapCenter] = useState<[number, number]>([
@@ -323,7 +351,7 @@ export default function GpsTrackingPage() {
 
     // Filter armada berdasarkan Site dan Query Pencarian
     const filteredFleet = useMemo(() => {
-        return FLEET_DATA.filter(unit => {
+        return fleet.filter(unit => {
             if (selectedSite !== 'ALL' && unit.site !== selectedSite) return false;
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase();
@@ -334,7 +362,7 @@ export default function GpsTrackingPage() {
             }
             return true;
         });
-    }, [selectedSite, searchQuery]);
+    }, [fleet, selectedSite, searchQuery]);
 
     const mainUnits = useMemo(() => filteredFleet.filter(u => u.category === 'MAIN'), [filteredFleet]);
     const generalUnits = useMemo(() => filteredFleet.filter(u => u.category === 'GENERAL'), [filteredFleet]);

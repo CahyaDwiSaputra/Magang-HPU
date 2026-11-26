@@ -389,57 +389,127 @@ class CmsV6ProxyController extends Controller
         ];
 
         // Ambil status real-time langsung dari server CMSV6 HPU Monitoring (10.10.0.33:8088)
-        $statusMap = Cache::remember('cmsv6_online_map_v3', 10, function() use ($vehicles) {
+        $statusMap = Cache::remember('cmsv6_online_map_v4', 10, function() use ($vehicles) {
             $map = [];
-            foreach ($vehicles as $v) {
-                $devId = $v['deviceNo'] ?? '';
-                if ($devId) {
-                    $res = $this->callWithRetry('/808gps/open/player/StandardApiAction_getVideoDevice.action', [
-                        'devIdno' => $devId
-                    ]);
-                    if (($res['result'] ?? -1) === 0) {
-                        $isOnline = (($res['isOnline'] ?? 0) == 1);
-                        $map[$devId] = [
-                            'online'     => $isOnline,
-                            'registered' => true,
-                            'chnCount'   => $res['chnCount'] ?? 2,
-                        ];
+            $devIds = array_filter(array_column($vehicles, 'deviceNo'));
+            
+            // 1. Batch query device status (GPS, speed, online, last time gt)
+            if (!empty($devIds)) {
+                $batchStr = implode(',', $devIds);
+                $stRes = $this->callWithRetry('/808gps/StandardApiAction_getDeviceStatus.action', [
+                    'devIdno' => $batchStr
+                ]);
+                if (($stRes['result'] ?? -1) === 0 && isset($stRes['status']) && is_array($stRes['status'])) {
+                    foreach ($stRes['status'] as $st) {
+                        $id = $st['id'] ?? '';
+                        if ($id) {
+                            $map[$id] = [
+                                'status_raw' => $st,
+                                'ol'         => ($st['ol'] ?? 0) == 1,
+                                'sp'         => ($st['sp'] ?? 0) / 10.0,
+                                'gt'         => $st['gt'] ?? null,
+                                'lat'        => isset($st['lat']) ? $st['lat'] / 1000000.0 : null,
+                                'lng'        => isset($st['lng']) ? $st['lng'] / 1000000.0 : null,
+                            ];
+                        }
+                    }
+                }
+            }
+
+            // 2. Query video device capability for registered devices
+            foreach ($devIds as $devId) {
+                $vRes = $this->callWithRetry('/808gps/open/player/StandardApiAction_getVideoDevice.action', [
+                    'devIdno' => $devId
+                ]);
+                $hasVideo = (($vRes['result'] ?? -1) === 0 && ($vRes['isVideoDevice'] ?? 0) == 1);
+                $chnCount = $vRes['chnCount'] ?? ($hasVideo ? 2 : 0);
+                
+                if (!isset($map[$devId])) {
+                    $map[$devId] = [];
+                }
+                $map[$devId]['has_video'] = $hasVideo;
+                $map[$devId]['chn_count'] = $chnCount;
+                if (($vRes['result'] ?? -1) === 0 && isset($vRes['isOnline'])) {
+                    if (!isset($map[$devId]['ol'])) {
+                        $map[$devId]['ol'] = ($vRes['isOnline'] == 1);
                     }
                 }
             }
             return $map;
         });
 
+        $availCount = 0;
+        $lostCount  = 0;
+        $notAvailCount = 0;
+
         foreach ($vehicles as &$v) {
             $devId = $v['deviceNo'] ?? '';
-            if (isset($statusMap[$devId])) {
-                $info = $statusMap[$devId];
-                $v['status'] = $info['online'] ? 'ONLINE' : 'STANDBY';
-                $v['is_registered'] = true;
+            $info = $statusMap[$devId] ?? null;
+            
+            $isOnline = $info['ol'] ?? false;
+            $hasVideo = $info['has_video'] ?? false;
+            $lastSeen = $info['gt'] ?? null;
+            $speed    = $info['sp'] ?? 0;
+            $lat      = $info['lat'] ?? null;
+            $lng      = $info['lng'] ?? null;
+
+            if ($isOnline) {
+                // Unit sedang online dan streaming video HD live tersedia
+                $v['dashcam_status']       = 'AVAILABLE';
+                $v['dashcam_status_label'] = 'Livecam Tersedia';
+                $v['status']               = 'ONLINE';
+                $v['is_registered']        = true;
+                $availCount++;
+            } elseif ($hasVideo || (!empty($lastSeen) && $lastSeen !== 'Never')) {
+                // Unit memiliki hardware MDVR terdaftar di CMSV6, namun sedang offline / sinyal putus
+                $v['dashcam_status']       = 'LOST_CONNECTION';
+                $v['dashcam_status_label'] = 'Lost Connection';
+                $v['status']               = 'LOST_CONNECTION';
+                $v['is_registered']        = true;
+                $lostCount++;
             } else {
-                $v['status'] = 'STANDBY';
-                $v['is_registered'] = false;
+                // Unit armada tambang belum dipasangi dashcam / belum terdaftar di CMSV6
+                $v['dashcam_status']       = 'NOT_AVAILABLE';
+                $v['dashcam_status_label'] = 'Belum Tersedia';
+                $v['status']               = 'STANDBY';
+                $v['is_registered']        = false;
+                $notAvailCount++;
+            }
+
+            $v['has_dashcam'] = $hasVideo;
+            $v['last_seen']   = $lastSeen;
+            $v['speed']       = $speed;
+            if ($lat !== null && $lng !== null) {
+                $v['latitude']  = $lat;
+                $v['longitude'] = $lng;
             }
         }
         unset($v);
 
-        // Prioritaskan: 1) yang sedang ONLINE, 2) yang TERDAFTAR di CMSV6, 3) sisanya
+        // Urutkan:
+        // 1) AVAILABLE (Live) pertama
+        // 2) LOST_CONNECTION kedua
+        // 3) NOT_AVAILABLE terakhir
         usort($vehicles, function ($a, $b) {
-            $aOnline = ($a['status'] === 'ONLINE');
-            $bOnline = ($b['status'] === 'ONLINE');
-            if ($aOnline !== $bOnline) return $aOnline ? -1 : 1;
-
-            $aReg = !empty($a['is_registered']);
-            $bReg = !empty($b['is_registered']);
-            if ($aReg !== $bReg) return $aReg ? -1 : 1;
+            $priority = [
+                'AVAILABLE'       => 1,
+                'LOST_CONNECTION' => 2,
+                'NOT_AVAILABLE'   => 3,
+            ];
+            $pA = $priority[$a['dashcam_status']] ?? 9;
+            $pB = $priority[$b['dashcam_status']] ?? 9;
+            if ($pA !== $pB) return $pA - $pB;
 
             return strcmp($a['plateNo'], $b['plateNo']);
         });
 
         return response()->json([
-            'result' => 0,
-            'total' => count($vehicles),
-            'vehicles' => $vehicles,
+            'result'                => 0,
+            'total'                 => count($vehicles),
+            'available_count'       => $availCount,
+            'lost_connection_count' => $lostCount,
+            'not_available_count'   => $notAvailCount,
+            'vehicles'              => $vehicles,
         ]);
     }
 
