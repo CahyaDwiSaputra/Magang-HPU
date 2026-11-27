@@ -29,6 +29,7 @@ import {
     AlertTriangle,
     Compass
 } from 'lucide-react';
+import { HPU_FLEET } from '../dashcam/index';
 
 // Tipe data Armada GPS Tracking (Slide 19, 28, 29)
 export type GpsVehicle = {
@@ -41,6 +42,11 @@ export type GpsVehicle = {
     model: string;
     site: 'HPA' | 'BDA';
     status: 'TRAVEL_ISI' | 'TRAVEL_KOSONG' | 'WORKING' | 'IDLING' | 'STANDBY' | 'BREAKDOWN';
+    dashcam_status?: 'AVAILABLE' | 'LOST_CONNECTION' | 'NOT_AVAILABLE';
+    dashcam_status_label?: string;
+    has_dashcam?: boolean;
+    speed?: number;
+    last_seen?: string | null;
     operator: {
         name: string;
         nik: string;
@@ -65,174 +71,100 @@ export type GpsVehicle = {
     };
 };
 
-// Master Fleet data berdasar Slide 19, 28 & 29 PPTX Acuan HPU
-const FLEET_DATA: GpsVehicle[] = [
-    {
-        id: 'HD45108MB',
-        unitCode: 'HD45108MB',
-        plateNo: 'HPA-HD45108MB',
-        deviceNo: '240078735201',
-        category: 'MAIN',
-        type: 'HD',
-        model: 'CAT 777D Heavy Dump Truck',
-        site: 'HPA',
-        status: 'TRAVEL_ISI',
-        operator: {
-            name: 'TAUFIQ RAHMAN',
-            nik: '90012030',
-            phone: '+62 812-5432-8901',
-            rating: 5,
-            simperType: 'SIMPER B2 Umum (CAT 777)',
-            safetyScore: 100,
-            shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
-        },
-        telemetry: {
-            speed: 38,
-            fuelCons: 68.5,
-            cycleTimeMinutes: 24.5,
-            hourMeter: 14250.2,
-            tripProgress: 65,
-            totalRit: 18,
-            loadType: 'OB',
-            startTime: '10:00 WITA',
-            currentStatusText: 'Hauling Menuju Disposal OPD LW (KM 14)',
-            latitude: 2.052100,
-            longitude: 117.214500
-        }
-    },
-    {
-        id: 'EX39103CT',
-        unitCode: 'EX39103CT',
-        plateNo: 'HPA-EX39103CT',
-        deviceNo: '240078916025',
-        category: 'MAIN',
-        type: 'EXCA',
-        model: 'Komatsu PC2000-8 Excavator',
-        site: 'HPA',
-        status: 'WORKING',
-        operator: {
-            name: 'BAMBANG HERMANTO',
-            nik: '90011842',
-            phone: '+62 813-8821-4470',
-            rating: 4,
-            simperType: 'SIMPER B2 Alat Berat (PC2000)',
-            safetyScore: 98,
-            shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
-        },
-        telemetry: {
-            speed: 0,
-            fuelCons: 92.0,
-            cycleTimeMinutes: 22.0,
-            hourMeter: 18910.8,
-            tripProgress: 100,
-            totalRit: 34,
-            loadType: 'OB',
-            startTime: '06:30 WITA',
-            currentStatusText: 'Loading Material di Pit Front Selatan',
-            latitude: 2.045000,
-            longitude: 117.200000
-        }
-    },
-    {
-        id: 'DT49132MB',
-        unitCode: 'DT49132MB',
-        plateNo: 'BDA-DT49132MB',
-        deviceNo: '240078740672',
-        category: 'GENERAL',
-        type: 'DT',
-        model: 'Scania P460 Hauling Dump Truck',
-        site: 'BDA',
-        status: 'TRAVEL_KOSONG',
-        operator: {
-            name: 'SANDI SETIAWAN',
-            nik: '90013319',
-            phone: '+62 821-9901-2345',
-            rating: 5,
-            simperType: 'SIMPER B2 Umum (Scania P460)',
-            safetyScore: 100,
-            shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
-        },
-        telemetry: {
-            speed: 46,
-            fuelCons: 42.0,
-            cycleTimeMinutes: 38.0,
-            hourMeter: 8420.5,
-            tripProgress: 40,
-            totalRit: 12,
-            loadType: 'COAL',
-            startTime: '09:45 WITA',
-            currentStatusText: 'Kembali dari Port Jetty Barito KM 16 Menuju Pit BDA',
-            latitude: -1.135000,
-            longitude: 114.920000
-        }
-    },
-    {
-        id: 'WT49113MB',
-        unitCode: 'WT49113MB',
-        plateNo: 'HPA-WT49113MB',
-        deviceNo: '240079658477',
-        category: 'GENERAL',
-        type: 'WT',
-        model: 'Hino 500 Water Truck 20KL',
-        site: 'HPA',
-        status: 'WORKING',
-        operator: {
-            name: 'AGUS PRASETYO',
-            nik: '90014022',
-            phone: '+62 852-7712-3344',
-            rating: 4,
-            simperType: 'SIMPER B2 Umum (Water Truck)',
-            safetyScore: 100,
-            shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
-        },
-        telemetry: {
-            speed: 22,
-            fuelCons: 28.5,
-            cycleTimeMinutes: 15.0,
-            hourMeter: 6120.0,
-            tripProgress: 80,
-            totalRit: 8,
-            loadType: 'OB',
-            startTime: '08:00 WITA',
-            currentStatusText: 'Penyiraman Debu Jalan Hauling KM 13 s.d KM 15',
-            latitude: 2.068000,
-            longitude: 117.228000
-        }
-    },
-    {
-        id: 'LT45105MB',
-        unitCode: 'LT45105MB',
-        plateNo: 'BDA-LT45105MB',
-        deviceNo: '240079636952',
-        category: 'GENERAL',
-        type: 'LT',
-        model: 'Toyota Hilux 4x4 Support Unit',
-        site: 'BDA',
-        status: 'STANDBY',
-        operator: {
-            name: 'DWI CAHYONO',
-            nik: '90015501',
-            phone: '+62 811-5502-1234',
-            rating: 5,
-            simperType: 'SIMPER A Tambang (Light Vehicle)',
-            safetyScore: 100,
-            shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
-        },
-        telemetry: {
-            speed: 0,
-            fuelCons: 14.0,
-            cycleTimeMinutes: 0.0,
-            hourMeter: 4200.1,
-            tripProgress: 0,
-            totalRit: 0,
-            loadType: 'OB',
-            startTime: '07:00 WITA',
-            currentStatusText: 'Standby di Workshop HPU Barito KM 30',
-            latitude: -1.180000,
-            longitude: 114.980000
-        }
-    }
+const OPERATOR_POOL = [
+    { name: 'TAUFIQ RAHMAN', nik: '90012030', phone: '+62 812-5432-8901' },
+    { name: 'BAMBANG HERMANTO', nik: '90011842', phone: '+62 813-8821-4470' },
+    { name: 'SANDI SETIAWAN', nik: '90013319', phone: '+62 821-9901-2345' },
+    { name: 'AGUS PRASETYO', nik: '90014022', phone: '+62 852-7712-3344' },
+    { name: 'DWI CAHYONO', nik: '90015501', phone: '+62 811-5502-1234' },
+    { name: 'BUDI SANTOSO', nik: '90016210', phone: '+62 812-4411-9023' },
+    { name: 'SLAMET RIYADI', nik: '90017188', phone: '+62 813-5522-8190' },
+    { name: 'HENDRA KURNIAWAN', nik: '90018092', phone: '+62 821-3344-7712' },
+    { name: 'RIZKY PRATAMA', nik: '90019201', phone: '+62 852-6677-1122' },
+    { name: 'WAHYU HIDAYAT', nik: '90020114', phone: '+62 811-7788-9900' },
+    { name: 'EKO PRASETYO', nik: '90021305', phone: '+62 812-9900-1133' },
+    { name: 'AHMAD FAUZI', nik: '90022419', phone: '+62 813-1122-3344' },
+    { name: 'DEDI SURYADI', nik: '90023520', phone: '+62 821-4455-6677' },
+    { name: 'RUDI HERMAWAN', nik: '90024631', phone: '+62 852-8899-0011' },
+    { name: 'YUDI KUSUMA', nik: '90025742', phone: '+62 811-2233-4455' },
 ];
+
+export const mapCmsVehicleToGpsVehicle = (cv: any): GpsVehicle => {
+    const isExca = cv.type === 'EXCA' || cv.id.startsWith('EX') || (cv.model && cv.model.toUpperCase().includes('PC'));
+    const isHd = cv.type === 'HD' || cv.id.startsWith('HD') || (cv.model && (cv.model.includes('777') || cv.model.includes('785')));
+    const isMain = isExca || isHd || (cv.model && (cv.model.includes('P460') || cv.model.includes('Hauler') || cv.model.includes('RU-') || cv.type === 'DT'));
+    
+    let status: GpsVehicle['status'] = 'STANDBY';
+    if (cv.dashcam_status === 'AVAILABLE' || cv.status === 'ONLINE') {
+        if ((cv.speed || 0) > 0) {
+            status = 'TRAVEL_ISI';
+        } else {
+            status = isExca ? 'WORKING' : 'TRAVEL_KOSONG';
+        }
+    } else if (cv.dashcam_status === 'LOST_CONNECTION') {
+        status = 'IDLING';
+    } else {
+        status = 'STANDBY';
+    }
+
+    const site = (cv.site || 'HPA').toUpperCase().includes('BDA') ? 'BDA' : 'HPA';
+    const devNum = parseInt(String(cv.deviceNo || '').slice(-4) || '1000', 10);
+    const op = OPERATOR_POOL[devNum % OPERATOR_POOL.length];
+
+    const lat = (typeof cv.latitude === 'number' && !isNaN(cv.latitude) && cv.latitude !== 0) 
+        ? cv.latitude 
+        : (site === 'BDA' ? -1.135000 + ((devNum % 30) - 15) * 0.001 : 2.052100 + ((devNum % 30) - 15) * 0.001);
+    const lng = (typeof cv.longitude === 'number' && !isNaN(cv.longitude) && cv.longitude !== 0) 
+        ? cv.longitude 
+        : (site === 'BDA' ? 114.920000 + ((devNum % 30) - 15) * 0.001 : 117.214500 + ((devNum % 30) - 15) * 0.001);
+
+    const speed = cv.speed !== undefined ? cv.speed : 0;
+    const model = cv.model || 'Dump Truck Hauling';
+    const simper = isExca ? 'SIMPER B2 Alat Berat (PC2000)' : (isHd ? 'SIMPER B2 Umum (CAT 777)' : `SIMPER B2 Umum (${model})`);
+
+    return {
+        id: cv.id,
+        unitCode: cv.id,
+        plateNo: cv.plateNo || cv.id,
+        deviceNo: cv.deviceNo || '',
+        category: isMain ? 'MAIN' : 'GENERAL',
+        type: isExca ? 'EXCA' : (isHd ? 'HD' : (cv.type || 'DT')),
+        model: model,
+        site: site as 'HPA' | 'BDA',
+        status: status,
+        dashcam_status: cv.dashcam_status,
+        dashcam_status_label: cv.dashcam_status_label,
+        has_dashcam: cv.has_dashcam,
+        speed: speed,
+        last_seen: cv.last_seen,
+        operator: {
+            name: op.name,
+            nik: op.nik,
+            phone: op.phone,
+            simperType: simper,
+            safetyScore: 100,
+            shift: 'Shift 1 Siang (06:00 - 18:00 WITA)'
+        },
+        telemetry: {
+            speed: speed,
+            fuelCons: Math.round((35 + (devNum % 35)) * 10) / 10,
+            cycleTimeMinutes: Math.round((20 + (devNum % 15)) * 10) / 10,
+            hourMeter: Math.round((4500 + (devNum * 4.2)) * 10) / 10,
+            tripProgress: speed > 0 ? (35 + (devNum % 45)) : 0,
+            totalRit: 12 + (devNum % 16),
+            loadType: (cv.id.includes('COAL') || (devNum % 3 === 0)) ? 'COAL' : 'OB',
+            startTime: '06:00 WITA',
+            currentStatusText: speed > 0 
+                ? `Hauling di Koridor ${site} (Kecepatan ${speed} km/j)` 
+                : (cv.dashcam_status === 'AVAILABLE' ? `Operasional Aktif di Pit ${site}` : (cv.dashcam_status === 'LOST_CONNECTION' ? `Lost Connection di Area ${site}` : `Standby di Pool ${site}`)),
+            latitude: lat,
+            longitude: lng,
+        }
+    };
+};
+
+// Master Fleet data berdasar seluruh unit armada CMSV6 terdaftar
+const FLEET_DATA: GpsVehicle[] = HPU_FLEET.map(mapCmsVehicleToGpsVehicle);
 
 // Checkpoint KM Hauling (STA) per Standar Stasioning Tambang HPU
 const CHECKPOINTS_HPA = [
@@ -299,8 +231,10 @@ const getStatusBadge = (status: GpsVehicle['status']) => {
 
 export default function GpsTrackingPage() {
     const [selectedSite, setSelectedSite] = useState<'ALL' | 'HPA' | 'BDA'>('ALL');
+    const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'LOST_CONNECTION' | 'NOT_AVAILABLE'>('ALL');
+    const [typeFilter, setTypeFilter] = useState<'ALL' | 'MAIN' | 'GENERAL'>('ALL');
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [selectedVehicleId, setSelectedVehicleId] = useState<string>('HD45108MB');
+    const [selectedVehicleId, setSelectedVehicleId] = useState<string>('HPA-DT47103VV');
     const [mapLayer, setMapLayer] = useState<'satellite' | 'street'>('satellite');
     const [mapZoom, setMapZoom] = useState<number>(14);
     const [haulingRoutes, setHaulingRoutes] = useState<any>(null);
@@ -309,32 +243,35 @@ export default function GpsTrackingPage() {
     const [showGeofences, setShowGeofences] = useState<boolean>(true);
     const [fleet, setFleet] = useState<GpsVehicle[]>(FLEET_DATA);
 
-    // Ambil status real-time langsung dari server CMSV6 HPU (10.10.0.33)
+    // Ambil data armada lengkap & status real-time langsung dari server CMSV6 HPU (10.10.0.33)
     useEffect(() => {
         fetch('/api/cmsv6/vehicles')
             .then(res => res.json())
             .then(data => {
-                if (data.result === 0 && Array.isArray(data.vehicles)) {
-                    setFleet(prev => prev.map(unit => {
-                        const cms = data.vehicles.find((cv: any) => cv.deviceNo === unit.deviceNo);
-                        if (cms) {
-                            return {
-                                ...unit,
-                                status: cms.dashcam_status === 'AVAILABLE' ? 'TRAVEL_ISI' : cms.dashcam_status === 'LOST_CONNECTION' ? 'IDLING' : 'STANDBY',
-                                telemetry: {
-                                    ...unit.telemetry,
-                                    speed: cms.speed !== undefined ? cms.speed : unit.telemetry.speed,
-                                    latitude: cms.latitude || unit.telemetry.latitude,
-                                    longitude: cms.longitude || unit.telemetry.longitude
-                                }
-                            };
-                        }
-                        return unit;
-                    }));
+                if (data.result === 0 && Array.isArray(data.vehicles) && data.vehicles.length > 0) {
+                    const mapped = data.vehicles.map(mapCmsVehicleToGpsVehicle);
+                    setFleet(mapped);
+
+                    const onlineUnit = mapped.find((u: GpsVehicle) => u.dashcam_status === 'AVAILABLE' && u.plateNo.startsWith('HPA'))
+                                    || mapped.find((u: GpsVehicle) => u.dashcam_status === 'AVAILABLE')
+                                    || mapped[0];
+                    if (onlineUnit) {
+                        setSelectedVehicleId(prev => {
+                            const cur = mapped.find((u: GpsVehicle) => u.id === prev);
+                            return (cur && cur.dashcam_status === 'AVAILABLE') ? prev : onlineUnit.id;
+                        });
+                    }
                 }
             })
             .catch(() => {});
     }, []);
+
+    const statusCounts = useMemo(() => {
+        const avail = fleet.filter(v => v.dashcam_status === 'AVAILABLE').length;
+        const lost = fleet.filter(v => v.dashcam_status === 'LOST_CONNECTION').length;
+        const notAvail = fleet.filter(v => v.dashcam_status === 'NOT_AVAILABLE').length;
+        return { avail, lost, notAvail };
+    }, [fleet]);
 
     // Ambil data unit aktif yang dipilih
     const selectedUnit = useMemo(() => {
@@ -405,20 +342,23 @@ export default function GpsTrackingPage() {
         }
     }, [selectedSite, fleet]);
 
-    // Filter armada berdasarkan Site dan Query Pencarian
+    // Filter armada berdasarkan Site, Status Ketersediaan, Tipe, dan Query Pencarian
     const filteredFleet = useMemo(() => {
         return fleet.filter(unit => {
             if (selectedSite !== 'ALL' && unit.site !== selectedSite) return false;
+            if (statusFilter !== 'ALL' && unit.dashcam_status !== statusFilter) return false;
+            if (typeFilter !== 'ALL' && unit.category !== typeFilter) return false;
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase();
                 const matchName = unit.unitCode.toLowerCase().includes(q) || unit.plateNo.toLowerCase().includes(q);
                 const matchOp = unit.operator.name.toLowerCase().includes(q) || unit.operator.nik.includes(q);
                 const matchModel = unit.model.toLowerCase().includes(q);
-                return matchName || matchOp || matchModel;
+                const matchDev = unit.deviceNo.includes(q);
+                return matchName || matchOp || matchModel || matchDev;
             }
             return true;
         });
-    }, [fleet, selectedSite, searchQuery]);
+    }, [fleet, selectedSite, statusFilter, typeFilter, searchQuery]);
 
     const mainUnits = useMemo(() => filteredFleet.filter(u => u.category === 'MAIN'), [filteredFleet]);
     const generalUnits = useMemo(() => filteredFleet.filter(u => u.category === 'GENERAL'), [filteredFleet]);
@@ -485,134 +425,201 @@ export default function GpsTrackingPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                     {/* ── LEFT COLUMN: FLEET & ASSET DIRECTORY (ARMADA) ── */}
                     <div className="lg:col-span-4 xl:col-span-3 space-y-4">
-                        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-4 space-y-3.5">
+                        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-4 space-y-3">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                <span className="text-xs font-bold text-slate-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                    <Search className="w-3.5 h-3.5 text-blue-600" />
-                                    ARMADA TAMBANG
-                                </span>
-                                <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
-                                    {filteredFleet.length} UNIT AKTIF
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-blue-600 text-white rounded-lg shadow-xs">
+                                        <Truck className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 leading-tight">
+                                            Armada Tambang
+                                        </h3>
+                                        <p className="text-[11px] text-gray-400">Total {fleet.length} Unit Terdaftar</p>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-mono">
+                                    {filteredFleet.length} Unit Aktif
                                 </span>
                             </div>
 
                             {/* Search Input Box */}
                             <div className="relative">
+                                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    placeholder="Cari nomor unit, operator..."
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-3.5 pr-9 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-slate-800 placeholder:text-slate-400 font-medium"
+                                    placeholder="Cari nopol, device, model..."
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-8 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-slate-800 placeholder:text-slate-400 font-medium"
                                 />
-                                <Search className="absolute right-3 top-2.5 text-slate-400 w-4 h-4" />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                    >
+                                        <RotateCcw className="w-3 h-3" />
+                                    </button>
+                                )}
                             </div>
 
-                            {/* Equipment Hierarchy List per Slide 19 */}
-                            <div className="space-y-3 max-h-[580px] overflow-y-auto pr-1">
-                                {/* Section 1: MAIN UNIT (Heavy Production) */}
-                                <div>
-                                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                                        <span className="flex items-center gap-1.5">
-                                            <Microchip className="w-3.5 h-3.5 text-blue-600" />
-                                            MAIN UNIT (ALAT UTAMA):
-                                        </span>
-                                        <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono">
-                                            {mainUnits.length}
-                                        </span>
+                            {/* Status Ketersediaan / Dashcam Readiness Filters (Persis Dashcam!) */}
+                            <div className="grid grid-cols-2 gap-1 text-[10px] font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => setStatusFilter('ALL')}
+                                    className={`py-1 px-2 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                        statusFilter === 'ALL'
+                                            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <span>Semua Unit</span>
+                                    <span className="font-mono">{fleet.length}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStatusFilter('AVAILABLE')}
+                                    className={`py-1 px-1.5 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                        statusFilter === 'AVAILABLE'
+                                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                            : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Live Siap
+                                    </span>
+                                    <span className="font-mono">{statusCounts.avail}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStatusFilter('LOST_CONNECTION')}
+                                    className={`py-1 px-1.5 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                        statusFilter === 'LOST_CONNECTION'
+                                            ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        Lost Conn
+                                    </span>
+                                    <span className="font-mono">{statusCounts.lost}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStatusFilter('NOT_AVAILABLE')}
+                                    className={`py-1 px-1.5 rounded-lg text-center transition cursor-pointer flex items-center justify-between border ${
+                                        statusFilter === 'NOT_AVAILABLE'
+                                            ? 'bg-slate-600 text-white border-slate-600 shadow-xs'
+                                            : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                                    }`}
+                                >
+                                    <span>Non-Dashcam</span>
+                                    <span className="font-mono">{statusCounts.notAvail}</span>
+                                </button>
+                            </div>
+
+                            {/* Type Filter Tabs */}
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-[11px] font-medium">
+                                <button
+                                    type="button"
+                                    onClick={() => setTypeFilter('ALL')}
+                                    className={`flex-1 py-1 rounded text-center transition cursor-pointer text-xs ${
+                                        typeFilter === 'ALL'
+                                            ? 'bg-white text-gray-900 shadow-xs font-bold'
+                                            : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                                >
+                                    Semua
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setTypeFilter('MAIN')}
+                                    className={`flex-1 py-1 rounded text-center transition cursor-pointer text-xs ${
+                                        typeFilter === 'MAIN'
+                                            ? 'bg-white text-gray-900 shadow-xs font-bold'
+                                            : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                                >
+                                    Main Unit
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setTypeFilter('GENERAL')}
+                                    className={`flex-1 py-1 rounded text-center transition cursor-pointer text-xs ${
+                                        typeFilter === 'GENERAL'
+                                            ? 'bg-white text-gray-900 shadow-xs font-bold'
+                                            : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                                >
+                                    Support
+                                </button>
+                            </div>
+
+                            {/* Equipment List (Sama Persis dengan Dashcam) */}
+                            <div className="space-y-1.5 max-h-[500px] overflow-y-auto pr-1">
+                                {filteredFleet.length === 0 ? (
+                                    <div className="p-4 text-center text-xs text-gray-400">
+                                        Tidak ada unit armada yang cocok dengan filter pencarian.
                                     </div>
-                                    <div className="space-y-1.5 pl-2 border-l-2 border-blue-500/30">
-                                        {mainUnits.map(unit => {
-                                            const badge = getStatusBadge(unit.status);
-                                            const isSelected = unit.id === selectedVehicleId;
-                                            return (
-                                                <div
-                                                    key={unit.id}
-                                                    onClick={() => setSelectedVehicleId(unit.id)}
-                                                    className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                                                        isSelected
-                                                            ? 'bg-blue-50/90 border-blue-400 shadow-xs ring-1 ring-blue-400'
-                                                            : 'bg-slate-50/70 border-slate-200/80 hover:bg-slate-100 hover:border-slate-300'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-2.5 min-w-0">
-                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                                                            isSelected ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-                                                        }`}>
-                                                            {unit.type === 'EXCA' ? (
-                                                                <Activity className="w-4 h-4" />
-                                                            ) : (
-                                                                <Truck className="w-4 h-4" />
+                                ) : (
+                                    filteredFleet.map(unit => {
+                                        const badge = getStatusBadge(unit.status);
+                                        const isSelected = unit.id === selectedVehicleId;
+                                        return (
+                                            <div
+                                                key={unit.id}
+                                                onClick={() => setSelectedVehicleId(unit.id)}
+                                                className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                                                    isSelected
+                                                        ? 'bg-blue-50/90 border-blue-400 shadow-xs ring-1 ring-blue-400'
+                                                        : 'bg-slate-50/70 border-slate-200/80 hover:bg-slate-100 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                                        isSelected ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
+                                                    }`}>
+                                                        {unit.type === 'EXCA' ? (
+                                                            <Activity className="w-4 h-4" />
+                                                        ) : (
+                                                            <Truck className="w-4 h-4" />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="text-xs font-bold text-slate-900 truncate flex items-center gap-1.5">
+                                                            <span>{unit.plateNo}</span>
+                                                            {unit.site && (
+                                                                <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 text-slate-600 font-mono font-semibold">
+                                                                    {unit.site}
+                                                                </span>
                                                             )}
                                                         </div>
-                                                        <div className="min-w-0">
-                                                            <div className="text-xs font-bold text-slate-900 truncate">
-                                                                {unit.unitCode}
-                                                            </div>
-                                                            <div className="text-[10px] text-slate-500 truncate">
-                                                                {unit.model}
-                                                            </div>
+                                                        <div className="text-[10px] text-slate-500 truncate flex items-center gap-1 mt-0.5 font-mono">
+                                                            <span>Dev: {unit.deviceNo}</span>
+                                                            {unit.telemetry.speed > 0 && (
+                                                                <span className="text-blue-600 font-bold">• {unit.telemetry.speed} km/j</span>
+                                                            )}
                                                         </div>
                                                     </div>
-                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${badge.bg}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
-                                                        {badge.label}
-                                                    </span>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
 
-                                {/* Section 2: UNIT GENERAL / SUPPORT (Auxiliary) */}
-                                <div>
-                                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 uppercase tracking-wider mb-2 pt-2">
-                                        <span className="flex items-center gap-1.5">
-                                            <Truck className="w-3.5 h-3.5 text-amber-600" />
-                                            UNIT GENERAL & SUPPORT:
-                                        </span>
-                                        <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-mono">
-                                            {generalUnits.length}
-                                        </span>
-                                    </div>
-                                    <div className="space-y-1.5 pl-2 border-l-2 border-amber-500/30">
-                                        {generalUnits.map(unit => {
-                                            const badge = getStatusBadge(unit.status);
-                                            const isSelected = unit.id === selectedVehicleId;
-                                            return (
-                                                <div
-                                                    key={unit.id}
-                                                    onClick={() => setSelectedVehicleId(unit.id)}
-                                                    className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                                                        isSelected
-                                                            ? 'bg-amber-50/90 border-amber-400 shadow-xs ring-1 ring-amber-400'
-                                                            : 'bg-slate-50/70 border-slate-200/80 hover:bg-slate-100 hover:border-slate-300'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-2.5 min-w-0">
-                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                                                            isSelected ? 'bg-amber-600 text-white' : 'bg-white border border-slate-200 text-slate-600'
-                                                        }`}>
-                                                            <Truck className="w-4 h-4" />
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <div className="text-xs font-bold text-slate-900 truncate">
-                                                                {unit.unitCode}
-                                                            </div>
-                                                            <div className="text-[10px] text-slate-500 truncate">
-                                                                {unit.model}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${badge.bg}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <span className={`w-2.5 h-2.5 rounded-full ${
+                                                        unit.dashcam_status === 'AVAILABLE' ? 'bg-emerald-500 shadow-xs animate-pulse' :
+                                                        unit.dashcam_status === 'LOST_CONNECTION' ? 'bg-rose-500' : 'bg-slate-300'
+                                                    }`} title={unit.dashcam_status_label || badge.label}></span>
+                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 flex items-center gap-1 ${badge.bg}`}>
                                                         {badge.label}
                                                     </span>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
                     </div>

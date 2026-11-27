@@ -640,11 +640,9 @@ export default function Page() {
             // Auto-pan ke lokasi konsesi site armada terkait
             const isBda = currentVehicle.site?.includes('BDA') || currentVehicle.id.startsWith('BDA') || currentVehicle.plateNo.startsWith('BDA');
             if (isBda) {
-                setSelectedSiteFilter('BDA');
                 setMapCenter([-1.119625, 115.020731]);
                 setMapZoom(12);
             } else {
-                setSelectedSiteFilter('HPA');
                 setMapCenter([2.045000, 117.200000]);
                 setMapZoom(14);
             }

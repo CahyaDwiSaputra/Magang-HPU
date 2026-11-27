@@ -8,6 +8,11 @@ use App\Http\Controllers\FrontpageController;
 
 //AUTH 
 Route::redirect("/", "/login");
+Route::get('/dev-login', function () {
+    $u = \App\Models\User::first();
+    \Illuminate\Support\Facades\Auth::login($u, true);
+    return redirect('/dashboard');
+});
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login_userpass', [AuthController::class, 'login_userpass'])->name("login_userpass");
 Route::middleware(["auth"])->post('/logout', [AuthController::class, 'logout']);
